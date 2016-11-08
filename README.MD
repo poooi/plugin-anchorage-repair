@@ -3,9 +3,9 @@
 ## Description
 A plugin to help in Akashi's anchorage repair arrangement, features:
 
-- [] estimate anchorage repair time
-- [] estimate better refresh time
-- [] notify upon ship repair completes
+- [ ] estimate anchorage repair time
+- [ ] estimate better refresh time
+- [ ] notify upon ship repair completes
 
 ## Basic mechanism
 ### Docking repair time
