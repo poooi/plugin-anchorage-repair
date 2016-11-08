@@ -3,9 +3,9 @@
 ## Description
 A plugin to help in Akashi's anchorage repair arrangement, features:
 
--[] estimate anchorage repair time
--[] estimate better refresh time
--[] notify upon ship repair completes
+- [] estimate anchorage repair time
+- [] estimate better refresh time
+- [] notify upon ship repair completes
 
 ## Basic mechanism
 ### Docking repair time
@@ -24,7 +24,7 @@ The formula base on HP loss, level and ship type is already proved, while This v
   - returning to the HQ screen,
   - changing fleet composition,
   - docking fleet member with Bucket, normal docking won't reset (currently not covered in the plugin),
-  - sending the fleet to expedition
+  - sending the fleet to expedition.
 
 ## Corner cases
 Following corner cases are not taken into consideration, thus the result may not behave as it could be.
