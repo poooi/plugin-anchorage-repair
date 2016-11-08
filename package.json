@@ -1,0 +1,42 @@
+{
+  "name": "poi-plugin-anchorage-repair",
+  "version": "0.1.0",
+  "description": "Anchorage repair plugin for poi",
+  "main": "index.es",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KagamiChan/plugin-anchorage-repair.git"
+  },
+  "author": {
+    "name": "かがみ",
+    "link": "https://github.com/kagamichan"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KagamiChan/plugin-anchorage-repair/issues"
+  },
+  "homepage": "https://github.com/KagamiChan/plugin-anchorage-repair#readme",
+  "dependencies": {
+    "react-inspector": "^1.1.1"
+  },
+  "devDependencies": {
+    "babel-eslint": "^7.0.0",
+    "babel-preset-es2017": ">=6.16.0",
+    "eslint": "^3.8.1",
+    "eslint-plugin-import": "^2.0.1",
+    "eslint-plugin-react": "^6.4.1",
+    "lodash": ">=4.16.4"
+  },
+  "poiPlugin": {
+    "title": "Anchorage repair",
+    "description": "A plugin to help in Akashi's anchorage repair arrangement",
+    "icon": "ti/anchor",
+    "priority": 9,
+    "apiVer": {
+      "6.99.99": "0.1.0"
+    }
+  }
+}
