@@ -5,6 +5,7 @@ import Inspector from 'react-inspector'
 import _ from 'lodash'
 import {Tabs, Tab, Table} from 'react-bootstrap'
 import { resolveTime } from 'views/utils/tools'
+import { CountupTimer } from './countup-timer'
 
 // Import selectors defined in poi
 import {
@@ -223,12 +224,16 @@ export const reactClass = connect(
   render() {
     const {_ships, $ships } = window
     return (
-      <div  id="anchorage-repair">
+      <div id="anchorage-repair">
           <Tabs activeKey={this.state.activeTab} onSelect={this.handleSelectTab} id="anchorage-tab">
           {
             _.map(this.props.fleets, (fleet, index) => {
               return(
                 <Tab eventKey={fleet.api_id} title={fleet.api_id}>
+                  <CountupTimer
+                    countdownId={`akashi-${index}`}
+                    startTime={this.state.lastRefresh[index]}
+                  />
                   {this.renderFleet(fleet)}
                 </Tab>
               )
