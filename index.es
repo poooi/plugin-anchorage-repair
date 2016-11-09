@@ -3,7 +3,8 @@ import { connect } from 'react-redux'
 import { createSelector  } from 'reselect'
 import Inspector from 'react-inspector'
 import _ from 'lodash'
-
+import {Tabs, Tab, Table} from 'react-bootstrap'
+import { resolveTime } from 'views/utils/tools'
 
 // Import selectors defined in poi
 import {
@@ -13,6 +14,8 @@ import {
   repairsSelector,
   createDeepCompareArraySelector,
 } from 'views/utils/selectors'
+
+import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-timer.es'
 
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
@@ -52,9 +55,8 @@ const fleetAkashiConv = (fleet, ships, equips, repairId) => {
 
   if (flagship != null) {
     akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
-    repairCount = _.filter(flagship.api_slot, (item) => {
-      return (_.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID).length + 2
-    })
+    repairCount = _.filter(flagship.api_slot, (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID).length
+    repairCount = repairCount + (akashiFlagship ? 2 : 0)
   }
 
   canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
@@ -79,6 +81,9 @@ const fleetAkashiConv = (fleet, ships, equips, repairId) => {
     api_id: fleet.api_id || -1,
     shipId: fleet.api_ship || [],
     canRepair,
+    akashiFlagship,
+    inExpedition,
+    flagShipInRepair,
     repairCount,
     repairDetail,
   }
@@ -117,7 +122,13 @@ export const reactClass = connect(
 
     this.state = {
       lastRefresh: Array(4).fill(0),
+      activeTab: 1,
     }
+  }
+
+  static basicNotifyConfig = {
+    title: 'Test',
+    message: (names) => `${names.join(' ')}`,
   }
 
   componentDidMount= () => {
@@ -167,10 +178,63 @@ export const reactClass = connect(
     console.log(this.props, this.state)
   }
 
-  render() {
-    return (
+  renderFleet = (fleet) => {
+    let result = []
+
+    _.forEach(fleet.repairDetail, (ship, index) =>
+      result.push(
+        <tr>
+          <td>{window._ships[ship.api_id].api_name}</td>
+          <td>{`${ship.api_nowhp}/${ship.api_maxhp}`}</td>
+          <td>{resolveTime(ship.estimate/1000)}</td>
+          <td>{resolveTime(ship.timePerHP/1000)}</td>
+        </tr>
+      )
+    )
+
+    return(
       <div>
-        <h1>Test</h1>
+        <span>{fleet.canRepair ? 'Ready for repair' : 'Not ready'}</span>
+        <span>{fleet.repairCount}</span>
+        <span>{fleet.akashiFlagship ? '' : 'Akashi not flagship'}</span>
+        <span>{fleet.inExpedition ? 'fleet in expedition' : ''}</span>
+        <span>{fleet.flagShipInRepair ? 'flagship in dock' : ''}</span>
+        <Table bordered>
+          <thead>
+            <tr>
+              <th>Ship Name</th>
+              <th>HP</th>
+              <th>Akashi Time</th>
+              <th>Per HP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result}
+          </tbody>
+        </Table>
+      </div>
+    )
+  }
+
+  handleSelectTab = (key) => {
+    this.setState({activeTab: key})
+  }
+
+  render() {
+    const {_ships, $ships } = window
+    return (
+      <div  id="anchorage-repair">
+          <Tabs activeKey={this.state.activeTab} onSelect={this.handleSelectTab} id="anchorage-tab">
+          {
+            _.map(this.props.fleets, (fleet, index) => {
+              return(
+                <Tab eventKey={fleet.api_id} title={fleet.api_id}>
+                  {this.renderFleet(fleet)}
+                </Tab>
+              )
+            })
+          }
+        </Tabs>
         <Inspector data={[this.props, this.state]} theme="chromeDark" />
       </div>
     )
