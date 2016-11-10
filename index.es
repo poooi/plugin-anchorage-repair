@@ -4,7 +4,7 @@ import { createSelector  } from 'reselect'
 import Inspector from 'react-inspector'
 import _ from 'lodash'
 import {join} from 'path'
-import {Tabs, Tab, Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label} from 'react-bootstrap'
+import {Tabs, Tab, Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label, Panel} from 'react-bootstrap'
 import { resolveTime } from 'views/utils/tools'
 import { CountupTimer } from './countup-timer'
 
@@ -43,9 +43,9 @@ const timePerHPCalc = ({api_nowhp, api_maxhp, api_ndock_time}) => {
     0
 }
 
-const repairEstimate = ({api_nowhp, api_maxhp, timePerHP}, timeElapsed = 0) => {
+const repairEstimate = ({api_nowhp, api_maxhp, timePerHP}, timeElapsed = 0, availableSRF = false) => {
   // timeElapsed is in seconds
-  if (api_nowhp >= api_maxhp || timePerHP == 0) return 0
+  if (api_nowhp >= api_maxhp || timePerHP == 0 || !availableSRF) return 0
 
   if (timeElapsed * 1000 < AKASHI_INTERVAL) {
     return 0
@@ -177,11 +177,11 @@ export const reactClass = connect(
     window.removeEventListener('game.response', this.handleResponse)
   }
 
-  resetRefresh = (fleetId) => {
+  resetRefresh = (fleetId, time = Date.now()) => {
     let _tmp
     if (_.includes([1, 2, 3, 4], fleetId)) {
       _tmp = this.state.lastRefresh.slice()
-      _tmp[fleetId -1] = Date.now()
+      _tmp[fleetId -1] = time
       this.setState({lastRefresh: _tmp})
     }
   }
@@ -205,11 +205,14 @@ export const reactClass = connect(
     let fleetId, shipId, infleet
     switch (path) {
     case '/kcsapi/api_port/port':
-      this.setState({lastRefresh: Array(4).fill(Date.now())})
+      this.setState({
+        lastRefresh: Array(4).fill(Date.now()),
+        timeElapsed: Array(4).fill(0),
+      })
       break
     case '/kcsapi/api_req_hensei/change':
       fleetId = parseInt(postBody.api_id)
-      this.resetRefresh(fleetId)
+      this.resetRefresh(fleetId, 0)
       break
     case '/kcsapi/api_req_nyukyo/start':
       shipId = parseInt(postBody.api_ship_id)
@@ -261,7 +264,7 @@ export const reactClass = connect(
           }
           </td>
           <td>{timePerHP ? resolveTime(timePerHP / 1000) : '' }</td>
-          <td>{fleet.canRepair && repairEstimate(ship, timeElapsed)}</td>
+          <td>{fleet.canRepair && repairEstimate(ship, timeElapsed, availableSRF)}</td>
         </tr>
       )}
     )
@@ -270,7 +273,7 @@ export const reactClass = connect(
       <Grid>
         <link rel="stylesheet" href={join(__dirname, 'assets', 'style.css')} />
         <Row className="info-row">
-          <Col xs={4}>
+          <Col xs={4} className="info-col">
           { fleet.canRepair ?
               <Label bsStyle={this.state.lastRefresh[fleet.api_id - 1] ? 'success' : 'warning'}>
                 <span>{'Elapsed:'} </span>
@@ -284,7 +287,7 @@ export const reactClass = connect(
               ''
           }
           </Col>
-          <Col xs={4}>
+          <Col xs={4} className="info-col">
             <OverlayTrigger placement="bottom" trigger={fleet.canRepair ? 'manual' : ['hover','focus']} overlay={
               <Tooltip>
                 <p>{fleet.akashiFlagship ? '' : 'Akashi not flagship'}</p>
@@ -297,8 +300,15 @@ export const reactClass = connect(
               </Label>
             </OverlayTrigger>
           </Col>
-          <Col xs={4}>
+          <Col xs={4} className="info-col">
             <Label bsStyle={fleet.repairCount? 'success' : 'warning'}>{`Capacity: ${fleet.repairCount}`}</Label>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={12}>
+            <Panel bsStyle="warning" className={lastRefresh == 0 ? '' : 'hidden'}>
+              {'Please return to HQ screen to make timer refreshed.'}
+            </Panel>
           </Col>
         </Row>
         <Row>
@@ -306,11 +316,11 @@ export const reactClass = connect(
             <Table bordered condensed>
               <thead>
                 <tr>
-                  <th>Ship Name</th>
-                  <th>HP</th>
-                  <th>Akashi Time</th>
-                  <th>Per HP</th>
-                  <th>Expected repair</th>
+                  <th>{'Ship Name'}</th>
+                  <th>{'HP'}</th>
+                  <th>{'Akashi Time'}</th>
+                  <th>{'Per HP'}</th>
+                  <th>{'Estimated repaired'}</th>
                 </tr>
               </thead>
               <tbody>

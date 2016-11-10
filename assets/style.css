@@ -2,10 +2,18 @@
   padding: 1em;
 }
 #anchorage-repair .info-row {
-  padding: 1em 0;
+  padding: 2em 0;
+}
+#anchorage-repair .info-row .label {
+  font-size: 120%;
+}
+#anchorage-repair .info-col {
+  align-content: center;
+  text-align: center;
 }
 #anchorage-repair .label {
   font-size: 90%;
+  font-weight: normal;
 }
 #anchorage-repair .lv-label {
   display: block;
@@ -18,4 +26,7 @@
 #anchorage-repair th {
   text-align: center;
   vertical-align: middle;
+}
+#anchorage-repair .panel .hidden {
+  display: none;
 }
