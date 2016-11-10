@@ -60,10 +60,10 @@ export class CountupTimer extends Component {
     window.ticker.unreg(this.props.countdownId)
   }
   tick = (currentTime) => {
-    const actualElapsed = this.constructor.getTimeElapsed(this.state.startTime, currentTime)
-    if (Math.abs(this.timeElapsed - actualElapsed) > 2) {
-      this.timeElapsed = actualElapsed
-    }
+    // const actualElapsed = this.constructor.getTimeElapsed(this.state.startTime, currentTime)
+    // if (Math.abs(this.timeElapsed - actualElapsed) > 2) {
+    //   this.timeElapsed = actualElapsed
+    // }
     this.timeElapsed = this.constructor.getTimeElapsed(this.state.startTime, currentTime)
     if (this.timeElapsed < 0) {
       this.stopTick()
@@ -71,7 +71,7 @@ export class CountupTimer extends Component {
     if (this.state.startTime >= 0)
       try {
         if (this.textLabel) {
-          this.textLabel.textContent = resolveTime(this.timeElapsed)
+          this.textLabel.textContent = resolveTime(this.timeElapsed) || 'Not Refreshed'
         }
         if (this.props.tickCallback) {
           this.props.tickCallback(this.timeElapsed)
