@@ -234,7 +234,7 @@ export const reactClass = connect(
     _.forEach(fleet.repairDetail, (ship, index) => {
       let {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_lv} = ship
       let completeTime = lastRefresh + estimate
-      if (estimate) console.log(`fire!${Date.now()}-${estimate}`)
+      if (estimate) console.log(`fire!${Date.now()}-${estimate}`, `anchorage-ship-${api_id}`)
       result.push(
         <tr>
           <td>
@@ -247,9 +247,9 @@ export const reactClass = connect(
             </Label>
           </td>
           <td>
-          { estimate > 0 ?
+          { estimate > 0 && fleet.canRepair && availableSRF ?
             <CountdownNotifierLabel
-              countdownId={`anchorage-ship-${api_id}`}
+              timerKey={`anchorage-ship-${api_id}`}
               completeTime={completeTime}
               getLabelStyle={getCountdownLabelStyle}
               getNotifyOptions={ () => (lastRefresh > 0) && {
@@ -273,7 +273,7 @@ export const reactClass = connect(
           <Col xs={4}>
           { fleet.canRepair ?
               <Label bsStyle={this.state.lastRefresh[fleet.api_id - 1] ? 'success' : 'warning'}>
-                <span>{'Eclapsed:'} </span>
+                <span>{'Elapsed:'} </span>
                 <CountupTimer
                   countdownId={`akashi-${fleet.api_id}`}
                   startTime={ this.state.lastRefresh[fleet.api_id - 1]}
