@@ -19,6 +19,22 @@ import {
 
 import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-timer.es'
 
+// import i18n2 from 'i18n-2'
+//
+// const i18n = new i18n2({
+//   // setup some locales - other locales default to the first locale
+//   locales: ['ko-KR', 'en-US', 'ja-JP', 'zh-CN', 'zh-TW'],
+//   devMode: true,
+//   directory: join(__dirname, 'i18n'),
+//   extension: '.json',
+//   indent: '  ',
+// })
+//
+// i18n.setLocale(window.language)
+// let __ = i18n.__.bind(i18n)
+
+const {i18n} = window
+const __ = i18n["poi-plugin-anchorage-repair"].__.bind(i18n["poi-plugin-anchorage-repair"])
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
 const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
@@ -274,9 +290,22 @@ export const reactClass = connect(
         <link rel="stylesheet" href={join(__dirname, 'assets', 'style.css')} />
         <Row className="info-row">
           <Col xs={4} className="info-col">
+            <OverlayTrigger placement="bottom" trigger={fleet.canRepair ? 'manual' : ['hover','focus']} overlay={
+              <Tooltip>
+                <p>{fleet.akashiFlagship ? '' : __('Akashi not flagship')}</p>
+                <p>{fleet.inExpedition ? __('fleet in expedition') : ''}</p>
+                <p>{fleet.flagShipInRepair ? __('flagship in dock') : ''}</p>
+              </Tooltip>
+            }>
+              <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
+                {fleet.canRepair ? __('Repairing') : __('Not ready')}
+              </Label>
+            </OverlayTrigger>
+          </Col>
+          <Col xs={4} className="info-col">
           { fleet.canRepair ?
               <Label bsStyle={this.state.lastRefresh[fleet.api_id - 1] ? 'success' : 'warning'}>
-                <span>{'Elapsed:'} </span>
+                <span>{__('Elapsed:')} </span>
                 <CountupTimer
                   countdownId={`akashi-${fleet.api_id}`}
                   startTime={ this.state.lastRefresh[fleet.api_id - 1]}
@@ -288,26 +317,13 @@ export const reactClass = connect(
           }
           </Col>
           <Col xs={4} className="info-col">
-            <OverlayTrigger placement="bottom" trigger={fleet.canRepair ? 'manual' : ['hover','focus']} overlay={
-              <Tooltip>
-                <p>{fleet.akashiFlagship ? '' : 'Akashi not flagship'}</p>
-                <p>{fleet.inExpedition ? 'fleet in expedition' : ''}</p>
-                <p>{fleet.flagShipInRepair ? 'flagship in dock' : ''}</p>
-              </Tooltip>
-            }>
-              <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
-                {fleet.canRepair ? 'Repairing' : 'Not ready'}
-              </Label>
-            </OverlayTrigger>
-          </Col>
-          <Col xs={4} className="info-col">
-            <Label bsStyle={fleet.repairCount? 'success' : 'warning'}>{`Capacity: ${fleet.repairCount}`}</Label>
+            <Label bsStyle={fleet.repairCount? 'success' : 'warning'}>{__('Capacity: %s', fleet.repairCount)}</Label>
           </Col>
         </Row>
         <Row>
           <Col xs={12}>
             <Panel bsStyle="warning" className={lastRefresh == 0 ? '' : 'hidden'}>
-              {'Please return to HQ screen to make timer refreshed.'}
+              {__('Please return to HQ screen to make timer refreshed.')}
             </Panel>
           </Col>
         </Row>
@@ -316,11 +332,11 @@ export const reactClass = connect(
             <Table bordered condensed>
               <thead>
                 <tr>
-                  <th>{'Ship Name'}</th>
-                  <th>{'HP'}</th>
-                  <th>{'Akashi Time'}</th>
-                  <th>{'Per HP'}</th>
-                  <th>{'Estimated repaired'}</th>
+                  <th>{__('Ship Name')}</th>
+                  <th>{__('HP')}</th>
+                  <th>{__('Akashi Time')}</th>
+                  <th>{__('Per HP')}</th>
+                  <th>{__('Estimated repaired')}</th>
                 </tr>
               </thead>
               <tbody>

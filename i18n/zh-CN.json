@@ -1,0 +1,15 @@
+{
+  "Anchorage repair": "泊地修理",
+  "Akashi not flagship": "明石不是旗舰",
+  "Not ready": "未就绪",
+  "Capacity: %s": "可维修数量: %s",
+  "Please return to HQ screen to make timer refreshed.": "请回到母港画面以重置计时器",
+  "Ship Name": "舰名",
+  "HP": "HP",
+  "Akashi Time": "明石修理时间",
+  "Per HP": "单位修理时间",
+  "Estimated repaired": "预计已修理",
+  "fleet in expedition": "舰队远征中",
+  "Elapsed:": "计时器：",
+  "Repairing": "正在修理"
+}
