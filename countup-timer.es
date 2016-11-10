@@ -71,7 +71,7 @@ export class CountupTimer extends Component {
     if (this.state.startTime >= 0)
       try {
         if (this.textLabel) {
-          this.textLabel.textContent = resolveTime(this.timeElapsed) || 'Not Refreshed'
+          this.textLabel.textContent = resolveTime(this.timeElapsed) || resolveTime(0)
         }
         if (this.props.tickCallback) {
           this.props.tickCallback(this.timeElapsed)

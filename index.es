@@ -3,7 +3,8 @@ import { connect } from 'react-redux'
 import { createSelector  } from 'reselect'
 import Inspector from 'react-inspector'
 import _ from 'lodash'
-import {Tabs, Tab, Table, Grid, Row, Col, OverlayTrigger, Tooltip, Panel} from 'react-bootstrap'
+import {join} from 'path'
+import {Tabs, Tab, Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label} from 'react-bootstrap'
 import { resolveTime } from 'views/utils/tools'
 import { CountupTimer } from './countup-timer'
 
@@ -50,9 +51,32 @@ const repairEstimate = ({api_nowhp, api_maxhp, timePerHP}, timeElapsed = 0) => {
     return 0
   }
   else {
-    return Math.min(Math.floor(timeElapsed * 1000 / timePerHP), api_maxhp - api_nowhp)
+    return Math.min(Math.max(Math.floor(timeElapsed * 1000 / timePerHP), 1), api_maxhp - api_nowhp)
   }
 }
+
+const getHPLabelStyle = (nowhp, maxhp, availableSRF = true) => {
+  let percentage = nowhp / maxhp
+  if (!availableSRF) return 'warning'
+  switch(true){
+  case (percentage == 1):
+    return 'success'
+  case (percentage >= MINOR_PERCENT):
+    return 'primary'
+  case (percentage < MINOR_PERCENT):
+    return 'warning'
+  }
+}
+
+const getCountdownLabelStyle = (props, timeRemaining) => {
+  return (
+    timeRemaining > 600 ? 'primary' :
+    timeRemaining > 60 ? 'warning' :
+    timeRemaining >= 0 ? 'success' :
+    'default'
+  )
+}
+
 
 // check a fleet status, returns information related to anchorage repair
 const fleetAkashiConv = (fleet, ships, equips, repairId) => {
@@ -142,7 +166,7 @@ export const reactClass = connect(
 
   static basicNotifyConfig = {
     title: 'Test',
-    message: (names) => `${names.join(' ')}`,
+    message: (names) => "hello",
   }
 
   componentDidMount= () => {
@@ -204,34 +228,61 @@ export const reactClass = connect(
 
   renderFleet = (fleet) => {
     let result = []
+    let timeElapsed = this.state.timeElapsed[fleet.api_id - 1]
+    let lastRefresh = this.state.lastRefresh[fleet.api_id - 1]
 
-    _.forEach(fleet.repairDetail, (ship, index) =>
+    _.forEach(fleet.repairDetail, (ship, index) => {
+      let {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_lv} = ship
+      let completeTime = lastRefresh + estimate
+      if (estimate) console.log(`fire!${Date.now()}-${estimate}`)
       result.push(
         <tr>
-          <td>{window._ships[ship.api_id].api_name}</td>
-          <td>{`${ship.api_nowhp} / ${ship.api_maxhp}`}</td>
-          <td>{resolveTime(ship.estimate / 1000)}</td>
-          <td>{resolveTime(ship.timePerHP / 1000)}</td>
-          <td>{fleet.canRepair && repairEstimate(ship, this.state.timeElapsed[fleet.api_id - 1])}</td>
+          <td>
+            {window._ships[api_id].api_name}
+            <span className="lv-label">Lv.{api_lv}</span>
+          </td>
+          <td>
+            <Label bsStyle={getHPLabelStyle(api_nowhp, api_maxhp, availableSRF)}>
+              {`${api_nowhp} / ${api_maxhp}`}
+            </Label>
+          </td>
+          <td>
+          { estimate > 0 ?
+            <CountdownNotifierLabel
+              countdownId={`anchorage-ship-${api_id}`}
+              completeTime={completeTime}
+              getLabelStyle={getCountdownLabelStyle}
+              getNotifyOptions={ () => (lastRefresh > 0) && {
+                ...this.constructor.basicNotifyConfig,
+                completeTime,
+              }}
+            /> :
+            ''
+          }
+          </td>
+          <td>{timePerHP ? resolveTime(timePerHP / 1000) : '' }</td>
+          <td>{fleet.canRepair && repairEstimate(ship, timeElapsed)}</td>
         </tr>
-      )
+      )}
     )
 
     return(
       <Grid>
-        <Row>
+        <link rel="stylesheet" href={join(__dirname, 'assets', 'style.css')} />
+        <Row className="info-row">
           <Col xs={4}>
-            <Panel>
-            { fleet.canRepair ?
+          { fleet.canRepair ?
+              <Label bsStyle={this.state.lastRefresh[fleet.api_id - 1] ? 'success' : 'warning'}>
+                <span>{'Eclapsed:'} </span>
                 <CountupTimer
                   countdownId={`akashi-${fleet.api_id}`}
                   startTime={ this.state.lastRefresh[fleet.api_id - 1]}
                   tickCallback={this.tick(fleet.api_id)}
                   startCallback={this.resetTimeElapsed(fleet.api_id)}
-                /> :
-                <span></span>
-            }
-            </Panel>
+                />
+              </Label> :
+              ''
+          }
           </Col>
           <Col xs={4}>
             <OverlayTrigger placement="bottom" trigger={fleet.canRepair ? 'manual' : ['hover','focus']} overlay={
@@ -241,16 +292,18 @@ export const reactClass = connect(
                 <p>{fleet.flagShipInRepair ? 'flagship in dock' : ''}</p>
               </Tooltip>
             }>
-              <Panel>{fleet.canRepair ? 'Ready for repair' : 'Not ready'}</Panel>
+              <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
+                {fleet.canRepair ? 'Repairing' : 'Not ready'}
+              </Label>
             </OverlayTrigger>
           </Col>
-          <Col>
-            <Panel>{`Capacity: ${fleet.repairCount}`}</Panel>
+          <Col xs={4}>
+            <Label bsStyle={fleet.repairCount? 'success' : 'warning'}>{`Capacity: ${fleet.repairCount}`}</Label>
           </Col>
         </Row>
         <Row>
           <Col xs={12}>
-            <Table bordered>
+            <Table bordered condensed>
               <thead>
                 <tr>
                   <th>Ship Name</th>
@@ -275,7 +328,6 @@ export const reactClass = connect(
   }
 
   render() {
-    const {_ships, $ships } = window
     return (
       <div id="anchorage-repair">
           <Tabs activeKey={this.state.activeTab} onSelect={this.handleSelectTab} id="anchorage-tab">

@@ -1,0 +1,21 @@
+#anchorage-repair {
+  padding: 1em;
+}
+#anchorage-repair .info-row {
+  padding: 1em 0;
+}
+#anchorage-repair .label {
+  font-size: 90%;
+}
+#anchorage-repair .lv-label {
+  display: block;
+  font-size: 70%;
+}
+#anchorage-repair .not-available {
+  font-style: italic;
+}
+#anchorage-repair td,
+#anchorage-repair th {
+  text-align: center;
+  vertical-align: middle;
+}
