@@ -30,6 +30,7 @@ module.exports = {
     'semi': ['error', 'never'],
     'unicode-bom': 'error',
     'react/prop-types': 'off',
+    'import/no-unresolved': [2, { ignore: ['views/.*'] }],
   },
   'settings': {
     'import/resolver': {

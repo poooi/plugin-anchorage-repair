@@ -14,6 +14,8 @@ import {
   shipsSelector,
   equipsSelector,
   repairsSelector,
+  constSelector,
+  miscSelector,
   createDeepCompareArraySelector,
 } from 'views/utils/selectors'
 
@@ -33,7 +35,7 @@ import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-ti
 // i18n.setLocale(window.language)
 // let __ = i18n.__.bind(i18n)
 
-const {i18n} = window
+const { ROOT, i18n } = window
 const __ = i18n["poi-plugin-anchorage-repair"].__.bind(i18n["poi-plugin-anchorage-repair"])
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
@@ -167,7 +169,15 @@ const fleetsAkashiSelector = createSelector(
 // React
 
 export const reactClass = connect(
-  createDeepCompareArraySelector([fleetsAkashiSelector], (data) => data )
+  createDeepCompareArraySelector([
+    fleetsAkashiSelector,
+    constSelector,
+    miscSelector,
+  ], (data, {$ships}, {canNotify}) => ({
+    ...data,
+    $ships,
+    canNotify,
+  }))
 )(class PluginAnchorageRepair extends Component {
 
   constructor(props) {
@@ -181,8 +191,11 @@ export const reactClass = connect(
   }
 
   static basicNotifyConfig = {
-    title: 'Test',
-    message: (names) => "hello",
+    type: 'repair',
+    title: __('Anchorage repair'),
+    message: (names) => `${_.joinString(names, ', ')} ${__('anchorage repair completed')}`,
+    icon: join(ROOT, 'assets', 'img', 'operation', 'repair.png'),
+    preemptTime: 60,
   }
 
   componentDidMount= () => {
@@ -203,7 +216,7 @@ export const reactClass = connect(
   }
 
   tick = (fleetId) => (timeElapsed) => {
-    if (timeElapsed % 10 == 0) { // limit component refresh rate
+    if (timeElapsed % 10 == 0 && _.includes([1, 2, 3, 4], fleetId)) { // limit component refresh rate
       let _tmp = this.state.timeElapsed.slice()
       _tmp[fleetId - 1] = timeElapsed
       this.setState({timeElapsed: _tmp})
@@ -228,7 +241,7 @@ export const reactClass = connect(
       break
     case '/kcsapi/api_req_hensei/change':
       fleetId = parseInt(postBody.api_id)
-      this.resetRefresh(fleetId, 0)
+      if (!Number.isNaN(fleetId)) this.resetRefresh(fleetId, 0)
       break
     case '/kcsapi/api_req_nyukyo/start':
       shipId = parseInt(postBody.api_ship_id)
@@ -253,7 +266,7 @@ export const reactClass = connect(
     _.forEach(fleet.repairDetail, (ship, index) => {
       let {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_lv} = ship
       let completeTime = lastRefresh + estimate
-      if (estimate) console.log(`fire!${Date.now()}-${estimate}`, `anchorage-ship-${api_id}`)
+      // if (estimate) console.log(`fire!${Date.now()}-${estimate}`, `anchorage-ship-${api_id}`)
       result.push(
         <tr>
           <td>
@@ -274,6 +287,7 @@ export const reactClass = connect(
               getNotifyOptions={ () => (lastRefresh > 0) && {
                 ...this.constructor.basicNotifyConfig,
                 completeTime,
+                args: window._ships[api_id].api_name,
               }}
             /> :
             ''
