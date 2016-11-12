@@ -1,5 +1,7 @@
 # Anchorage repair plugin for poi
 
+[![npm package][npm-badge]][npm]
+
 ## Description
 A plugin to help in Akashi's anchorage repair arrangement, features:
 
@@ -46,3 +48,6 @@ Initial version
 
 # License
 MIT
+
+[npm-badge]: https://img.shields.io/npm/v/poi-plugin-anchorage-repair.svg?style=flat-square
+[npm]: https://www.npmjs.org/package/poi-plugin-anchorage-repair

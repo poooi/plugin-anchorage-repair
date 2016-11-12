@@ -22,7 +22,7 @@ export class FleetList extends Component {
   }
 
   static propTypes = {
-    fleet: PropTypes.object,
+    fleet: PropTypes.object.isRequired,
   }
 
   componentDidMount= () => {

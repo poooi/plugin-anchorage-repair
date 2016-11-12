@@ -43,12 +43,12 @@ export const ShipRow = connect(
   }
 
   static propTypes = {
-    $ships: PropTypes.object,
-    canNotify: PropTypes.bool,
-    timeElapsed: PropTypes.number,
-    lastRefresh: PropTypes.number,
-    ship: PropTypes.object,
-    canRepair: PropTypes.bool,
+    $ships: PropTypes.object.isRequired,
+    canNotify: PropTypes.bool.isRequired,
+    timeElapsed: PropTypes.number.isRequired,
+    lastRefresh: PropTypes.number.isRequired,
+    ship: PropTypes.object.isRequired,
+    canRepair: PropTypes.bool.isRequired,
   }
 
   render() {
