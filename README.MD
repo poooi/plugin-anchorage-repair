@@ -2,6 +2,8 @@
 
 [![npm package][npm-badge]][npm]
 
+[简体中文说明](README.CN.MD)
+
 ## Description
 A plugin to help in Akashi's anchorage repair arrangement, features:
 
@@ -28,7 +30,7 @@ The formula base on HP loss, level and ship type is already proved, while this v
 - The repair timer will reset by:
   - returning to the HQ screen,
   - changing fleet composition,
-  - docking fleet member with Bucket, normal docking won't reset (currently not covered in the plugin),
+  - docking fleet member with Bucket, normal docking won't reset,
   - sending the fleet to expedition.
 
 ### Corner cases
