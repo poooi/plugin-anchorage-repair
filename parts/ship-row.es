@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { createSelector  } from 'reselect'
-import _ from 'lodash'
+// import { createSelector  } from 'reselect'
 import { Label} from 'react-bootstrap'
 import { resolveTime } from 'views/utils/tools'
 import { constSelector, createDeepCompareArraySelector } from 'views/utils/selectors'

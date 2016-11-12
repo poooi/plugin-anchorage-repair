@@ -19,12 +19,11 @@ import {
   shipsSelector,
   equipsSelector,
   repairsSelector,
-  constSelector,
   miscSelector,
   createDeepCompareArraySelector,
 } from 'views/utils/selectors'
 
-const { i18n } = window
+const { i18n, dbg } = window
 const __ = i18n["poi-plugin-anchorage-repair"].__.bind(i18n["poi-plugin-anchorage-repair"])
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
@@ -121,11 +120,6 @@ export const reactClass = connect(
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    console.log(this.props, this.state)
-  }
-
-
   handleSelectTab = (key) => {
     this.setState({activeTab: key})
   }
@@ -145,7 +139,7 @@ export const reactClass = connect(
             })
           }
         </Tabs>
-        <Inspector data={[this.props, this.state]} theme="chromeDark" />
+        {dbg.isEnabled() ? <Inspector data={[this.props, this.state]} theme="chromeDark" /> : '' }
       </div>
     )
   }
