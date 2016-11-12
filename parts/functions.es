@@ -10,6 +10,8 @@ export const akashiEstimate = ({api_nowhp, api_maxhp, api_ndock_time}) => {
 
   if (api_nowhp < api_maxhp * MINOR_PERCENT) return 0 // damage check
 
+  if (api_maxhp - api_nowhp == 1) return AKASHI_INTERVAL // if only 1 hp to repair
+
   return Math.max(api_ndock_time, AKASHI_INTERVAL)
 }
 

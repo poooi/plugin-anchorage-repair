@@ -1,12 +1,17 @@
 {
-  "Akashi not flagship": "Akashi not flagship",
-  "Not ready": "Not ready",
-  "Capacity: %s": "Capacity: %s",
-  "Please return to HQ screen to make timer refreshed.": "Please return to HQ screen to make timer refreshed.",
-  "Ship Name": "Ship Name",
-  "HP": "HP",
-  "Akashi Time": "Akashi Time",
-  "Per HP": "Per HP",
-  "Estimated repaired": "Estimated repaired",
-  "fleet in expedition": "fleet in expedition"
+  "Anchorage repair": "泊地修理",
+  "Akashi not flagship": "明石は旗艦ではありません",
+  "Not ready": "準備ができていません",
+  "Capacity: %s": "修理対象數: %s",
+  "Please return to HQ screen to make timer refreshed.": "タイマーをリセットするために、母港画面に戻ってください。",
+  "Ship": "艦娘",
+  "HP": "耐久",
+  "Akashi Time": "明石の修理時間",
+  "Per HP": "單位修理時間",
+  "Estimated repaired": "推定回復量",
+  "fleet in expedition": "艦隊遠征中",
+  "Elapsed:": "タイマー：",
+  "Repairing": "修理中",
+  "Akashi loves you!": "明石はあなたを愛してるよ！",
+  "flagship in dock": "旗艦入渠中"
 }

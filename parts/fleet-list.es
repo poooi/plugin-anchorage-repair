@@ -93,10 +93,10 @@ export class FleetList extends Component {
           <Col xs={4} className="info-col">
             <OverlayTrigger 
               placement="bottom" 
-              trigger={fleet.canRepair ? 'manual' : ['hover','focus']} 
-              id={`anchorage-refresh-notify-${fleet.api_id}`}
+              trigger={fleet.canRepair ? 'click' : ['hover','focus']}
               overlay={
-                <Tooltip>
+                <Tooltip id={`anchorage-refresh-notify-${fleet.api_id}`}>
+                  <p>{fleet.canRepair ? __('Akashi loves you!') : '' }</p>
                   <p>{fleet.akashiFlagship ? '' : __('Akashi not flagship')}</p>
                   <p>{fleet.inExpedition ? __('fleet in expedition') : ''}</p>
                   <p>{fleet.flagShipInRepair ? __('flagship in dock') : ''}</p>
@@ -137,7 +137,7 @@ export class FleetList extends Component {
             <Table bordered condensed>
               <thead>
                 <tr>
-                  <th>{__('Ship Name')}</th>
+                  <th>{__('Ship')}</th>
                   <th>{__('HP')}</th>
                   <th>{__('Akashi Time')}</th>
                   <th>{__('Per HP')}</th>
