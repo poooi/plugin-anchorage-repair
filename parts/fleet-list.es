@@ -33,14 +33,6 @@ export class FleetList extends Component {
     window.removeEventListener('game.response', this.handleResponse)
   }
 
-  resetRefresh = (fleetId, time = Date.now()) => {
-    let _tmp
-    if (_.includes([1, 2, 3, 4], fleetId)) {
-      _tmp = this.state.lastRefresh.slice()
-      _tmp[fleetId -1] = time
-      this.setState({lastRefresh: _tmp})
-    }
-  }
 
   handleResponse = (e) => {
     const {path, body, postBody} = e.detail
@@ -69,7 +61,7 @@ export class FleetList extends Component {
   }
 
   tick = (timeElapsed) => {
-    if (timeElapsed % 10 == 0) { // limit component refresh rate
+    if (timeElapsed % 5 == 0) { // limit component refresh rate
       this.setState({timeElapsed: timeElapsed})
     }
   }
