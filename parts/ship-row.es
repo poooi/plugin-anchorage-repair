@@ -4,6 +4,8 @@ import { connect } from 'react-redux'
 import _ from 'lodash'
 import { join } from 'path'
 import { Label} from 'react-bootstrap'
+import FontAwesome from 'react-fontawesome'
+
 import { resolveTime } from 'views/utils/tools'
 import { constSelector, createDeepCompareArraySelector } from 'views/utils/selectors'
 import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-timer'
@@ -53,8 +55,9 @@ export const ShipRow = connect(
 
   render() {
     const {timeElapsed, lastRefresh, canRepair, ship, $ships, canNotify} = this.props
-    const {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_ship_id, api_lv} = ship
+    const {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_ship_id, api_lv, inRepair} = ship
     let completeTime = lastRefresh + estimate
+    
     return(
       <tr>
         <td>
@@ -62,12 +65,12 @@ export const ShipRow = connect(
           <span className="lv-label">Lv.{api_lv}</span>
         </td>
         <td>
-          <Label bsStyle={getHPLabelStyle(api_nowhp, api_maxhp, availableSRF)}>
+          <Label bsStyle={getHPLabelStyle(api_nowhp, api_maxhp, availableSRF, inRepair)}>
             {`${api_nowhp} / ${api_maxhp}`}
           </Label>
         </td>
         <td>
-        { estimate > 0 && canRepair && availableSRF ?
+        { estimate > 0 && canRepair && availableSRF && !inRepair ?
           <CountdownNotifierLabel
             timerKey={`anchorage-ship-${api_id}`}
             completeTime={completeTime}
@@ -77,12 +80,11 @@ export const ShipRow = connect(
               completeTime,
               args: [$ships[api_ship_id].api_name],
             }}
-          /> :
-          ''
+          /> : (inRepair ? <Label bsStyle='success'><FontAwesome name='wrench' /> {__("Docking")}</Label> : '')
         }
         </td>
         <td>{timePerHP ? resolveTime(timePerHP / 1000) : '' }</td>
-        <td>{canRepair && repairEstimate(ship, timeElapsed, availableSRF)}</td>
+        <td>{canRepair && api_nowhp != api_maxhp && !inRepair && repairEstimate(ship, timeElapsed, availableSRF)}</td>
       </tr>
     )
   }

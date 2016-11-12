@@ -38,11 +38,11 @@ export const repairEstimate = ({api_nowhp, api_maxhp, timePerHP}, timeElapsed = 
   }
 }
 
-export const getHPLabelStyle = (nowhp, maxhp, availableSRF = true) => {
+export const getHPLabelStyle = (nowhp, maxhp, availableSRF = true, inRepair = false) => {
   let percentage = nowhp / maxhp
   if (!availableSRF) return 'warning'
   switch(true){
-  case (percentage == 1):
+  case (percentage >= 1 || inRepair):
     return 'success'
   case (percentage >= MINOR_PERCENT):
     return 'primary'
