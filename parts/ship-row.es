@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 // import { createSelector  } from 'reselect'
 import _ from 'lodash'
@@ -40,6 +40,15 @@ export const ShipRow = connect(
     icon: join(ROOT, 'assets', 'img', 'operation', 'repair.png'),
     preemptTime: 0,
     groupKey: 'plugin-anchorage-repair',
+  }
+
+  static propTypes = {
+    $ships: PropTypes.object,
+    canNotify: PropTypes.bool,
+    timeElapsed: PropTypes.number,
+    lastRefresh: PropTypes.number,
+    ship: PropTypes.object,
+    canRepair: PropTypes.bool,
   }
 
   render() {

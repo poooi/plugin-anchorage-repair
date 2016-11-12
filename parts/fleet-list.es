@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, PropTypes } from 'react'
 import _ from 'lodash'
 import {Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label, Panel} from 'react-bootstrap'
 
@@ -19,6 +19,10 @@ export class FleetList extends Component {
       lastRefresh: 0,
       timeElapsed: 0,
     }
+  }
+
+  static propTypes = {
+    fleet: PropTypes.object,
   }
 
   componentDidMount= () => {
