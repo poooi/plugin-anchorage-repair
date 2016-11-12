@@ -6,7 +6,7 @@ import { join } from 'path'
 import { Label} from 'react-bootstrap'
 import { resolveTime } from 'views/utils/tools'
 import { constSelector, createDeepCompareArraySelector } from 'views/utils/selectors'
-import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-timer.es'
+import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-timer'
 
 import {
   repairEstimate,
