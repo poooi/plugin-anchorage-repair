@@ -51,7 +51,7 @@ export class FleetList extends Component {
 
     case '/kcsapi/api_req_hensei/change':
       fleetId = parseInt(postBody.api_id)
-      if (!Number.isNaN(fleetId)) this.setState({lastRefresh: 0})
+      if (!Number.isNaN(fleetId) && fleetId == this.props.fleet.api_id ) this.setState({lastRefresh: 0})
       break
 
     case '/kcsapi/api_req_nyukyo/start':
@@ -143,7 +143,7 @@ export class FleetList extends Component {
                         key={`anchorage-ship-${ship.api_id}`}
                         ship={ship}
                         lastRefresh={lastRefresh}
-                        elapseTime={timeElapsed}
+                        timeElapsed={timeElapsed}
                         canRepair={fleet.canRepair}
                       />)
                   })
