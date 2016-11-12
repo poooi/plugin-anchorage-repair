@@ -2,8 +2,8 @@
   "Anchorage repair": "泊地修理",
   "Akashi not flagship": "明石不是旗艦",
   "Not ready": "未就緒",
-  "Capacity: %s": "可維修數量: %s",
-  "Please return to HQ screen to make timer refreshed.": "請回到母港畫面以重置計時器",
+  "Capacity: %s": "可修理數量: %s",
+  "Please return to HQ screen to make timer refreshed.": "請回到母港畫面以重置計時器。",
   "Ship": "艦娘",
   "HP": "耐久",
   "Akashi Time": "明石修理時間",
@@ -13,5 +13,6 @@
   "Elapsed:": "計時器：",
   "Repairing": "正在修理",
   "Akashi loves you!": "明石愛你哦！",
-  "flagship in dock": "旗艦入渠中"
+  "flagship in dock": "旗艦入渠中",
+  "anchorage repair completed": "泊地修理完畢"
 }

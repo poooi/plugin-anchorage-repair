@@ -1,13 +1,12 @@
 import React, { Component } from 'react'
 import _ from 'lodash'
-import {join} from 'path'
 import {Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label, Panel} from 'react-bootstrap'
 
 import { CountupTimer } from './countup-timer'
 
 import {ShipRow} from './ship-row'
 
-const { ROOT, i18n } = window
+const { i18n } = window
 const __ = i18n["poi-plugin-anchorage-repair"].__.bind(i18n["poi-plugin-anchorage-repair"])
 
 
@@ -20,14 +19,6 @@ export class FleetList extends Component {
       lastRefresh: 0,
       timeElapsed: 0,
     }
-  }
-
-  static basicNotifyConfig = {
-    type: 'repair',
-    title: __('Anchorage repair'),
-    message: (names) => `${_.joinString(names, ', ')} ${__('anchorage repair completed')}`,
-    icon: join(ROOT, 'assets', 'img', 'operation', 'repair.png'),
-    preemptTime: 60,
   }
 
   componentDidMount= () => {

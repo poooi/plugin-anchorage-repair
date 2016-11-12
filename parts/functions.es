@@ -1,4 +1,4 @@
-const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
+export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 const MINOR_PERCENT = 0.5 // minor damage determination
 

@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { createSelector  } from 'reselect'
-import Inspector from 'react-inspector'
 import _ from 'lodash'
 import {join} from 'path'
 import {Tabs, Tab} from 'react-bootstrap'
@@ -23,7 +22,7 @@ import {
   createDeepCompareArraySelector,
 } from 'views/utils/selectors'
 
-const { i18n, dbg } = window
+const { i18n } = window
 const __ = i18n["poi-plugin-anchorage-repair"].__.bind(i18n["poi-plugin-anchorage-repair"])
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
@@ -139,7 +138,6 @@ export const reactClass = connect(
             })
           }
         </Tabs>
-        {dbg.isEnabled() ? <Inspector data={[this.props, this.state]} theme="chromeDark" /> : '' }
       </div>
     )
   }
