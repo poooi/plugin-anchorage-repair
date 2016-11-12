@@ -35,7 +35,7 @@ export class FleetList extends Component {
 
 
   handleResponse = (e) => {
-    const {path, body, postBody} = e.detail
+    const {path, postBody} = e.detail
     let fleetId, shipId, infleet
     switch (path) {
     case '/kcsapi/api_port/port':

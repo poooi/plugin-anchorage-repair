@@ -7,14 +7,12 @@ import { Label} from 'react-bootstrap'
 import FontAwesome from 'react-fontawesome'
 
 import { resolveTime } from 'views/utils/tools'
-import { constSelector, createDeepCompareArraySelector } from 'views/utils/selectors'
 import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-timer'
 
 import {
   repairEstimate,
   getHPLabelStyle,
   getCountdownLabelStyle,
-  AKASHI_INTERVAL,
 } from './functions'
 
 // const constShipsSelector = createSelector(

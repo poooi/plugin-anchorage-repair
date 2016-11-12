@@ -10,8 +10,10 @@ module.exports = {
     'plugin:import/errors',
     'plugin:import/warnings',
   ],
-  'ecmaFeatures': {
-    'jsx': true,
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    }
   },
   'installedESLint': true,
   'parser': 'babel-eslint',

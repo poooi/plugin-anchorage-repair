@@ -2,7 +2,7 @@
 
 [![npm package][npm-badge]][npm]
 
-[简体中文说明](README.CN.MD)
+[简体中文说明](README-CN.MD)
 
 ## Description
 A plugin to help in Akashi's anchorage repair arrangement, features:
