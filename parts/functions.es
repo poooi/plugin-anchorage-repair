@@ -2,6 +2,11 @@ export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 const MINOR_PERCENT = 0.5 // minor damage determination
 
+const minuteCeil = (time) => {
+  const minute = 60 * 1000
+
+  return Math.ceil(time/minute) * minute
+}
 
 // estimate the time needed in anchorage repair
 export const akashiEstimate = ({api_nowhp, api_maxhp, api_ndock_time}) => {
@@ -12,7 +17,7 @@ export const akashiEstimate = ({api_nowhp, api_maxhp, api_ndock_time}) => {
 
   if (api_maxhp - api_nowhp == 1) return AKASHI_INTERVAL // if only 1 hp to repair
 
-  return Math.max(api_ndock_time, AKASHI_INTERVAL)
+  return Math.max(minuteCeil(api_ndock_time - DOCKING_OFFSET), AKASHI_INTERVAL)
 }
 
 export const timePerHPCalc = ({api_nowhp, api_maxhp, api_ndock_time}) => {

@@ -38,7 +38,7 @@ export const ShipRow = connect(
     title: __('Anchorage repair'),
     message: (names) => `${_.join(names, ', ')} ${__('anchorage repair completed')}`,
     icon: join(ROOT, 'assets', 'img', 'operation', 'repair.png'),
-    preemptTime: 60,
+    preemptTime: 0,
     groupKey: 'plugin-anchorage-repair',
   }
 
@@ -46,7 +46,6 @@ export const ShipRow = connect(
     const {timeElapsed, lastRefresh, canRepair, ship, $ships, canNotify} = this.props
     const {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_ship_id, api_lv} = ship
     let completeTime = lastRefresh + estimate
-    let preemptTime =  (estimate - AKASHI_INTERVAL >= (60 * 1000)) ? 60 : Math.round((estimate - AKASHI_INTERVAL)/1000)
     return(
       <tr>
         <td>
@@ -67,7 +66,6 @@ export const ShipRow = connect(
             getNotifyOptions={ () => canNotify && (lastRefresh > 0) && {
               ...this.constructor.basicNotifyConfig,
               completeTime,
-              preemptTime,
               args: [$ships[api_ship_id].api_name],
             }}
           /> :
