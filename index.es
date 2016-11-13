@@ -8,7 +8,7 @@ import {Tabs, Tab} from 'react-bootstrap'
 
 import {
   akashiEstimate,
-  timePerHPCalc,
+  getTimePerHP,
 } from './parts/functions'
 import { FleetList } from './parts/fleet-list'
 
@@ -30,7 +30,7 @@ const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
 
 // check a fleet status, returns information related to anchorage repair
-const fleetAkashiConv = (fleet, ships, equips, repairId) => {
+const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
 
   const pickKey = ['api_id', 'api_ship_id', 'api_lv', 'api_nowhp', 'api_maxhp', 'api_ndock_time']
 
@@ -56,10 +56,13 @@ const fleetAkashiConv = (fleet, ships, equips, repairId) => {
 
     let ship = _.pick(ships[shipId], pickKey)
 
+    let constShip = _.pick($ships[ship.api_ship_id], ['api_name', 'api_stype'])
+
     repairDetail.push({
       ...ship,
+      ...constShip,
       estimate: akashiEstimate(ship),
-      timePerHP: timePerHPCalc(ship),
+      timePerHP: getTimePerHP(ship.api_lv, constShip.api_stype),
       inRepair: _.includes(repairId, ship.api_id),
       availableSRF: index < repairCount,
     })
@@ -84,16 +87,18 @@ const repairIdSelector = createSelector(
   (repair) => _.map(repair, (dock) => dock.api_ship_id)
 )
 
+const constShipsSelector = (state) => state.const.$ships || {}
 
 const fleetsAkashiSelector = createSelector(
   [
+    constShipsSelector,
     fleetsSelector,
     shipsSelector,
     equipsSelector,
     repairIdSelector,
   ],
-  (fleets, ships, equips, repairId) => {
-    return {fleets: _.map(fleets, fleet => fleetAkashiConv(fleet, ships, equips, repairId))}
+  ($ships, fleets, ships, equips, repairId) => {
+    return {fleets: _.map(fleets, fleet => fleetAkashiConv(fleet, $ships, ships, equips, repairId))}
   }
 )
 

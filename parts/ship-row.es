@@ -25,10 +25,8 @@ const __ = i18n["poi-plugin-anchorage-repair"].__.bind(i18n["poi-plugin-anchorag
 
 export const ShipRow = connect(
   (state) =>{
-    const $ships = state.const.$ships
     const canNotify = state.misc.canNotify
     return {
-      $ships,
       canNotify,
     }
   }
@@ -43,7 +41,6 @@ export const ShipRow = connect(
   }
 
   static propTypes = {
-    $ships: PropTypes.object.isRequired,
     canNotify: PropTypes.bool.isRequired,
     timeElapsed: PropTypes.number.isRequired,
     lastRefresh: PropTypes.number.isRequired,
@@ -52,14 +49,14 @@ export const ShipRow = connect(
   }
 
   render() {
-    const {timeElapsed, lastRefresh, canRepair, ship, $ships, canNotify} = this.props
-    const {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_ship_id, api_lv, inRepair} = ship
+    const {timeElapsed, lastRefresh, canRepair, ship, canNotify} = this.props
+    const {api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_lv, inRepair, api_name} = ship
     let completeTime = lastRefresh + estimate
     
     return(
       <tr>
         <td>
-          {$ships[api_ship_id].api_name}
+          {i18n.resources.__(api_name)}
           <span className="lv-label">Lv.{api_lv}</span>
         </td>
         <td>
@@ -76,12 +73,13 @@ export const ShipRow = connect(
             getNotifyOptions={ () => canNotify && (lastRefresh > 0) && {
               ...this.constructor.basicNotifyConfig,
               completeTime,
-              args: [$ships[api_ship_id].api_name],
+              args: i18n.resources.__(api_name),
             }}
           /> : (inRepair ? <Label bsStyle='success'><FontAwesome name='wrench' /> {__("Docking")}</Label> : '')
         }
         </td>
-        <td>{timePerHP ? resolveTime(timePerHP / 1000) : '' }</td>
+        <td>{timePerHP ? resolveTime(timePerHP / 1000) : '' }
+        </td>
         <td>{canRepair && api_nowhp != api_maxhp && !inRepair && repairEstimate(ship, timeElapsed, availableSRF)}</td>
       </tr>
     )

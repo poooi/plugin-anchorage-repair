@@ -1,3 +1,5 @@
+import {FACTOR} from './factor'
+
 export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 const MINOR_PERCENT = 0.5 // minor damage determination
@@ -24,6 +26,21 @@ export const timePerHPCalc = ({api_nowhp, api_maxhp, api_ndock_time}) => {
   return (api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MINOR_PERCENT) ?
     ((api_ndock_time - DOCKING_OFFSET) / (api_maxhp - api_nowhp)) :
     0
+}
+
+// alternative way for timePerHP
+export const getTimePerHP = (api_lv = 1, api_stype = 1) => {
+  let factor
+  if (FACTOR[api_stype] != null ) factor = FACTOR[api_stype].factor || 0
+
+  if (factor == 0) return 0
+
+  if (api_lv < 12) {
+    return api_lv * 10 * factor * 1000
+  }
+  else {
+    return (api_lv * 5 + (Math.floor(Math.sqrt(api_lv - 11)) * 10 + 50))* factor * 1000
+  }
 }
 
 export const repairEstimate = ({api_nowhp, api_maxhp, timePerHP}, timeElapsed = 0, availableSRF = false) => {
