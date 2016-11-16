@@ -16,5 +16,8 @@
   "flagship in dock": "旗艦入渠中",
   "anchorage repair completed": "泊地修理完了",
   "A plugin to help in Akashi's anchorage repair arrangement": "明石の泊地修理の助手ちゃん",
-  "Docking": "入渠中"
+  "Docking": "入渠中",
+  "Total time required": "完全回復に掛かる時間",
+  "Time required for 1 HP recovery": "耐久１ポイント回復に掛かる時間",
+  "Estimated HP recovery since last refresh": "前回のリセット以降の推定回復量"
 }

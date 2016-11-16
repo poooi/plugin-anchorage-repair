@@ -126,9 +126,39 @@ export class FleetList extends Component {
                 <tr>
                   <th>{__('Ship')}</th>
                   <th>{__('HP')}</th>
-                  <th>{__('Akashi Time')}</th>
-                  <th>{__('Per HP')}</th>
-                  <th>{__('Estimated repaired')}</th>
+                  <th>
+                    <OverlayTrigger 
+                    placement="top"
+                    overlay={
+                      <Tooltip id={"akashi-time-desc"}>
+                        {__('Total time required')}
+                      </Tooltip>
+                    }>
+                      <span>{__('Akashi Time')}</span>
+                    </OverlayTrigger >
+                  </th>
+                  <th>
+                    <OverlayTrigger 
+                    placement="top"
+                    overlay={
+                      <Tooltip id={"akashi-time-desc"}>
+                        {__('Time required for 1 HP recovery')}
+                      </Tooltip>
+                    }>
+                      <span>{__('Per HP')}</span>
+                    </OverlayTrigger >
+                  </th>
+                  <th>                    
+                    <OverlayTrigger 
+                      placement="top"
+                      overlay={
+                        <Tooltip id={"akashi-time-desc"}>
+                          {__('Estimated HP recovery since last refresh')}
+                        </Tooltip>
+                      }>
+                        <span>{__('Estimated repaired')}</span>
+                      </OverlayTrigger >
+                  </th>
                 </tr>
               </thead>
               <tbody>
