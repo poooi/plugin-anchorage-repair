@@ -38,9 +38,15 @@ Following corner cases are not taken into consideration, thus the result may not
 - changing Akashi's slot itmes, more precisely, changing the numbers of Ship Repair Facilities,
 - sending fleet to sortie.
 
+### Experimental
+Loading composition presets won't reset the timer, which is sometimes regarded as a bug.
+
 # Changelog
 ## v0.1
 Initial version
+
+## v0.2
+Now the timer is always displayed for those who want to make use of composition preset bug.
 
 # References
 - <http://kancolle.wikia.com/wiki/Akashi#Anchorage_Repair>

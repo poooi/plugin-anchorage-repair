@@ -37,6 +37,8 @@
 - 调整明石的装备，准确地说，调整舰队修理设施的数量
 - 使舰队参加远征
 
+### 试验性支持
+目前编成配置载入不会引发计时器重置
 
 # 参考资料
 - <http://kancolle.wikia.com/wiki/Akashi#Anchorage_Repair>

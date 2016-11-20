@@ -95,8 +95,8 @@ export class FleetList extends Component {
             </OverlayTrigger>
           </Col>
           <Col xs={4} className="info-col">
-          { fleet.canRepair ?
-              <Label bsStyle={this.state.lastRefresh ? 'success' : 'warning'}>
+          { 
+              <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
                 <span>{__('Elapsed:')} </span>
                 <CountupTimer
                   countdownId={`akashi-${fleet.api_id}`}
@@ -104,8 +104,8 @@ export class FleetList extends Component {
                   tickCallback={this.tick}
                   startCallback={this.resetTimeElapsed}
                 />
-              </Label> :
-              ''
+              </Label> 
+              
           }
           </Col>
           <Col xs={4} className="info-col">
