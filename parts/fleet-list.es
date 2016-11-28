@@ -41,7 +41,7 @@ export class FleetList extends Component {
     let fleetId, shipId, infleet
     switch (path) {
     case '/kcsapi/api_port/port':
-      if(timeElapsed >= AKASHI_INTERVAL || lastRefresh == 0)
+      if(timeElapsed >= (AKASHI_INTERVAL/1000) || lastRefresh == 0)
       {
         this.setState({
           lastRefresh: Date.now(),
@@ -54,7 +54,7 @@ export class FleetList extends Component {
       fleetId = parseInt(postBody.api_id)
       if (!Number.isNaN(fleetId) && fleetId == this.props.fleet.api_id ) {
         
-        if(timeElapsed < AKASHI_INTERVAL ){
+        if(timeElapsed < (AKASHI_INTERVAL/1000) ){
           this.setState({
             lastRefresh: Date.now(),
             timeElapsed: 0,
