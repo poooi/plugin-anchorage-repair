@@ -28,7 +28,7 @@ The formula base on HP loss, level and ship type is already proved, while this v
 - Above 20 minutes, the the amount will be the same as ships in docking, rounded down.
 - In the docking time formula, a 30-second bias is always added; the docking is actually finished, however, 1 minute earlier. And anchorage repair time will be **rounded up** to next minute.
 - The repair timer will reset by:
-  - returning to the HQ screen,
+  - returning to the HQ screen after 20 minutes from the time the composition changed, that is, ships' hp changed,
   - changing fleet composition,
   - docking fleet member with Bucket, normal docking won't reset,
   - sending the fleet to expedition.
@@ -47,6 +47,11 @@ Initial version
 
 ## v0.2
 Now the timer is always displayed for those who want to make use of composition preset bug.
+
+## v0.3
+The timer reset rules corrected
++ Returning to HQ within 20 minutes won't reset the timer,
++ Changing fleet composition within 20 minutes will immediately reset the timer. Otherwise a return to HQ is required
 
 # References
 - <http://kancolle.wikia.com/wiki/Akashi#Anchorage_Repair>

@@ -3,6 +3,7 @@ import _ from 'lodash'
 import {Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label, Panel} from 'react-bootstrap'
 
 import { CountupTimer } from './countup-timer'
+import { AKASHI_INTERVAL } from './functions'
 
 import {ShipRow} from './ship-row'
 
@@ -36,18 +37,34 @@ export class FleetList extends Component {
 
   handleResponse = (e) => {
     const {path, postBody} = e.detail
+    const {timeElapsed, lastRefresh} = this.state
     let fleetId, shipId, infleet
     switch (path) {
     case '/kcsapi/api_port/port':
-      this.setState({
-        lastRefresh: Date.now(),
-        timeElapsed: 0,
-      })
+      if(timeElapsed >= AKASHI_INTERVAL || lastRefresh == 0)
+      {
+        this.setState({
+          lastRefresh: Date.now(),
+          timeElapsed: 0,
+        })
+      }
       break
 
     case '/kcsapi/api_req_hensei/change':
       fleetId = parseInt(postBody.api_id)
-      if (!Number.isNaN(fleetId) && fleetId == this.props.fleet.api_id ) this.setState({lastRefresh: 0})
+      if (!Number.isNaN(fleetId) && fleetId == this.props.fleet.api_id ) {
+        
+        if(timeElapsed < AKASHI_INTERVAL ){
+          this.setState({
+            lastRefresh: Date.now(),
+            timeElapsed: 0,
+          })
+        } else {
+          this.setState({ // since it has passed more than 20 minutes, need to refresh the hp
+            lastRefresh: 0,
+          })
+        }
+      }
       break
 
     case '/kcsapi/api_req_nyukyo/start':
