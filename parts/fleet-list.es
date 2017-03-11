@@ -38,9 +38,6 @@ export default class FleetList extends Component {
   handleResponse = (e) => {
     const { path, postBody } = e.detail
     const { timeElapsed, lastRefresh } = this.state
-    let fleetId
-    let shipId
-    let infleet
     switch (path) {
     case '/kcsapi/api_port/port':
       if (timeElapsed >= (AKASHI_INTERVAL / 1000) || lastRefresh === 0) {
@@ -51,14 +48,20 @@ export default class FleetList extends Component {
       }
       break
 
-    case '/kcsapi/api_req_hensei/change':
-      fleetId = parseInt(postBody.api_id)
-      if (!Number.isNaN(fleetId) && fleetId === this.props.fleet.api_id) {
+    case '/kcsapi/api_req_hensei/change': {
+      const fleetId = parseInt(postBody.api_id)
+      const shipId = parseInt(postBody.api_ship_id)
+      // const shipIndex = parseInt(postBody.api_ship_idx)
+      if (!Number.isNaN(fleetId)
+        && fleetId === this.props.fleet.api_id
+        && shipId >= 0) {
         if (timeElapsed < (AKASHI_INTERVAL / 1000)) {
           this.setState({
             lastRefresh: Date.now(),
             timeElapsed: 0,
           })
+        } else if (shipId < 0) {
+          // do nothing
         } else {
           this.setState({ // since it has passed more than 20 minutes, need to refresh the hp
             lastRefresh: 0,
@@ -66,14 +69,15 @@ export default class FleetList extends Component {
         }
       }
       break
-
-    case '/kcsapi/api_req_nyukyo/start':
-      shipId = parseInt(postBody.api_ship_id)
-      infleet = _.filter(this.props.fleet.shipId, id => shipId === id)
+    }
+    case '/kcsapi/api_req_nyukyo/start': {
+      const shipId = parseInt(postBody.api_ship_id)
+      const infleet = _.filter(this.props.fleet.shipId, id => shipId === id)
       if (postBody.api_highspeed === 1 && infleet != null) {
         this.setState({ lastRefresh: Date.now() })
       }
       break
+    }
     }
   }
 
