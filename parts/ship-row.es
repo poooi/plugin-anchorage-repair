@@ -23,7 +23,7 @@ import {
 const { ROOT, i18n } = window
 const __ = i18n['poi-plugin-anchorage-repair'].__.bind(i18n['poi-plugin-anchorage-repair'])
 
-export const ShipRow = connect(
+const ShipRow = connect(
   (state) => {
     const canNotify = state.misc.canNotify
     return {
@@ -50,7 +50,8 @@ export const ShipRow = connect(
 
   render() {
     const { timeElapsed, lastRefresh, canRepair, ship, canNotify } = this.props
-    const { api_nowhp, api_maxhp, availableSRF, estimate, timePerHP, api_id, api_lv, inRepair, api_name } = ship
+    const { api_nowhp, api_maxhp, availableSRF, estimate, timePerHP,
+      api_id, api_lv, inRepair, api_name } = ship
     const completeTime = lastRefresh + estimate
 
     return (
@@ -83,9 +84,16 @@ export const ShipRow = connect(
         <td>{timePerHP ? resolveTime(timePerHP / 1000) : '' }
         </td>
         <td>
-          {canRepair && api_nowhp !== api_maxhp && !inRepair && repairEstimate(ship, timeElapsed, availableSRF)}
+          {
+            canRepair &&
+            api_nowhp !== api_maxhp &&
+            !inRepair &&
+            repairEstimate(ship, timeElapsed, availableSRF)
+          }
         </td>
       </tr>
     )
   }
 })
+
+export default ShipRow

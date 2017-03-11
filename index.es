@@ -19,7 +19,7 @@ import {
   akashiEstimate,
   getTimePerHP,
 } from './parts/functions'
-import { FleetList } from './parts/fleet-list'
+import FleetList from './parts/fleet-list'
 
 const { i18n } = window
 const __ = i18n['poi-plugin-anchorage-repair'].__.bind(i18n['poi-plugin-anchorage-repair'])

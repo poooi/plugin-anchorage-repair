@@ -2,16 +2,16 @@ import React, { Component, PropTypes } from 'react'
 import _ from 'lodash'
 import { Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label, Panel } from 'react-bootstrap'
 
-import { CountupTimer } from './countup-timer'
+import CountupTimer from './countup-timer'
 import { AKASHI_INTERVAL } from './functions'
 
-import { ShipRow } from './ship-row'
+import ShipRow from './ship-row'
 
 const { i18n } = window
 const __ = i18n['poi-plugin-anchorage-repair'].__.bind(i18n['poi-plugin-anchorage-repair'])
 
 
-export class FleetList extends Component {
+export default class FleetList extends Component {
   static propTypes = {
     fleet: PropTypes.object.isRequired,
   }

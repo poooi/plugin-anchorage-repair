@@ -5,7 +5,7 @@ import React, { Component, PropTypes } from 'react'
 import { resolveTime } from 'views/utils/tools'
 
 
-export class CountupTimer extends Component {
+export default class CountupTimer extends Component {
   static propTypes = {
     countdownId: PropTypes.string.isRequired, // UNIQUE ID to register to window.ticker
     startTime: PropTypes.number, // startTime in ms
