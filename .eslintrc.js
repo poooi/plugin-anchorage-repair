@@ -9,6 +9,7 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:import/errors',
     'plugin:import/warnings',
+    'airbnb',
   ],
   "parserOptions": {
     "ecmaFeatures": {
@@ -36,6 +37,23 @@ module.exports = {
     'unicode-bom': 'error',
     'react/prop-types': 'off',
     'import/no-unresolved': [2, { ignore: ['views/.*'] }],
+    "react/jsx-indent": [1, 2],
+    "react/jsx-indent-props": [1, 2],
+    "react/jsx-closing-bracket-location": [1, 'tag-aligned'],
+    'import/extensions': 'off',
+    'import/no-extraneous-dependencies': 'off',
+    'default-case': 'off',
+    'consistent-return': 'off',
+    'no-underscore-dangle': 'off',
+    'camelcase': 'off',
+    'object-shorthand': 'off',
+    'arrow-body-style': 'off',
+    'radix': 'warn',
+    'no-return-assign': 'off',
+    'no-trailing-spaces': ["error", { "skipBlankLines": true }],
+    'react/jsx-filename-extension': 'off',
+    'jsx-a11y/no-static-element-interactions': 'off',
+    'jsx-a11y/img-has-alt': 'off',
   },
   'settings': {
     'import/resolver': {
