@@ -1,16 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { createSelector  } from 'reselect'
+import { createSelector } from 'reselect'
 import _ from 'lodash'
-import {join} from 'path'
-import {Tabs, Tab} from 'react-bootstrap'
-
-
-import {
-  akashiEstimate,
-  getTimePerHP,
-} from './parts/functions'
-import { FleetList } from './parts/fleet-list'
+import { join } from 'path'
+import { Tabs, Tab } from 'react-bootstrap'
 
 // Import selectors defined in poi
 import {
@@ -22,8 +15,14 @@ import {
   createDeepCompareArraySelector,
 } from 'views/utils/selectors'
 
+import {
+  akashiEstimate,
+  getTimePerHP,
+} from './parts/functions'
+import { FleetList } from './parts/fleet-list'
+
 const { i18n } = window
-const __ = i18n["poi-plugin-anchorage-repair"].__.bind(i18n["poi-plugin-anchorage-repair"])
+const __ = i18n['poi-plugin-anchorage-repair'].__.bind(i18n['poi-plugin-anchorage-repair'])
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
 const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
@@ -31,32 +30,30 @@ const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
 // check a fleet status, returns information related to anchorage repair
 const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
-
   const pickKey = ['api_id', 'api_ship_id', 'api_lv', 'api_nowhp', 'api_maxhp', 'api_ndock_time']
 
   let canRepair = false
-  let akashiFlagship =false
+  let akashiFlagship = false
   let repairCount = 0
-  let inExpedition = _.get(fleet,'api_mission.0') && true
-  let flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
-  let flagship = ships[_.get(fleet, 'api_ship.0', -1)]
+  const inExpedition = _.get(fleet, 'api_mission.0') && true
+  const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
+  const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
 
   if (flagship != null) {
     akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
-    repairCount = _.filter(flagship.api_slot, (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID).length
-    repairCount = repairCount + (akashiFlagship ? 2 : 0)
+    repairCount = _.filter(flagship.api_slot, item => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID).length
+    repairCount += akashiFlagship ? 2 : 0
   }
 
   canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
 
-  let repairDetail = []
+  const repairDetail = []
   _.forEach(fleet.api_ship, (shipId, index) => {
+    if (shipId === -1) return false // break, LODASH ONLY
 
-    if (shipId == -1) return false // break, LODASH ONLY
+    const ship = _.pick(ships[shipId], pickKey)
 
-    let ship = _.pick(ships[shipId], pickKey)
-
-    let constShip = _.pick($ships[ship.api_ship_id], ['api_name', 'api_stype'])
+    const constShip = _.pick($ships[ship.api_ship_id], ['api_name', 'api_stype'])
 
     repairDetail.push({
       ...ship,
@@ -84,10 +81,10 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
 
 const repairIdSelector = createSelector(
   [repairsSelector],
-  (repair) => _.map(repair, (dock) => dock.api_ship_id)
+  repair => _.map(repair, dock => dock.api_ship_id)
 )
 
-const constShipsSelector = (state) => state.const.$ships || {}
+const constShipsSelector = state => state.const.$ships || {}
 
 const fleetsAkashiSelector = createSelector(
   [
@@ -97,11 +94,10 @@ const fleetsAkashiSelector = createSelector(
     equipsSelector,
     repairIdSelector,
   ],
-  ($ships, fleets, ships, equips, repairId) => {
-    return {fleets: _.map(fleets, fleet => fleetAkashiConv(fleet, $ships, ships, equips, repairId))}
-  }
-)
+  ($ships, fleets, ships, equips, repairId) =>
+    ({ fleets: _.map(fleets, fleet => fleetAkashiConv(fleet, $ships, ships, equips, repairId)) })
 
+)
 
 
 // React
@@ -110,7 +106,7 @@ export const reactClass = connect(
   createDeepCompareArraySelector([
     fleetsAkashiSelector,
     miscSelector,
-  ], (data, {canNotify}) => ({
+  ], (data, { canNotify }) => ({
     ...data,
     canNotify,
   }))
@@ -125,7 +121,7 @@ export const reactClass = connect(
   }
 
   handleSelectTab = (key) => {
-    this.setState({activeTab: key})
+    this.setState({ activeTab: key })
   }
 
   render() {
@@ -135,7 +131,7 @@ export const reactClass = connect(
         <Tabs activeKey={this.state.activeTab} onSelect={this.handleSelectTab} id="anchorage-tab">
           {
             _.map(this.props.fleets, (fleet, index) => {
-              return(
+              return (
                 <Tab eventKey={fleet.api_id} title={fleet.api_id} key={`anchorage-tab-${index}`}>
                   <FleetList fleet={fleet} />
                 </Tab>
