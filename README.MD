@@ -29,7 +29,7 @@ The formula base on HP loss, level and ship type is already proved, while this v
 - In the docking time formula, a 30-second bias is always added; the docking is actually finished, however, 1 minute earlier. And anchorage repair time will be **rounded up** to next minute.
 - The repair timer will reset by:
   - returning to the HQ screen after 20 minutes from the time the composition changed, that is, ships' hp changed,
-  - changing fleet composition,
+  - changing fleet composition while dragging a ship out of fleet or disbanding the whole fleet won't,
   - docking fleet member with Bucket, normal docking won't reset,
   - sending the fleet to expedition.
 
