@@ -21,7 +21,7 @@ import {
 } from './parts/functions'
 import FleetList from './parts/fleet-list'
 
-const { i18n } = window
+const { i18n, getStore } = window
 const __ = i18n['poi-plugin-anchorage-repair'].__.bind(i18n['poi-plugin-anchorage-repair'])
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
@@ -143,3 +143,13 @@ export const reactClass = connect(
     )
   }
 })
+
+export const switchPluginPath = [
+  {
+    path: '/kcsapi/api_port/port',
+    valid: function() {
+      let flagShipId = getStore('info.fleets').map(shipid => getStore(`info.ships.${shipid.api_ship[0]}.api_ship_id`))
+      return flagShipId.map(id => AKASHI_ID.includes(id)).reduce((a, b) => a || b)
+    },
+  },
+]
