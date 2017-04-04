@@ -148,7 +148,7 @@ export const switchPluginPath = [
   {
     path: '/kcsapi/api_port/port',
     valid: function() {
-      let flagShipId = getStore('info.fleets').map(shipid => getStore(`info.ships.${shipid.api_ship[0]}.api_ship_id`))
+      let flagShipId = getStore('info.fleets').map(fleet => getStore(`info.ships.${_.get(fleet, 'api_ship.0')}.api_ship_id`))
       return flagShipId.map(id => AKASHI_ID.includes(id)).reduce((a, b) => a || b)
     },
   },
