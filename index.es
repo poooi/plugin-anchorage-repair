@@ -45,6 +45,13 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
     repairCount += akashiFlagship ? 2 : 0
   }
 
+  const needRepair = (fleet.api_ship || []).map(shipId =>
+    shipId > 0 &&
+    ships[shipId].api_nowhp !== ships[shipId].api_maxhp &&
+    ships[shipId].api_nowhp > 0.75 * ships[shipId].api_maxhp &&
+    !repairId.includes(shipId)
+  )
+
   canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
 
   const repairDetail = []
@@ -74,6 +81,7 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
     flagShipInRepair,
     repairCount,
     repairDetail,
+    needRepair,
   }
 }
 
@@ -147,9 +155,13 @@ export const reactClass = connect(
 export const switchPluginPath = [
   {
     path: '/kcsapi/api_port/port',
-    valid: function() {
-      let flagShipId = getStore('info.fleets').map(fleet => getStore(`info.ships.${_.get(fleet, 'api_ship.0')}.api_ship_id`))
-      return flagShipId.map(id => AKASHI_ID.includes(id)).reduce((a, b) => a || b)
+    valid: () => {
+      const { fleets = [], ships = {}, equips = {}, repairs = [] } = getStore('info') || {}
+      const $ships = getStore('const.$ships')
+      const repairId = repairs.map(dock => dock.api_ship_id)
+
+      const result = fleets.map(fleet => fleetAkashiConv(fleet, $ships, ships, equips, repairId))
+      return result.some(fleet => fleet.canRepair && fleet.needRepair.some(v => v))
     },
   },
 ]
