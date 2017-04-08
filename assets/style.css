@@ -27,3 +27,6 @@
 #anchorage-repair .panel .hidden {
   display: none;
 }
+#anchorage-repair .nav li.can-repair {
+  flex: 2;
+}
