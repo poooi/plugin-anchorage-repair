@@ -144,7 +144,7 @@ export const reactClass = connect(
                   eventKey={fleet.api_id}
                   title={fleet.api_id}
                   key={`anchorage-tab-${index}`}
-                  tabClassName={fleet.canRepair && 'can-repair'}
+                  tabClassName={fleet.canRepair ? 'can-repair' : ''}
                 >
                   <FleetList fleet={fleet} />
                 </Tab>
