@@ -45,13 +45,6 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
     repairCount += akashiFlagship ? 2 : 0
   }
 
-  const needRepair = (fleet.api_ship || []).map(shipId =>
-    shipId > 0 &&
-    ships[shipId].api_nowhp !== ships[shipId].api_maxhp &&
-    ships[shipId].api_nowhp > 0.75 * ships[shipId].api_maxhp &&
-    !repairId.includes(shipId)
-  )
-
   canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
 
   const repairDetail = []
@@ -81,7 +74,6 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
     flagShipInRepair,
     repairCount,
     repairDetail,
-    needRepair,
   }
 }
 
@@ -166,7 +158,7 @@ export const switchPluginPath = [
       const repairId = repairs.map(dock => dock.api_ship_id)
 
       const result = fleets.map(fleet => fleetAkashiConv(fleet, $ships, ships, equips, repairId))
-      return result.some(fleet => fleet.canRepair && fleet.needRepair.some(v => v))
+      return result.some(fleet => fleet.canRepair && fleet.repairDetail.some(ship => ship.estimate > 0))
     },
   },
 ]
