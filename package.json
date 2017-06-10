@@ -1,10 +1,10 @@
 {
   "name": "poi-plugin-anchorage-repair",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Anchorage repair plugin for poi",
   "main": "index.es",
   "scripts": {
-    "prepack": "poi-util-transpile",
+    "prepack": "poi-util-transpile --replace --sm",
     "postpublish": "git clean -f && git checkout .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
