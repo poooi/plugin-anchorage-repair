@@ -1,6 +1,6 @@
 {
   "name": "poi-plugin-anchorage-repair",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Anchorage repair plugin for poi",
   "main": "index.es",
   "scripts": {
@@ -37,7 +37,8 @@
     "icon": "ti/anchor",
     "priority": 9,
     "apiVer": {
-      "6.99.99": "0.1.0"
+      "6.99.99": "0.1.0",
+      "7.5.99": "0.4.5"
     }
   }
 }
