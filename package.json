@@ -4,7 +4,7 @@
   "description": "Anchorage repair plugin for poi",
   "main": "index.es",
   "scripts": {
-    "prepack": "poi-plugin-transpile",
+    "prepack": "poi-util-transpile",
     "postpublish": "git clean -f && git checkout .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
