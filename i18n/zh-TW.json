@@ -19,5 +19,6 @@
   "Docking": "入渠中",
   "Total time required": "泊地修理總耗時",
   "Time required for 1 HP recovery": "每回復一點耐久所用泊地修理時間",
-  "Estimated HP recovery since last refresh": "從上次刷新之後的預計耐久回復量"
+  "Estimated HP recovery since last refresh": "從上次刷新之後的預計耐久回復量",
+  "Candidates": "適格者"
 }
