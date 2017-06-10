@@ -6,6 +6,7 @@ import { mapValues, findIndex, includes, map } from 'lodash'
 import { AutoSizer, List } from 'react-virtualized'
 import { ButtonGroup, Button } from 'react-bootstrap'
 import FA from 'react-fontawesome'
+import chroma from 'chroma-js'
 
 import { repairsSelector, fleetShipsIdSelectorFactory } from 'views/utils/selectors'
 import { resolveTime } from 'views/utils/tools'
@@ -76,8 +77,20 @@ const candidateShipsSelector = sortIndex => createSelector(
       )(ships)
 )
 
-const getHPBackgroundColor = (nowhp, maxhp) =>
-  (nowhp / maxhp) > 0.75 ? 'rgba(67, 160, 71, 0.6)' : 'rgba(253, 216, 53, 0.6)'
+const getHPBackgroundColor = (nowhp, maxhp) => {
+  const percentage = nowhp / maxhp
+  return percentage > 0.75
+    ? chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', (percentage - 0.75) / 0.25, 'lab').alpha(0.6).css()
+    : chroma.mix('rgb(245, 124, 0)', 'rgb(253, 216, 53)', (percentage - 0.5) / 0.25, 'lab').alpha(0.6).css()
+}
+
+// console.log(
+//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'lch').alpha(0.6).css(),
+//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'rgb').alpha(0.6).css(),
+//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'hsl').alpha(0.6).css(),
+//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'lab').alpha(0.6).css(),
+// )
+  // (nowhp / maxhp) > 0.75 ? 'rgba(67, 160, 71, 0.6)' : 'rgba(253, 216, 53, 0.6)'
 
 const Candidates = connect(
   (state, { sortIndex = 0 }) => ({
