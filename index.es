@@ -47,7 +47,7 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
 
   canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
 
-  const repairDetail = _.map(fleet.api_ship, (shipId, index) => {
+  const repairDetail = _.map(_.filter(fleet.api_ship, shipId => shipId > 0), (shipId, index) => {
     if (shipId === -1) return false // break, LODASH ONLY
 
     const ship = _.pick(ships[shipId], pickKey)
