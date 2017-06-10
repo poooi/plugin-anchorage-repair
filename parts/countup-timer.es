@@ -20,7 +20,7 @@ export default class CountupTimer extends Component {
     }
     return Math.round((currentTime - startTime) / 1000)
   }
-  defaultProps = {
+  static defaultProps = {
     startTime: -1,
     tickCallback: null,
     startCallback: null,

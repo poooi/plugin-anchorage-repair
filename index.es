@@ -158,7 +158,8 @@ export const switchPluginPath = [
       const repairId = repairs.map(dock => dock.api_ship_id)
 
       const result = fleets.map(fleet => fleetAkashiConv(fleet, $ships, ships, equips, repairId))
-      return result.some(fleet => fleet.canRepair && fleet.repairDetail.some(ship => ship.estimate > 0))
+      return result.some(fleet =>
+        fleet.canRepair && fleet.repairDetail.some(ship => ship.estimate > 0))
     },
   },
 ]

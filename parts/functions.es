@@ -41,7 +41,8 @@ export const getTimePerHP = (api_lv = 1, api_stype = 1) => {
   return ((api_lv * 5) + ((Math.floor(Math.sqrt(api_lv - 11)) * 10) + 50)) * factor * 1000
 }
 
-export const repairEstimate = ({ api_nowhp, api_maxhp, timePerHP }, timeElapsed = 0, availableSRF = false) => {
+export const repairEstimate =
+({ api_nowhp, api_maxhp, timePerHP }, timeElapsed = 0, availableSRF = false) => {
   // timeElapsed is in seconds
   if (api_nowhp >= api_maxhp || timePerHP === 0 || !availableSRF) return 0
 
