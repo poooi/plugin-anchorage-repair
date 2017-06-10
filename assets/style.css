@@ -1,5 +1,6 @@
 #anchorage-repair {
   padding: 1em;
+  height: 100%;
 }
 #anchorage-repair .info-row {
   padding: 2em 0;
@@ -29,4 +30,26 @@
 }
 #anchorage-repair .nav li.can-repair {
   flex: 2;
+}
+#anchorage-repair #anchorage-tabs {
+  height: 100%;
+}
+#anchorage-repair .tab-content {
+  height: 100%;
+}
+#anchorage-repair .candidate-pane {
+  height: 100%;
+}
+#anchorage-repair #candidate-list {
+  height: 100%;
+}
+#anchorage-repair #candidate-list ::-webkit-scrollbar {
+  width: 1em;
+}
+#anchorage-repair .candidate-ship-item {
+  display: flex;
+  align-items: center;
+}
+#anchorage-repair .ship-name {
+  font-size: 120%;
 }

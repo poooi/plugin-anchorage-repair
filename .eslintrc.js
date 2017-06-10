@@ -47,6 +47,7 @@ module.exports = {
       'fs-extra',
       'lodash',
       'cson',
+      'react-virtualized',
     ],
   },
 }

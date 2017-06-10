@@ -20,6 +20,7 @@ import {
   getTimePerHP,
 } from './parts/functions'
 import FleetList from './parts/fleet-list'
+import Candidates from './parts/candidates'
 
 const { i18n, getStore } = window
 const __ = i18n['poi-plugin-anchorage-repair'].__.bind(i18n['poi-plugin-anchorage-repair'])
@@ -116,6 +117,7 @@ export const reactClass = connect(
 
     this.state = {
       activeTab: 1,
+      sortIndex: 0,
     }
   }
 
@@ -123,11 +125,17 @@ export const reactClass = connect(
     this.setState({ activeTab: key })
   }
 
+  handleSort = index => () => {
+    this.setState({
+      sortIndex: index,
+    })
+  }
+
   render() {
     return (
       <div id="anchorage-repair">
         <link rel="stylesheet" href={join(__dirname, 'assets', 'style.css')} />
-        <Tabs activeKey={this.state.activeTab} onSelect={this.handleSelectTab} id="anchorage-tab">
+        <Tabs activeKey={this.state.activeTab} onSelect={this.handleSelectTab} id="anchorage-tabs">
           {
             _.map(this.props.fleets, (fleet, index) => (
               <Tab
@@ -140,6 +148,13 @@ export const reactClass = connect(
               </Tab>
             ))
           }
+          <Tab
+            className="candidate-pane"
+            eventKey={-1}
+            title={__('Candidates')}
+          >
+            <Candidates handleSort={this.handleSort} sortIndex={this.state.sortIndex} />
+          </Tab>
         </Tabs>
       </div>
     )
