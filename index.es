@@ -47,22 +47,21 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
 
   canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
 
-  const repairDetail = []
-  _.forEach(fleet.api_ship, (shipId, index) => {
+  const repairDetail = _.map(fleet.api_ship, (shipId, index) => {
     if (shipId === -1) return false // break, LODASH ONLY
 
     const ship = _.pick(ships[shipId], pickKey)
 
     const constShip = _.pick($ships[ship.api_ship_id], ['api_name', 'api_stype'])
 
-    repairDetail.push({
+    return {
       ...ship,
       ...constShip,
       estimate: akashiEstimate(ship),
       timePerHP: getTimePerHP(ship.api_lv, constShip.api_stype),
       inRepair: _.includes(repairId, ship.api_id),
       availableSRF: index < repairCount,
-    })
+    }
   })
 
   return {
@@ -130,18 +129,16 @@ export const reactClass = connect(
         <link rel="stylesheet" href={join(__dirname, 'assets', 'style.css')} />
         <Tabs activeKey={this.state.activeTab} onSelect={this.handleSelectTab} id="anchorage-tab">
           {
-            _.map(this.props.fleets, (fleet, index) => {
-              return (
-                <Tab
-                  eventKey={fleet.api_id}
-                  title={fleet.api_id}
-                  key={`anchorage-tab-${index}`}
-                  tabClassName={fleet.canRepair ? 'can-repair' : ''}
-                >
-                  <FleetList fleet={fleet} />
-                </Tab>
-              )
-            })
+            _.map(this.props.fleets, (fleet, index) => (
+              <Tab
+                eventKey={fleet.api_id}
+                title={fleet.api_id}
+                key={`anchorage-tab-${index}`}
+                tabClassName={fleet.canRepair ? 'can-repair' : ''}
+              >
+                <FleetList fleet={fleet} />
+              </Tab>
+            ))
           }
         </Tabs>
       </div>

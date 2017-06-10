@@ -21,11 +21,10 @@ export const akashiEstimate = ({ api_nowhp, api_maxhp, api_ndock_time }) => {
   return Math.max(minuteCeil(api_ndock_time - DOCKING_OFFSET), AKASHI_INTERVAL)
 }
 
-export const timePerHPCalc = ({ api_nowhp, api_maxhp, api_ndock_time }) => {
-  return (api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MINOR_PERCENT) ?
-    ((api_ndock_time - DOCKING_OFFSET) / (api_maxhp - api_nowhp)) :
-    0
-}
+export const timePerHPCalc = ({ api_nowhp, api_maxhp, api_ndock_time }) =>
+  (api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MINOR_PERCENT)
+  ? ((api_ndock_time - DOCKING_OFFSET) / (api_maxhp - api_nowhp))
+  : 0
 
 // alternative way for timePerHP
 export const getTimePerHP = (api_lv = 1, api_stype = 1) => {
@@ -55,26 +54,30 @@ export const repairEstimate =
 
 export const getHPLabelStyle = (nowhp, maxhp, availableSRF = true, inRepair = false) => {
   const percentage = nowhp / maxhp
-  if (!availableSRF) return 'warning'
-  switch (true) {
-  case (percentage >= 1 || inRepair):
-    return 'success'
-  case (percentage >= MINOR_PERCENT):
-    return 'primary'
-  case (percentage < MINOR_PERCENT):
+  if (!availableSRF) {
     return 'warning'
+  }
+  switch (true) {
+    case (percentage >= 1 || inRepair):
+      return 'success'
+    case (percentage >= MINOR_PERCENT):
+      return 'primary'
+    case (percentage < MINOR_PERCENT):
+      return 'warning'
+    default:
+      return 'warning'
   }
 }
 
 export const getCountdownLabelStyle = (props, timeRemaining) => {
   switch (true) {
-  case (timeRemaining > 600):
-    return 'primary'
-  case (timeRemaining > 60):
-    return 'warning'
-  case (timeRemaining >= 0):
-    return 'success'
-  default:
-    return 'default'
+    case (timeRemaining > 600):
+      return 'primary'
+    case (timeRemaining > 60):
+      return 'warning'
+    case (timeRemaining >= 0):
+      return 'success'
+    default:
+      return 'default'
   }
 }
