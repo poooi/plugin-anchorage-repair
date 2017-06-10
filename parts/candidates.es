@@ -2,12 +2,12 @@ import React, { Component } from 'react'
 import { createSelector } from 'reselect'
 import { connect } from 'react-redux'
 import fp from 'lodash/fp'
-import { mapValues, findIndex, includes } from 'lodash'
+import { mapValues, findIndex, includes, map } from 'lodash'
 import { AutoSizer, List } from 'react-virtualized'
 import { ButtonGroup, Button } from 'react-bootstrap'
 import FA from 'react-fontawesome'
 
-import { fleetShipsIdSelectorFactory } from 'views/utils/selectors'
+import { repairsSelector, fleetShipsIdSelectorFactory } from 'views/utils/selectors'
 import { resolveTime } from 'views/utils/tools'
 
 import { akashiEstimate, timePerHPCalc } from './functions'
@@ -51,14 +51,20 @@ const shipFleetIdMapSelector = createSelector(
     mapValues(ships, ship => findIndex(fleetIds, fleetId => includes(fleetId, ship.api_id)))
 )
 
+const repairIdSelector = createSelector(
+  [repairsSelector],
+  repair => map(repair, dock => dock.api_ship_id)
+)
+
 const candidateShipsSelector = sortIndex => createSelector(
   [
     state => state.info.ships,
     state => state.const.$ships,
     shipFleetIdMapSelector,
-  ], (ships, $ships, shipFleetIdMap) =>
+    repairIdSelector,
+  ], (ships, $ships, shipFleetIdMap, repairIds) =>
       fp.flow(
-        fp.filter(ship => akashiEstimate(ship) > 0),
+        fp.filter(ship => akashiEstimate(ship) > 0 && !includes(repairIds, ship.api_id)),
         fp.map(ship => ({
           ...$ships[ship.api_ship_id],
           ...ship,
