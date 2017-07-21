@@ -161,10 +161,43 @@ export const reactClass = connect(
   }
 })
 
+
+/*
+
+   The following APIs are called in order when a fleet returns from expedition:
+
+   - api_req_mission/result
+   - api_port/port
+
+   As anchorage repair pops up conditionally on the latter one,
+   it also prevents other plugins' auto-switch mechanism on
+   tracking api_req_mission/result calls.
+
+   The problem is solved by applying a lock upon expedition returns
+   and ignoring the immediately followed api_port/port call.
+
+ */
+let expedReturnLock = null
+const clearExpedReturnLock = () => {
+  if (expedReturnLock !== null) {
+    clearTimeout(expedReturnLock)
+    expedReturnLock = null
+  }
+}
+
 export const switchPluginPath = [
   {
     path: '/kcsapi/api_port/port',
     valid: () => {
+      if (expedReturnLock !== null) {
+        /*
+           this is the immediately followed api_port/port call
+           after an expedition returning event.
+         */
+        clearExpedReturnLock()
+        return false
+      }
+
       const { fleets = [], ships = {}, equips = {}, repairs = [] } = getStore('info') || {}
       const $ships = getStore('const.$ships')
       const repairId = repairs.map(dock => dock.api_ship_id)
@@ -172,6 +205,21 @@ export const switchPluginPath = [
       const result = fleets.map(fleet => fleetAkashiConv(fleet, $ships, ships, equips, repairId))
       return result.some(fleet =>
         fleet.canRepair && fleet.repairDetail.some(ship => ship.estimate > 0))
+    },
+  },
+  {
+    path: '/kcsapi/api_req_mission/result',
+    valid: () => {
+      clearExpedReturnLock()
+      expedReturnLock = setTimeout(
+        clearExpedReturnLock,
+        /*
+           allow a window of 5 secnds before the lock
+           clears itself
+         */
+        5000
+      )
+      return false
     },
   },
 ]
