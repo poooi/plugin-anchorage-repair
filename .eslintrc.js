@@ -48,6 +48,7 @@ module.exports = {
       'lodash',
       'cson',
       'react-virtualized',
+      'prop-types',
     ],
   },
 }

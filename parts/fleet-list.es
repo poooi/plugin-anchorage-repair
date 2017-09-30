@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import _ from 'lodash'
 import { Table, Grid, Row, Col, OverlayTrigger, Tooltip, Label, Panel } from 'react-bootstrap'
 

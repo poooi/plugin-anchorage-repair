@@ -1,6 +1,7 @@
 // similar to CountdownTimer in 'views/components/main/parts/countdown-timer.es', but it counts up
 
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 import { resolveTime } from 'views/utils/tools'
 
