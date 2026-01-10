@@ -5,7 +5,6 @@ import PropTypes from 'prop-types'
 
 import { resolveTime } from 'views/utils/tools'
 
-
 export default class CountupTimer extends Component {
   static propTypes = {
     countdownId: PropTypes.string.isRequired, // UNIQUE ID to register to window.ticker
@@ -46,7 +45,8 @@ export default class CountupTimer extends Component {
     }
   }
   shouldComponentUpdate = (nextProps, nextState) =>
-    nextProps.countdownId !== this.props.countdownId || nextState.startTime !== this.state.startTime
+    nextProps.countdownId !== this.props.countdownId ||
+    nextState.startTime !== this.state.startTime
   componentDidUpdate = () => {
     this.startTick() // Doesn't matter if it didn't stop
   }
@@ -64,14 +64,18 @@ export default class CountupTimer extends Component {
     // if (Math.abs(this.timeElapsed - actualElapsed) > 2) {
     //   this.timeElapsed = actualElapsed
     // }
-    this.timeElapsed = this.constructor.getTimeElapsed(this.state.startTime, currentTime)
+    this.timeElapsed = this.constructor.getTimeElapsed(
+      this.state.startTime,
+      currentTime,
+    )
     if (this.timeElapsed < 0) {
       this.stopTick()
     }
     if (this.state.startTime >= 0) {
       try {
         if (this.textLabel) {
-          this.textLabel.textContent = resolveTime(this.timeElapsed) || resolveTime(0)
+          this.textLabel.textContent =
+            resolveTime(this.timeElapsed) || resolveTime(0)
         }
         if (this.props.tickCallback) {
           this.props.tickCallback(this.timeElapsed)
@@ -86,6 +90,14 @@ export default class CountupTimer extends Component {
     this.timeElapsed += 1
   }
   render() {
-    return <span ref={(ref) => { this.textLabel = ref }}>{resolveTime(this.timeElapsed)}</span>
+    return (
+      <span
+        ref={(ref) => {
+          this.textLabel = ref
+        }}
+      >
+        {resolveTime(this.timeElapsed)}
+      </span>
+    )
   }
 }

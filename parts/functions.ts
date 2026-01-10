@@ -22,9 +22,9 @@ export const akashiEstimate = ({ api_nowhp, api_maxhp, api_ndock_time }) => {
 }
 
 export const timePerHPCalc = ({ api_nowhp, api_maxhp, api_ndock_time }) =>
-  (api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MINOR_PERCENT)
-  ? ((api_ndock_time - DOCKING_OFFSET) / (api_maxhp - api_nowhp))
-  : 0
+  api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MINOR_PERCENT
+    ? (api_ndock_time - DOCKING_OFFSET) / (api_maxhp - api_nowhp)
+    : 0
 
 // alternative way for timePerHP
 export const getTimePerHP = (api_lv = 1, api_stype = 1) => {
@@ -37,11 +37,18 @@ export const getTimePerHP = (api_lv = 1, api_stype = 1) => {
     return api_lv * 10 * factor * 1000
   }
 
-  return ((api_lv * 5) + ((Math.floor(Math.sqrt(api_lv - 11)) * 10) + 50)) * factor * 1000
+  return (
+    (api_lv * 5 + (Math.floor(Math.sqrt(api_lv - 11)) * 10 + 50)) *
+    factor *
+    1000
+  )
 }
 
-export const repairEstimate =
-({ api_nowhp, api_maxhp, timePerHP }, timeElapsed = 0, availableSRF = false) => {
+export const repairEstimate = (
+  { api_nowhp, api_maxhp, timePerHP },
+  timeElapsed = 0,
+  availableSRF = false,
+) => {
   // timeElapsed is in seconds
   if (api_nowhp >= api_maxhp || timePerHP === 0 || !availableSRF) return 0
 
@@ -49,20 +56,28 @@ export const repairEstimate =
     return 0
   }
 
-  return Math.min(Math.max(Math.floor((timeElapsed * 1000) / timePerHP), 1), api_maxhp - api_nowhp)
+  return Math.min(
+    Math.max(Math.floor((timeElapsed * 1000) / timePerHP), 1),
+    api_maxhp - api_nowhp,
+  )
 }
 
-export const getHPLabelStyle = (nowhp, maxhp, availableSRF = true, inRepair = false) => {
+export const getHPLabelStyle = (
+  nowhp,
+  maxhp,
+  availableSRF = true,
+  inRepair = false,
+) => {
   const percentage = nowhp / maxhp
   if (!availableSRF) {
     return 'warning'
   }
   switch (true) {
-    case (percentage >= 1 || inRepair):
+    case percentage >= 1 || inRepair:
       return 'success'
-    case (percentage >= MINOR_PERCENT):
+    case percentage >= MINOR_PERCENT:
       return 'primary'
-    case (percentage < MINOR_PERCENT):
+    case percentage < MINOR_PERCENT:
       return 'warning'
     default:
       return 'warning'
@@ -71,11 +86,11 @@ export const getHPLabelStyle = (nowhp, maxhp, availableSRF = true, inRepair = fa
 
 export const getCountdownLabelStyle = (props, timeRemaining) => {
   switch (true) {
-    case (timeRemaining > 600):
+    case timeRemaining > 600:
       return 'primary'
-    case (timeRemaining > 60):
+    case timeRemaining > 60:
       return 'warning'
-    case (timeRemaining >= 0):
+    case timeRemaining >= 0:
       return 'success'
     default:
       return 'default'
