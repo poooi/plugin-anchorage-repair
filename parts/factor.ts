@@ -1,4 +1,7 @@
-const FACTOR = {
+const FACTOR: Record<
+  number,
+  { api_id: number; api_name: string; factor: number }
+> = {
   1: { api_id: 1, api_name: '海防艦', factor: 0.5 },
   2: { api_id: 2, api_name: '駆逐艦', factor: 1 },
   3: { api_id: 3, api_name: '軽巡洋艦', factor: 1 },

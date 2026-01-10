@@ -4,14 +4,22 @@ export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 const MINOR_PERCENT = 0.5 // minor damage determination
 
-const minuteCeil = (time) => {
+const minuteCeil = (time: number) => {
   const minute = 60 * 1000
 
   return Math.ceil(time / minute) * minute
 }
 
 // estimate the time needed in anchorage repair
-export const akashiEstimate = ({ api_nowhp, api_maxhp, api_ndock_time }) => {
+export const akashiEstimate = ({
+  api_nowhp,
+  api_maxhp,
+  api_ndock_time,
+}: {
+  api_nowhp: number
+  api_maxhp: number
+  api_ndock_time: number
+}) => {
   if (api_ndock_time === 0 || api_nowhp >= api_maxhp) return 0
 
   if (api_nowhp <= api_maxhp * MINOR_PERCENT) return 0 // damage check
@@ -21,7 +29,15 @@ export const akashiEstimate = ({ api_nowhp, api_maxhp, api_ndock_time }) => {
   return Math.max(minuteCeil(api_ndock_time - DOCKING_OFFSET), AKASHI_INTERVAL)
 }
 
-export const timePerHPCalc = ({ api_nowhp, api_maxhp, api_ndock_time }) =>
+export const timePerHPCalc = ({
+  api_nowhp,
+  api_maxhp,
+  api_ndock_time,
+}: {
+  api_nowhp: number
+  api_maxhp: number
+  api_ndock_time: number
+}) =>
   api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MINOR_PERCENT
     ? (api_ndock_time - DOCKING_OFFSET) / (api_maxhp - api_nowhp)
     : 0
@@ -45,7 +61,15 @@ export const getTimePerHP = (api_lv = 1, api_stype = 1) => {
 }
 
 export const repairEstimate = (
-  { api_nowhp, api_maxhp, timePerHP },
+  {
+    api_nowhp,
+    api_maxhp,
+    timePerHP,
+  }: {
+    api_nowhp: number
+    api_maxhp: number
+    timePerHP: number
+  },
   timeElapsed = 0,
   availableSRF = false,
 ) => {
@@ -63,10 +87,10 @@ export const repairEstimate = (
 }
 
 export const getHPLabelStyle = (
-  nowhp,
-  maxhp,
-  availableSRF = true,
-  inRepair = false,
+  nowhp: number,
+  maxhp: number,
+  availableSRF: boolean = true,
+  inRepair: boolean = false,
 ) => {
   const percentage = nowhp / maxhp
   if (!availableSRF) {
