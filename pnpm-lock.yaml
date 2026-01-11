@@ -57,9 +57,15 @@ importers:
       jiti:
         specifier: ^2.6.1
         version: 2.6.1
+      kcsapi:
+        specifier: ^1.191214.0
+        version: 1.191214.0
       poi-util-transpile:
         specifier: ^7.6.0
         version: 7.6.1
+      reselect:
+        specifier: ^5.1.1
+        version: 5.1.1
       typescript-eslint:
         specifier: ^8.52.0
         version: 8.52.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
@@ -1206,6 +1212,9 @@ packages:
     resolution: {integrity: sha512-ZZow9HBI5O6EPgSJLUb8n2NKgmVWTwCvHGwFuJlMjvLFqlGG6pjirPhtdsseaLZjSibD8eegzmYpUZwoIlj2cQ==}
     engines: {node: '>=4.0'}
 
+  kcsapi@1.191214.0:
+    resolution: {integrity: sha512-laI7IZ7m/daAfbgTzdEha6KeC6Tsif59Gb8W3/ETpIl74jDLwv8hy3xcB8IseGZNlup0BPJoCzqPZJq2GOz2vQ==}
+
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -1499,6 +1508,9 @@ packages:
 
   require-main-filename@1.0.1:
     resolution: {integrity: sha512-IqSUtOVP4ksd1C/ej5zeEh/BIP2ajqpn8c5x+q99gvcIG/Qf0cud5raVnE/Dwd0ua9TXYDoDc0RE5hBSdz22Ug==}
+
+  reselect@5.1.1:
+    resolution: {integrity: sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==}
 
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -3321,6 +3333,8 @@ snapshots:
       object.assign: 4.1.7
       object.values: 1.2.1
 
+  kcsapi@1.191214.0: {}
+
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -3615,6 +3629,8 @@ snapshots:
   require-directory@2.1.1: {}
 
   require-main-filename@1.0.1: {}
+
+  reselect@5.1.1: {}
 
   resolve-from@4.0.0: {}
 

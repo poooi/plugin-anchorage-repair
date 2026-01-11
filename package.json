@@ -37,7 +37,9 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^17.0.0",
     "jiti": "^2.6.1",
+    "kcsapi": "^1.191214.0",
     "poi-util-transpile": "^7.6.0",
+    "reselect": "^5.1.1",
     "typescript-eslint": "^8.52.0"
   },
   "poiPlugin": {
