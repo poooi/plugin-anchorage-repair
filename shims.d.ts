@@ -1,5 +1,7 @@
+declare const __dirname: string
+
 declare module 'views/utils/selectors' {
-  import { Selector, createSelectorCreator } from 'reselect'
+  import { Selector, createSelector } from 'reselect'
   import { APIShip } from 'kcsapi/api_port/port/response'
   import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
   import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
@@ -13,10 +15,7 @@ declare module 'views/utils/selectors' {
   >
   export const repairsSelector: Selector<any, APIGetMemberNdockResponse[]>
   export const miscSelector: Selector<any, { canNotify: boolean }>
-  export const createDeepCompareArraySelector: typeof createSelectorCreator<
-    any,
-    any[]
-  >
+  export const createDeepCompareArraySelector: typeof createSelector
   export const fleetShipsIdSelectorFactory: (
     fleetId: number,
   ) => Selector<any, number[]>

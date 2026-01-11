@@ -1,9 +1,17 @@
-import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import { createSelector } from 'reselect'
+import React, { useState } from 'react'
+import { useSelector } from 'react-redux'
+import { createSelector, Selector } from 'reselect'
 import _ from 'lodash'
 import { join } from 'path'
 import { Tabs, Tab } from 'react-bootstrap'
+import { APIMstShip } from 'kcsapi/api_start2/getData/response'
+import { useTranslation } from 'react-i18next'
+
+declare global {
+  interface Window {
+    getStore: (key: string) => any
+  }
+}
 
 // Import selectors defined in poi
 import {
@@ -11,25 +19,52 @@ import {
   shipsSelector,
   equipsSelector,
   repairsSelector,
-  miscSelector,
   createDeepCompareArraySelector,
 } from 'views/utils/selectors'
 
 import { akashiEstimate, getTimePerHP } from './parts/functions'
 import FleetList from './parts/fleet-list'
 import Candidates from './parts/candidates'
-
-const { i18n, getStore } = window
-const __ = i18n['poi-plugin-anchorage-repair'].__.bind(
-  i18n['poi-plugin-anchorage-repair'],
-)
+import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
+import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
+import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
 const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
+type FleetAkashiConvReturn = {
+  api_id: number
+  shipId: number[]
+  canRepair: boolean
+  akashiFlagship: boolean
+  inExpedition: boolean
+  flagShipInRepair: boolean
+  repairCount: number
+  repairDetail: Array<{
+    api_id: number
+    api_ship_id: number
+    api_lv: number
+    api_nowhp: number
+    api_maxhp: number
+    api_ndock_time: number
+    api_name: string
+    api_stype: number
+    estimate: number
+    timePerHP: number
+    inRepair: boolean
+    availableSRF: boolean
+  }>
+}
+
 // check a fleet status, returns information related to anchorage repair
-const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
-  const pickKey = [
+const fleetAkashiConv = (
+  fleet: APIDeckPort,
+  $ships: Record<number, APIMstShip>,
+  ships: Record<number, APIShip>,
+  equips: Record<number, APIGetMemberSlotItemResponse>,
+  repairId: number[],
+): FleetAkashiConvReturn => {
+  const pickKey: (keyof APIShip)[] = [
     'api_id',
     'api_ship_id',
     'api_lv',
@@ -41,7 +76,7 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
   let canRepair = false
   let akashiFlagship = false
   let repairCount = 0
-  const inExpedition = _.get(fleet, 'api_mission.0') && true
+  const inExpedition = Boolean(_.get(fleet, 'api_mission.0')) && true
   const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
   const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
 
@@ -59,8 +94,6 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
   const repairDetail = _.map(
     _.filter(fleet.api_ship, (shipId) => shipId > 0),
     (shipId, index) => {
-      if (shipId === -1) return false // break, LODASH ONLY
-
       const ship = _.pick(ships[shipId], pickKey)
 
       const constShip = _.pick($ships[ship.api_ship_id], [
@@ -93,11 +126,20 @@ const fleetAkashiConv = (fleet, $ships, ships, equips, repairId) => {
 
 // selectors
 
-const repairIdSelector = createSelector([repairsSelector], (repair) =>
-  _.map(repair, (dock) => dock.api_ship_id),
+interface RootState {
+  const: {
+    $ships: Record<number, APIMstShip>
+  }
+}
+
+const repairIdSelector: Selector<RootState, number[]> = createSelector(
+  [repairsSelector],
+  (repair) => _.map(repair, (dock) => dock.api_ship_id),
 )
 
-const constShipsSelector = (state) => state.const.$ships || {}
+const constShipsSelector: Selector<RootState, Record<number, APIMstShip>> = (
+  state,
+) => state.const.$ships || {}
 
 const fleetsAkashiSelector = createSelector(
   [
@@ -114,75 +156,53 @@ const fleetsAkashiSelector = createSelector(
   }),
 )
 
-// React
-
-export const reactClass = connect(
-  createDeepCompareArraySelector(
-    [fleetsAkashiSelector, miscSelector],
-    (data, { canNotify }) => ({
-      ...data,
-      canNotify,
-    }),
-  ),
-)(
-  class PluginAnchorageRepair extends Component {
-    constructor(props) {
-      super(props)
-
-      this.state = {
-        activeTab: 1,
-        sortIndex: 0,
-      }
-    }
-
-    handleSelectTab = (key) => {
-      this.setState({ activeTab: key })
-    }
-
-    handleSort = (index) => () => {
-      this.setState({
-        sortIndex: index,
-      })
-    }
-
-    render() {
-      return (
-        <div id="anchorage-repair">
-          <link
-            rel="stylesheet"
-            href={join(__dirname, 'assets', 'style.css')}
-          />
-          <Tabs
-            activeKey={this.state.activeTab}
-            onSelect={this.handleSelectTab}
-            id="anchorage-tabs"
-          >
-            {_.map(this.props.fleets, (fleet, index) => (
-              <Tab
-                eventKey={fleet.api_id}
-                title={fleet.api_id}
-                key={`anchorage-tab-${index}`}
-                tabClassName={fleet.canRepair ? 'can-repair' : ''}
-              >
-                <FleetList fleet={fleet} />
-              </Tab>
-            ))}
-            <Tab
-              className="candidate-pane"
-              eventKey={-1}
-              title={__('Candidates')}
-            >
-              <Candidates
-                handleSort={this.handleSort}
-                sortIndex={this.state.sortIndex}
-              />
-            </Tab>
-          </Tabs>
-        </div>
-      )
-    }
-  },
+const fleetSelector = createDeepCompareArraySelector(
+  [fleetsAkashiSelector],
+  (data) => data,
 )
+
+const PluginAnchorageRepair: React.FC = () => {
+  const { fleets } = useSelector(fleetSelector)
+  const [activeTab, setActiveTab] = useState(1)
+  const [sortIndex, setSortIndex] = useState(0)
+
+  const { t } = useTranslation()
+
+  const handleSelectTab = (key: number) => {
+    setActiveTab(key)
+  }
+
+  const handleSort = (index: number) => () => {
+    setSortIndex(index)
+  }
+
+  return (
+    <div id="anchorage-repair">
+      <link rel="stylesheet" href={join(__dirname, 'assets', 'style.css')} />
+      <Tabs
+        activeKey={activeTab}
+        onSelect={handleSelectTab}
+        id="anchorage-tabs"
+      >
+        {_.map(fleets, (fleet, index) => (
+          <Tab
+            eventKey={fleet.api_id}
+            title={fleet.api_id}
+            key={`anchorage-tab-${index}`}
+            tabClassName={fleet.canRepair ? 'can-repair' : ''}
+          >
+            <FleetList fleet={fleet} />
+          </Tab>
+        ))}
+        <Tab className="candidate-pane" eventKey={-1} title={t('Candidates')}>
+          <Candidates handleSort={handleSort} sortIndex={sortIndex} />
+        </Tab>
+      </Tabs>
+    </div>
+  )
+}
+
+export const reactClass = PluginAnchorageRepair
 
 /*
 
@@ -199,7 +219,7 @@ export const reactClass = connect(
    and ignoring the immediately followed api_port/port call.
 
  */
-let expedReturnLock = null
+let expedReturnLock: number | null = null
 const clearExpedReturnLock = () => {
   if (expedReturnLock !== null) {
     clearTimeout(expedReturnLock)
@@ -225,8 +245,13 @@ export const switchPluginPath = [
         ships = {},
         equips = {},
         repairs = [],
-      } = getStore('info') || {}
-      const $ships = getStore('const.$ships')
+      }: {
+        fleets: APIDeckPort[]
+        ships: Record<number, APIShip>
+        equips: Record<number, APIGetMemberSlotItemResponse>
+        repairs: APIGetMemberNdockResponse[]
+      } = window.getStore('info') || {}
+      const $ships: Record<number, APIMstShip> = window.getStore('const.$ships')
       const repairId = repairs.map((dock) => dock.api_ship_id)
 
       const result = fleets.map((fleet) =>

@@ -39,6 +39,8 @@
     "jiti": "^2.6.1",
     "kcsapi": "^1.191214.0",
     "poi-util-transpile": "^7.6.0",
+    "react-i18next": "^16.5.2",
+    "react-redux": "^9.2.0",
     "reselect": "^5.1.1",
     "typescript-eslint": "^8.52.0"
   },
