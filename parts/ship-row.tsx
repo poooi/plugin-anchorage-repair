@@ -1,8 +1,6 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-// import { createSelector  } from 'reselect'
-import _ from 'lodash'
+import React from 'react'
+import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 import { join } from 'path'
 import { Label } from 'react-bootstrap'
 import FontAwesome from 'react-fontawesome'
@@ -15,113 +13,125 @@ import {
   getHPLabelStyle,
   getCountdownLabelStyle,
 } from './functions'
+import { RootState } from '../poi-types'
 
-// const constShipsSelector = createSelector(
-//   constSelector,
-//   (_const) => _.keyBy(_const.$ships, 'api_id')
-// )
-
-const { ROOT, i18n } = window
-const __ = i18n['poi-plugin-anchorage-repair'].__.bind(
-  i18n['poi-plugin-anchorage-repair'],
-)
-
-const ShipRow = connect((state) => {
-  const canNotify = state.misc.canNotify
-  return {
-    canNotify,
+declare global {
+  interface Window {
+    ROOT: string
+    i18n: {
+      resources: {
+        __: (key: string) => string
+      }
+    }
   }
-})(
-  class ShipRowClass extends Component {
-    static basicNotifyConfig = {
-      type: 'repair',
-      title: __('Anchorage repair'),
-      message: (names) =>
-        `${_.join(names, ', ')} ${__('anchorage repair completed')}`,
-      icon: join(ROOT, 'assets', 'img', 'operation', 'repair.png'),
-      preemptTime: 0,
-      groupKey: 'plugin-anchorage-repair',
-    }
+}
 
-    static propTypes = {
-      canNotify: PropTypes.bool.isRequired,
-      timeElapsed: PropTypes.number.isRequired,
-      lastRefresh: PropTypes.number.isRequired,
-      ship: PropTypes.object.isRequired,
-      canRepair: PropTypes.bool.isRequired,
-    }
+interface ShipData {
+  api_id: number
+  api_name: string
+  api_lv: number
+  api_nowhp: number
+  api_maxhp: number
+  availableSRF: boolean
+  estimate: number
+  timePerHP: number
+  inRepair: boolean
+}
 
-    render() {
-      const { timeElapsed, lastRefresh, canRepair, ship, canNotify } =
-        this.props
-      const {
-        api_nowhp,
-        api_maxhp,
-        availableSRF,
-        estimate,
-        timePerHP,
-        api_id,
-        api_lv,
-        inRepair,
-        api_name,
-      } = ship
-      const completeTime = lastRefresh + estimate
+interface ShipRowProps {
+  timeElapsed: number
+  lastRefresh: number
+  ship: ShipData
+  canRepair: boolean
+}
 
-      return (
-        <tr>
-          <td>
-            {i18n.resources.__(api_name)}
-            <span className="lv-label">Lv.{api_lv}</span>
-          </td>
-          <td>
-            <Label
-              bsStyle={getHPLabelStyle(
-                api_nowhp,
-                api_maxhp,
-                availableSRF,
-                inRepair,
-              )}
-            >
-              {`${api_nowhp} / ${api_maxhp}`}
+const ShipRow: React.FC<ShipRowProps> = ({
+  timeElapsed,
+  lastRefresh,
+  canRepair,
+  ship,
+}) => {
+  const canNotify = useSelector((state: RootState) => state.misc.canNotify)
+  const { t } = useTranslation()
+
+  const {
+    api_nowhp,
+    api_maxhp,
+    availableSRF,
+    estimate,
+    timePerHP,
+    api_id,
+    api_lv,
+    inRepair,
+    api_name,
+  } = ship
+
+  const completeTime = lastRefresh + estimate
+
+  const basicNotifyConfig = {
+    type: 'repair',
+    title: t('Anchorage repair'),
+    message: t('anchorage repair completed'),
+    icon: join(window.ROOT, 'assets', 'img', 'operation', 'repair.png'),
+    preemptTime: 0,
+    groupKey: 'plugin-anchorage-repair',
+  }
+
+  return (
+    <tr>
+      <td>
+        {window.i18n.resources.__(api_name)}
+        <span className="lv-label">Lv.{api_lv}</span>
+      </td>
+      <td>
+        <Label
+          bsStyle={getHPLabelStyle(
+            api_nowhp,
+            api_maxhp,
+            availableSRF,
+            inRepair,
+          )}
+        >
+          {`${api_nowhp} / ${api_maxhp}`}
+        </Label>
+      </td>
+      <td>
+        {estimate > 0 &&
+          canRepair &&
+          availableSRF &&
+          (!inRepair ? (
+            <CountdownNotifierLabel
+              timerKey={`anchorage-ship-${api_id}`}
+              completeTime={completeTime}
+              getLabelStyle={getCountdownLabelStyle}
+              getNotifyOptions={() => {
+                if (!canNotify || lastRefresh <= 0) {
+                  return undefined as any
+                }
+                return {
+                  ...basicNotifyConfig,
+                  completeTime,
+                  args: window.i18n.resources.__(api_name),
+                }
+              }}
+            />
+          ) : inRepair ? (
+            <Label bsStyle="success">
+              <FontAwesome name="wrench" /> {t('Docking')}
             </Label>
-          </td>
-          <td>
-            {estimate > 0 &&
-              canRepair &&
-              availableSRF &&
-              (!inRepair ? (
-                <CountdownNotifierLabel
-                  timerKey={`anchorage-ship-${api_id}`}
-                  completeTime={completeTime}
-                  getLabelStyle={getCountdownLabelStyle}
-                  getNotifyOptions={() =>
-                    canNotify &&
-                    lastRefresh > 0 && {
-                      ...this.constructor.basicNotifyConfig,
-                      completeTime,
-                      args: i18n.resources.__(api_name),
-                    }
-                  }
-                />
-              ) : inRepair ? (
-                <Label bsStyle="success">
-                  <FontAwesome name="wrench" /> {__('Docking')}
-                </Label>
-              ) : (
-                ''
-              ))}
-          </td>
-          <td>{timePerHP ? resolveTime(timePerHP / 1000) : ''}</td>
-          <td>
-            {canRepair &&
-              api_nowhp !== api_maxhp &&
-              !inRepair &&
-              repairEstimate(ship, timeElapsed, availableSRF)}
-          </td>
-        </tr>
-      )
-    }
-  },
-)
+          ) : (
+            ''
+          ))}
+      </td>
+      <td>{timePerHP ? resolveTime(timePerHP / 1000) : ''}</td>
+      <td>
+        {canRepair &&
+          api_nowhp !== api_maxhp &&
+          !inRepair &&
+          repairEstimate(ship, timeElapsed, availableSRF)}
+      </td>
+    </tr>
+  )
+}
 
 export default ShipRow

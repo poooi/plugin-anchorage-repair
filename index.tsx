@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 
 declare global {
   interface Window {
-    getStore: (key: string) => any
+    getStore: <T = unknown>(key: string) => T
   }
 }
 
@@ -28,6 +28,7 @@ import Candidates from './parts/candidates'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
 import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
+import { RootState } from './poi-types'
 
 const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
 const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
@@ -125,12 +126,6 @@ const fleetAkashiConv = (
 }
 
 // selectors
-
-interface RootState {
-  const: {
-    $ships: Record<number, APIMstShip>
-  }
-}
 
 const repairIdSelector: Selector<RootState, number[]> = createSelector(
   [repairsSelector],

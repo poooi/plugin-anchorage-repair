@@ -1,9 +1,10 @@
-import React, { Component } from 'react'
+import React, { useCallback } from 'react'
 import { createSelector } from 'reselect'
-import { connect } from 'react-redux'
+import { useSelector } from 'react-redux'
+import { useTranslation } from 'react-i18next'
 import fp from 'lodash/fp'
 import { mapValues, findIndex, includes, map } from 'lodash'
-import { AutoSizer, List } from 'react-virtualized'
+import { AutoSizer, List, ListRowProps } from 'react-virtualized'
 import { ButtonGroup, Button } from 'react-bootstrap'
 import FA from 'react-fontawesome'
 import chroma from 'chroma-js'
@@ -15,18 +16,34 @@ import {
 import { resolveTime } from 'views/utils/tools'
 
 import { akashiEstimate, timePerHPCalc } from './functions'
+import { APIShip } from 'kcsapi/api_port/port/response'
+import { APIMstShip } from 'kcsapi/api_start2/getData/response'
+import { RootState } from '../poi-types'
 
-const { i18n } = window
-const __ = i18n['poi-plugin-anchorage-repair'].__.bind(
-  i18n['poi-plugin-anchorage-repair'],
-)
+declare global {
+  interface Window {
+    i18n: {
+      resources: {
+        __: (key: string) => string
+      }
+    }
+  }
+}
 
 const sortable = ['HP', 'Akashi Time', 'Per HP']
 
-const getSortValue = (sortIndex) => (ship) => {
+interface EnhancedShip extends APIShip {
+  akashi: number
+  perHP: number
+  fleetId: number
+  api_name: string
+  api_stype: number
+}
+
+const getSortValue = (sortIndex: number) => (ship: EnhancedShip) => {
   const direction = sortIndex % 2 ? -1 : 1
 
-  switch (parseInt(sortIndex / 2, 10)) {
+  switch (Math.floor(sortIndex / 2)) {
     case 0:
       return (ship.api_nowhp / ship.api_maxhp) * direction
     case 1:
@@ -48,7 +65,7 @@ const allFleetShipIdSelector = createSelector(
 )
 
 const shipFleetIdMapSelector = createSelector(
-  [(state) => state.info.ships, allFleetShipIdSelector],
+  [(state: RootState) => state.info.ships, allFleetShipIdSelector],
   (ships, fleetIds) =>
     mapValues(ships, (ship) =>
       findIndex(fleetIds, (fleetId) => includes(fleetId, ship.api_id)),
@@ -59,32 +76,39 @@ const repairIdSelector = createSelector([repairsSelector], (repair) =>
   map(repair, (dock) => dock.api_ship_id),
 )
 
-const candidateShipsSelector = (sortIndex) =>
+const candidateShipsSelector = (sortIndex: number) =>
   createSelector(
     [
-      (state) => state.info.ships,
-      (state) => state.const.$ships,
+      (state: RootState) => state.info.ships,
+      (state: RootState) => state.const.$ships,
       shipFleetIdMapSelector,
       repairIdSelector,
     ],
-    (ships, $ships, shipFleetIdMap, repairIds) =>
+    (
+      ships: Record<number, APIShip>,
+      $ships: Record<number, APIMstShip>,
+      shipFleetIdMap: Record<number, number>,
+      repairIds: number[],
+    ): EnhancedShip[] =>
       fp.flow(
         fp.filter(
-          (ship) =>
+          (ship: APIShip) =>
             akashiEstimate(ship) > 0 && !includes(repairIds, ship.api_id),
         ),
-        fp.map((ship) => ({
-          ...$ships[ship.api_ship_id],
-          ...ship,
-          akashi: akashiEstimate(ship),
-          perHP: timePerHPCalc(ship),
-          fleetId: shipFleetIdMap[ship.api_id],
-        })),
-        fp.sortBy((ship) => getSortValue(sortIndex)(ship)),
+        fp.map(
+          (ship: APIShip): EnhancedShip => ({
+            ...$ships[ship.api_ship_id],
+            ...ship,
+            akashi: akashiEstimate(ship),
+            perHP: timePerHPCalc(ship),
+            fleetId: shipFleetIdMap[ship.api_id],
+          }),
+        ),
+        fp.sortBy((ship: EnhancedShip) => getSortValue(sortIndex)(ship)),
       )(ships),
   )
 
-const getHPBackgroundColor = (nowhp, maxhp) => {
+const getHPBackgroundColor = (nowhp: number, maxhp: number): string => {
   const percentage = nowhp / maxhp
   return percentage > 0.75
     ? chroma
@@ -107,20 +131,19 @@ const getHPBackgroundColor = (nowhp, maxhp) => {
         .css()
 }
 
-// console.log(
-//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'lch').alpha(0.6).css(),
-//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'rgb').alpha(0.6).css(),
-//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'hsl').alpha(0.6).css(),
-//   chroma.mix('rgb(253, 216, 53)', 'rgb(67, 160, 71)', 0.5, 'lab').alpha(0.6).css(),
-// )
-// (nowhp / maxhp) > 0.75 ? 'rgba(67, 160, 71, 0.6)' : 'rgba(253, 216, 53, 0.6)'
+interface CandidatesProps {
+  handleSort: (index: number) => () => void
+  sortIndex: number
+}
 
-const Candidates = connect((state, { sortIndex = 0 }) => ({
-  ships: candidateShipsSelector(sortIndex)(state),
-}))(
-  class Candidates extends Component {
-    rowRenderer = ({ key, index, style }) => {
-      const { ships } = this.props
+const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
+  const ships = useSelector((state: RootState) =>
+    candidateShipsSelector(sortIndex)(state),
+  )
+  const { t } = useTranslation()
+
+  const rowRenderer = useCallback(
+    ({ key, index, style }: ListRowProps) => {
       const ship = ships[index]
       const color = getHPBackgroundColor(ship.api_nowhp, ship.api_maxhp)
       const percentage = Math.round((100 * ship.api_nowhp) / ship.api_maxhp)
@@ -146,42 +169,40 @@ const Candidates = connect((state, { sortIndex = 0 }) => ({
           )} / ${resolveTime(ship.perHP / 1000)}`}</span>
         </div>
       )
-    }
+    },
+    [ships],
+  )
 
-    render() {
-      const { ships, sortIndex } = this.props
-      return (
-        <div id="candidate-list">
-          <div style={{ marginBottom: '1ex' }}>
-            <ButtonGroup bsSize="small">
-              {[...new Array(6).keys()].map((index) => (
-                <Button
-                  key={index}
-                  onClick={this.props.handleSort(index)}
-                  bsStyle={index === sortIndex ? 'success' : 'default'}
-                >
-                  {__(sortable[parseInt(index / 2, 10)])}
-                  <FA name={index % 2 === 0 ? 'arrow-up' : 'arrow-down'} />
-                </Button>
-              ))}
-            </ButtonGroup>
-          </div>
-          <AutoSizer>
-            {({ height, width }) => (
-              <List
-                sortIndex={sortIndex}
-                height={height}
-                width={width}
-                rowHeight={40}
-                rowCount={ships.length}
-                rowRenderer={this.rowRenderer}
-              />
-            )}
-          </AutoSizer>
-        </div>
-      )
-    }
-  },
-)
+  return (
+    <div id="candidate-list">
+      <div style={{ marginBottom: '1ex' }}>
+        <ButtonGroup bsSize="small">
+          {[...new Array(6).keys()].map((index) => (
+            <Button
+              key={index}
+              onClick={handleSort(index)}
+              bsStyle={index === sortIndex ? 'success' : 'default'}
+            >
+              {t(sortable[Math.floor(index / 2)])}
+              <FA name={index % 2 === 0 ? 'arrow-up' : 'arrow-down'} />
+            </Button>
+          ))}
+        </ButtonGroup>
+      </div>
+      <AutoSizer>
+        {({ height, width }) => (
+          <List
+            sortIndex={sortIndex}
+            height={height}
+            width={width}
+            rowHeight={40}
+            rowCount={ships.length}
+            rowRenderer={rowRenderer}
+          />
+        )}
+      </AutoSizer>
+    </div>
+  )
+}
 
 export default Candidates

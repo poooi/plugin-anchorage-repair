@@ -7,16 +7,46 @@ declare module 'views/utils/selectors' {
   import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
   import { APIDeckPort } from 'kcsapi/api_port/port/response'
 
-  export const fleetsSelector: Selector<any, APIDeckPort[]>
-  export const shipsSelector: Selector<any, Record<number, APIShip>>
+  type RootState = import('./poi-types').RootState
+
+  export const fleetsSelector: Selector<RootState, APIDeckPort[]>
+  export const shipsSelector: Selector<RootState, Record<number, APIShip>>
   export const equipsSelector: Selector<
-    any,
+    RootState,
     Record<number, APIGetMemberSlotItemResponse>
   >
-  export const repairsSelector: Selector<any, APIGetMemberNdockResponse[]>
-  export const miscSelector: Selector<any, { canNotify: boolean }>
+  export const repairsSelector: Selector<RootState, APIGetMemberNdockResponse[]>
+  export const miscSelector: Selector<RootState, { canNotify: boolean }>
   export const createDeepCompareArraySelector: typeof createSelector
   export const fleetShipsIdSelectorFactory: (
     fleetId: number,
-  ) => Selector<any, number[]>
+  ) => Selector<RootState, number[]>
+}
+
+declare module 'views/components/main/parts/countdown-timer' {
+  import { ComponentType } from 'react'
+  export const CountdownTimerInner: ComponentType<{
+    countdownId: string
+    startTime?: number
+    tickCallback?: (timeElapsed: number) => void
+    startCallback?: () => void
+  }>
+
+  export const CountdownNotifierLabel: ComponentType<{
+    timerKey: string
+    completeTime: number
+    getLabelStyle: (_: any, timeRemaining: number) => string
+    getNotifyOptions: () => {
+      type: string
+      title: string
+      message: string
+      icon: string
+      preemptTime: number
+      groupKey: string
+    }
+  }>
+}
+
+declare module 'views/utils/tools' {
+  export const resolveTime: (timeElapsed: number) => string
 }
