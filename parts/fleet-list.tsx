@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 import _ from 'lodash'
 import {
   Table,
@@ -55,6 +56,27 @@ interface GameResponseEvent extends CustomEvent {
     }
   }
 }
+
+const InfoRow = styled(Row)`
+  padding: 2em 0;
+`
+
+const InfoCol = styled(Col)`
+  align-content: center;
+  text-align: center;
+`
+
+const HiddenPanel = styled(Panel)<{ $hidden: boolean }>`
+  display: ${(props) => (props.$hidden ? 'none' : 'block')};
+`
+
+const StyledTable = styled(Table)`
+  td,
+  th {
+    text-align: center;
+    vertical-align: middle;
+  }
+`
 
 const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
   const [lastRefresh, setLastRefresh] = useState(0)
@@ -128,8 +150,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
 
   return (
     <Grid>
-      <Row className="info-row">
-        <Col xs={4} className="info-col">
+      <InfoRow>
+        <InfoCol xs={4}>
           <OverlayTrigger
             placement="bottom"
             trigger={fleet.canRepair ? 'click' : ['hover', 'focus']}
@@ -146,8 +168,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
               {fleet.canRepair ? t('Repairing') : t('Not ready')}
             </Label>
           </OverlayTrigger>
-        </Col>
-        <Col xs={4} className="info-col">
+        </InfoCol>
+        <InfoCol xs={4}>
           <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
             <span>{t('Elapsed:')} </span>
             <CountupTimer
@@ -157,26 +179,23 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
               startCallback={resetTimeElapsed}
             />
           </Label>
-        </Col>
-        <Col xs={4} className="info-col">
+        </InfoCol>
+        <InfoCol xs={4}>
           <Label bsStyle={fleet.repairCount ? 'success' : 'warning'}>
             {t('Capacity: {{count}}', { count: fleet.repairCount })}
           </Label>
-        </Col>
-      </Row>
+        </InfoCol>
+      </InfoRow>
       <Row>
         <Col xs={12}>
-          <Panel
-            bsStyle="warning"
-            className={lastRefresh === 0 ? '' : 'hidden'}
-          >
+          <HiddenPanel bsStyle="warning" $hidden={lastRefresh !== 0}>
             {t('refresh_notice')}
-          </Panel>
+          </HiddenPanel>
         </Col>
       </Row>
       <Row>
         <Col xs={12}>
-          <Table bordered condensed>
+          <StyledTable bordered condensed>
             <thead>
               <tr>
                 <th>{t('Ship')}</th>
@@ -230,7 +249,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
                 />
               ))}
             </tbody>
-          </Table>
+          </StyledTable>
         </Col>
       </Row>
     </Grid>

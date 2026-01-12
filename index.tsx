@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { createSelector, Selector } from 'reselect'
+import styled from 'styled-components'
 import _ from 'lodash'
-import { join } from 'path'
 import { Tabs, Tab } from 'react-bootstrap'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { useTranslation } from 'react-i18next'
@@ -154,6 +154,27 @@ const fleetsAkashiSelector = createSelector(
 const fleetSelector: Selector<RootState, { fleets: FleetAkashiConvReturn[] }> =
   createDeepCompareArraySelector([fleetsAkashiSelector], (data) => data)
 
+const AnchorageRepairContainer = styled.div`
+  padding: 1em;
+  height: 100%;
+
+  #anchorage-tabs {
+    height: 100%;
+  }
+
+  .tab-content {
+    height: 100%;
+  }
+
+  .nav li.can-repair {
+    flex: 2;
+  }
+`
+
+const CandidatePaneTab = styled(Tab)`
+  height: 100%;
+`
+
 const PluginAnchorageRepair: React.FC = () => {
   const { fleets } = useSelector(fleetSelector)
   const [activeTab, setActiveTab] = useState(1)
@@ -170,8 +191,7 @@ const PluginAnchorageRepair: React.FC = () => {
   }
 
   return (
-    <div id="anchorage-repair">
-      <link rel="stylesheet" href={join(__dirname, 'assets', 'style.css')} />
+    <AnchorageRepairContainer id="anchorage-repair">
       <Tabs
         activeKey={activeTab}
         onSelect={handleSelectTab}
@@ -187,11 +207,11 @@ const PluginAnchorageRepair: React.FC = () => {
             <FleetList fleet={fleet} />
           </Tab>
         ))}
-        <Tab className="candidate-pane" eventKey={-1} title={t('Candidates')}>
+        <CandidatePaneTab eventKey={-1} title={t('Candidates')}>
           <Candidates handleSort={handleSort} sortIndex={sortIndex} />
-        </Tab>
+        </CandidatePaneTab>
       </Tabs>
-    </div>
+    </AnchorageRepairContainer>
   )
 }
 

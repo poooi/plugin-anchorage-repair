@@ -1,6 +1,7 @@
 import React from 'react'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 import { join } from 'path'
 import { Label } from 'react-bootstrap'
 import FontAwesome from 'react-fontawesome'
@@ -45,6 +46,11 @@ interface ShipRowProps {
   canRepair: boolean
 }
 
+const LvLabel = styled.span`
+  display: block;
+  font-size: 70%;
+`
+
 const ShipRow: React.FC<ShipRowProps> = ({
   timeElapsed,
   lastRefresh,
@@ -80,8 +86,8 @@ const ShipRow: React.FC<ShipRowProps> = ({
   return (
     <tr>
       <td>
-        {window.i18n.resources.__(api_name)}
-        <span className="lv-label">Lv.{api_lv}</span>
+        {t(api_name, { ns: 'resources' })}
+        <LvLabel>Lv.{api_lv}</LvLabel>
       </td>
       <td>
         <Label

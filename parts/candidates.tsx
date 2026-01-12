@@ -2,6 +2,7 @@ import React, { useCallback } from 'react'
 import { createSelector } from 'reselect'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 import fp from 'lodash/fp'
 import { mapValues, findIndex, includes, map } from 'lodash'
 import { AutoSizer, List, ListRowProps } from 'react-virtualized'
@@ -121,6 +122,43 @@ const getHPBackgroundColor = (nowhp: number, maxhp: number): string => {
         .css()
 }
 
+const CandidateListContainer = styled.div`
+  height: 100%;
+
+  ::-webkit-scrollbar {
+    width: 1em;
+  }
+`
+
+const CandidateShipItem = styled.div<{
+  $background: string
+  $percentage: number
+}>`
+  display: flex;
+  align-items: center;
+  background: linear-gradient(
+    90deg,
+    ${(props) => props.$background} ${(props) => props.$percentage}%,
+    rgba(0, 0, 0, 0) 50%
+  );
+`
+
+const ShipName = styled.span`
+  font-size: 120%;
+`
+
+const ButtonGroupContainer = styled.div`
+  margin-bottom: 1ex;
+`
+
+const HPSpan = styled.span`
+  margin-left: 1em;
+`
+
+const TimeSpan = styled.span`
+  margin-left: 2em;
+`
+
 interface CandidatesProps {
   handleSort: (index: number) => () => void
   sortIndex: number
@@ -138,34 +176,30 @@ const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
       const color = getHPBackgroundColor(ship.api_nowhp, ship.api_maxhp)
       const percentage = Math.round((100 * ship.api_nowhp) / ship.api_maxhp)
       return (
-        <div
-          className="candidate-ship-item"
-          style={{
-            ...style,
-            background: `linear-gradient(90deg, ${color} ${percentage}%, rgba(0, 0, 0, 0) 50%)`,
-          }}
+        <CandidateShipItem
           key={key}
+          style={style}
+          $background={color}
+          $percentage={percentage}
         >
-          <span className="ship-name">
+          <ShipName>
             {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
               ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
             }`}
-          </span>
-          <span
-            style={{ marginLeft: '1em' }}
-          >{`(${ship.api_nowhp} / ${ship.api_maxhp})`}</span>
-          <span style={{ marginLeft: '2em' }}>{`${resolveTime(
-            ship.akashi / 1000,
-          )} / ${resolveTime(ship.perHP / 1000)}`}</span>
-        </div>
+          </ShipName>
+          <HPSpan>{`(${ship.api_nowhp} / ${ship.api_maxhp})`}</HPSpan>
+          <TimeSpan>{`${resolveTime(ship.akashi / 1000)} / ${resolveTime(
+            ship.perHP / 1000,
+          )}`}</TimeSpan>
+        </CandidateShipItem>
       )
     },
-    [ships],
+    [ships, t],
   )
 
   return (
-    <div id="candidate-list">
-      <div style={{ marginBottom: '1ex' }}>
+    <CandidateListContainer id="candidate-list">
+      <ButtonGroupContainer>
         <ButtonGroup bsSize="small">
           {[...new Array(6).keys()].map((index) => (
             <Button
@@ -178,7 +212,7 @@ const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
             </Button>
           ))}
         </ButtonGroup>
-      </div>
+      </ButtonGroupContainer>
       <AutoSizer>
         {({ height, width }) => (
           <List
@@ -191,7 +225,7 @@ const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
           />
         )}
       </AutoSizer>
-    </div>
+    </CandidateListContainer>
   )
 }
 
