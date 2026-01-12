@@ -151,17 +151,15 @@ const fleetsAkashiSelector = createSelector(
   }),
 )
 
-const fleetSelector = createDeepCompareArraySelector(
-  [fleetsAkashiSelector],
-  (data) => data,
-)
+const fleetSelector: Selector<RootState, { fleets: FleetAkashiConvReturn[] }> =
+  createDeepCompareArraySelector([fleetsAkashiSelector], (data) => data)
 
 const PluginAnchorageRepair: React.FC = () => {
   const { fleets } = useSelector(fleetSelector)
   const [activeTab, setActiveTab] = useState(1)
   const [sortIndex, setSortIndex] = useState(0)
 
-  const { t } = useTranslation()
+  const { t } = useTranslation('poi-plugin-anchorage-repair')
 
   const handleSelectTab = (key: number) => {
     setActiveTab(key)

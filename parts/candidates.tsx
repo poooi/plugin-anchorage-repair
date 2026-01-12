@@ -20,16 +20,6 @@ import { APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { RootState } from '../poi-types'
 
-declare global {
-  interface Window {
-    i18n: {
-      resources: {
-        __: (key: string) => string
-      }
-    }
-  }
-}
-
 const sortable = ['HP', 'Akashi Time', 'Per HP']
 
 interface EnhancedShip extends APIShip {
@@ -140,7 +130,7 @@ const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
   const ships = useSelector((state: RootState) =>
     candidateShipsSelector(sortIndex)(state),
   )
-  const { t } = useTranslation()
+  const { t } = useTranslation('poi-plugin-anchorage-repair')
 
   const rowRenderer = useCallback(
     ({ key, index, style }: ListRowProps) => {
@@ -157,7 +147,7 @@ const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
           key={key}
         >
           <span className="ship-name">
-            {`Lv.${ship.api_lv} ${window.i18n.resources.__(ship.api_name)}${
+            {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
               ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
             }`}
           </span>

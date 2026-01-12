@@ -1,5 +1,5 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
+import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import _ from 'lodash'
 import {
   Table,
@@ -17,208 +17,224 @@ import { AKASHI_INTERVAL } from './functions'
 
 import ShipRow from './ship-row'
 
-const { i18n } = window
-const __ = i18n['poi-plugin-anchorage-repair'].__.bind(
-  i18n['poi-plugin-anchorage-repair'],
-)
+interface FleetAkashiInfo {
+  api_id: number
+  shipId: number[]
+  canRepair: boolean
+  akashiFlagship: boolean
+  inExpedition: boolean
+  flagShipInRepair: boolean
+  repairCount: number
+  repairDetail: Array<{
+    api_id: number
+    api_ship_id: number
+    api_lv: number
+    api_nowhp: number
+    api_maxhp: number
+    api_ndock_time: number
+    api_name: string
+    api_stype: number
+    estimate: number
+    timePerHP: number
+    inRepair: boolean
+    availableSRF: boolean
+  }>
+}
 
-export default class FleetList extends Component {
-  static propTypes = {
-    fleet: PropTypes.object.isRequired,
-  }
+interface FleetListProps {
+  fleet: FleetAkashiInfo
+}
 
-  constructor(props) {
-    super(props)
-
-    this.state = {
-      lastRefresh: 0,
-      timeElapsed: 0,
+interface GameResponseEvent extends CustomEvent {
+  detail: {
+    path: string
+    postBody: {
+      api_id?: string
+      api_ship_id?: string
+      api_highspeed?: number
     }
-  }
-
-  componentDidMount = () => {
-    window.addEventListener('game.response', this.handleResponse)
-  }
-
-  componentWillUnmount = () => {
-    window.removeEventListener('game.response', this.handleResponse)
-  }
-
-  handleResponse = (e) => {
-    const { path, postBody } = e.detail
-    const { timeElapsed, lastRefresh } = this.state
-    switch (path) {
-      case '/kcsapi/api_port/port':
-        if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
-          this.setState({
-            lastRefresh: Date.now(),
-            timeElapsed: 0,
-          })
-        }
-        break
-
-      case '/kcsapi/api_req_hensei/change': {
-        const fleetId = parseInt(postBody.api_id, 10)
-        const shipId = parseInt(postBody.api_ship_id, 10)
-        // const shipIndex = parseInt(postBody.api_ship_idx)
-        if (
-          !Number.isNaN(fleetId) &&
-          fleetId === this.props.fleet.api_id &&
-          shipId >= 0
-        ) {
-          if (timeElapsed < AKASHI_INTERVAL / 1000) {
-            this.setState({
-              lastRefresh: Date.now(),
-              timeElapsed: 0,
-            })
-          } else if (shipId < 0) {
-            // do nothing
-          } else {
-            this.setState({
-              // since it has passed more than 20 minutes, need to refresh the hp
-              lastRefresh: 0,
-            })
-          }
-        }
-        break
-      }
-      case '/kcsapi/api_req_nyukyo/start': {
-        const shipId = parseInt(postBody.api_ship_id, 10)
-        const infleet = _.filter(this.props.fleet.shipId, (id) => shipId === id)
-        if (postBody.api_highspeed === 1 && infleet != null) {
-          this.setState({ lastRefresh: Date.now() })
-        }
-        break
-      }
-      default:
-    }
-  }
-
-  tick = (timeElapsed) => {
-    if (timeElapsed % 5 === 0) {
-      // limit component refresh rate
-      this.setState({ timeElapsed })
-    }
-  }
-
-  resetTimeElapsed = () => {
-    this.setState({ timeElapsed: 0 })
-  }
-
-  render() {
-    const { timeElapsed, lastRefresh } = this.state
-    const { fleet } = this.props
-
-    return (
-      <Grid>
-        <Row className="info-row">
-          <Col xs={4} className="info-col">
-            <OverlayTrigger
-              placement="bottom"
-              trigger={fleet.canRepair ? 'click' : ['hover', 'focus']}
-              overlay={
-                <Tooltip id={`anchorage-refresh-notify-${fleet.api_id}`}>
-                  <p>{fleet.canRepair ? __('Akashi loves you!') : ''}</p>
-                  <p>{fleet.akashiFlagship ? '' : __('Akashi not flagship')}</p>
-                  <p>{fleet.inExpedition ? __('fleet in expedition') : ''}</p>
-                  <p>{fleet.flagShipInRepair ? __('flagship in dock') : ''}</p>
-                </Tooltip>
-              }
-            >
-              <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
-                {fleet.canRepair ? __('Repairing') : __('Not ready')}
-              </Label>
-            </OverlayTrigger>
-          </Col>
-          <Col xs={4} className="info-col">
-            {
-              <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
-                <span>{__('Elapsed:')} </span>
-                <CountupTimer
-                  countdownId={`akashi-${fleet.api_id}`}
-                  startTime={this.state.lastRefresh}
-                  tickCallback={this.tick}
-                  startCallback={this.resetTimeElapsed}
-                />
-              </Label>
-            }
-          </Col>
-          <Col xs={4} className="info-col">
-            <Label bsStyle={fleet.repairCount ? 'success' : 'warning'}>
-              {__('Capacity: %s', fleet.repairCount)}
-            </Label>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs={12}>
-            <Panel
-              bsStyle="warning"
-              className={lastRefresh === 0 ? '' : 'hidden'}
-            >
-              {__('Please return to HQ screen to make timer refreshed.')}
-            </Panel>
-          </Col>
-        </Row>
-        <Row>
-          <Col xs={12}>
-            <Table bordered condensed>
-              <thead>
-                <tr>
-                  <th>{__('Ship')}</th>
-                  <th>{__('HP')}</th>
-                  <th>
-                    <OverlayTrigger
-                      placement="top"
-                      overlay={
-                        <Tooltip id={'akashi-time-desc'}>
-                          {__('Total time required')}
-                        </Tooltip>
-                      }
-                    >
-                      <span>{__('Akashi Time')}</span>
-                    </OverlayTrigger>
-                  </th>
-                  <th>
-                    <OverlayTrigger
-                      placement="top"
-                      overlay={
-                        <Tooltip id={'akashi-time-desc'}>
-                          {__('Time required for 1 HP recovery')}
-                        </Tooltip>
-                      }
-                    >
-                      <span>{__('Per HP')}</span>
-                    </OverlayTrigger>
-                  </th>
-                  <th>
-                    <OverlayTrigger
-                      placement="top"
-                      overlay={
-                        <Tooltip id={'akashi-time-desc'}>
-                          {__('Estimated HP recovery since last refresh')}
-                        </Tooltip>
-                      }
-                    >
-                      <span>{__('Estimated repaired')}</span>
-                    </OverlayTrigger>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {_.map(fleet.repairDetail, (ship) => (
-                  <ShipRow
-                    key={`anchorage-ship-${ship.api_id}`}
-                    ship={ship}
-                    lastRefresh={lastRefresh}
-                    timeElapsed={timeElapsed}
-                    canRepair={fleet.canRepair}
-                  />
-                ))}
-              </tbody>
-            </Table>
-          </Col>
-        </Row>
-      </Grid>
-    )
   }
 }
+
+const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
+  const [lastRefresh, setLastRefresh] = useState(0)
+  const [timeElapsed, setTimeElapsed] = useState(0)
+  const { t } = useTranslation('poi-plugin-anchorage-repair')
+
+  const handleResponse = useCallback(
+    (e: Event) => {
+      const event = e as GameResponseEvent
+      const { path, postBody } = event.detail
+
+      switch (path) {
+        case '/kcsapi/api_port/port':
+          if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
+            setLastRefresh(Date.now())
+            setTimeElapsed(0)
+          }
+          break
+
+        case '/kcsapi/api_req_hensei/change': {
+          const fleetId = parseInt(postBody.api_id || '', 10)
+          const shipId = parseInt(postBody.api_ship_id || '', 10)
+          if (
+            !Number.isNaN(fleetId) &&
+            fleetId === fleet.api_id &&
+            shipId >= 0
+          ) {
+            if (timeElapsed < AKASHI_INTERVAL / 1000) {
+              setLastRefresh(Date.now())
+              setTimeElapsed(0)
+            } else if (shipId < 0) {
+              // do nothing
+            } else {
+              // since it has passed more than 20 minutes, need to refresh the hp
+              setLastRefresh(0)
+            }
+          }
+          break
+        }
+        case '/kcsapi/api_req_nyukyo/start': {
+          const shipId = parseInt(postBody.api_ship_id || '', 10)
+          const infleet = _.filter(fleet.shipId, (id) => shipId === id)
+          if (postBody.api_highspeed === 1 && infleet.length > 0) {
+            setLastRefresh(Date.now())
+          }
+          break
+        }
+        default:
+      }
+    },
+    [fleet.api_id, fleet.shipId, timeElapsed, lastRefresh],
+  )
+
+  useEffect(() => {
+    window.addEventListener('game.response', handleResponse)
+    return () => {
+      window.removeEventListener('game.response', handleResponse)
+    }
+  }, [handleResponse])
+
+  const tick = useCallback((elapsed: number) => {
+    if (elapsed % 5 === 0) {
+      // limit component refresh rate
+      setTimeElapsed(elapsed)
+    }
+  }, [])
+
+  const resetTimeElapsed = useCallback(() => {
+    setTimeElapsed(0)
+  }, [])
+
+  return (
+    <Grid>
+      <Row className="info-row">
+        <Col xs={4} className="info-col">
+          <OverlayTrigger
+            placement="bottom"
+            trigger={fleet.canRepair ? 'click' : ['hover', 'focus']}
+            overlay={
+              <Tooltip id={`anchorage-refresh-notify-${fleet.api_id}`}>
+                <p>{fleet.canRepair ? t('Akashi loves you!') : ''}</p>
+                <p>{fleet.akashiFlagship ? '' : t('Akashi not flagship')}</p>
+                <p>{fleet.inExpedition ? t('fleet in expedition') : ''}</p>
+                <p>{fleet.flagShipInRepair ? t('flagship in dock') : ''}</p>
+              </Tooltip>
+            }
+          >
+            <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
+              {fleet.canRepair ? t('Repairing') : t('Not ready')}
+            </Label>
+          </OverlayTrigger>
+        </Col>
+        <Col xs={4} className="info-col">
+          <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
+            <span>{t('Elapsed:')} </span>
+            <CountupTimer
+              countdownId={`akashi-${fleet.api_id}`}
+              startTime={lastRefresh}
+              tickCallback={tick}
+              startCallback={resetTimeElapsed}
+            />
+          </Label>
+        </Col>
+        <Col xs={4} className="info-col">
+          <Label bsStyle={fleet.repairCount ? 'success' : 'warning'}>
+            {t('Capacity: {{count}}', { count: fleet.repairCount })}
+          </Label>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={12}>
+          <Panel
+            bsStyle="warning"
+            className={lastRefresh === 0 ? '' : 'hidden'}
+          >
+            {t('refresh_notice')}
+          </Panel>
+        </Col>
+      </Row>
+      <Row>
+        <Col xs={12}>
+          <Table bordered condensed>
+            <thead>
+              <tr>
+                <th>{t('Ship')}</th>
+                <th>{t('HP')}</th>
+                <th>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={
+                      <Tooltip id={'akashi-time-desc'}>
+                        {t('Total time required')}
+                      </Tooltip>
+                    }
+                  >
+                    <span>{t('Akashi Time')}</span>
+                  </OverlayTrigger>
+                </th>
+                <th>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={
+                      <Tooltip id={'akashi-time-desc'}>
+                        {t('Time required for 1 HP recovery')}
+                      </Tooltip>
+                    }
+                  >
+                    <span>{t('Per HP')}</span>
+                  </OverlayTrigger>
+                </th>
+                <th>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={
+                      <Tooltip id={'akashi-time-desc'}>
+                        {t('Estimated HP recovery since last refresh')}
+                      </Tooltip>
+                    }
+                  >
+                    <span>{t('Estimated repaired')}</span>
+                  </OverlayTrigger>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {_.map(fleet.repairDetail, (ship) => (
+                <ShipRow
+                  key={`anchorage-ship-${ship.api_id}`}
+                  ship={ship}
+                  lastRefresh={lastRefresh}
+                  timeElapsed={timeElapsed}
+                  canRepair={fleet.canRepair}
+                />
+              ))}
+            </tbody>
+          </Table>
+        </Col>
+      </Row>
+    </Grid>
+  )
+}
+
+export default FleetList

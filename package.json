@@ -42,6 +42,7 @@
     "react-i18next": "^16.5.2",
     "react-redux": "^9.2.0",
     "reselect": "^5.1.1",
+    "styled-components": "^6.3.5",
     "typescript-eslint": "^8.52.0"
   },
   "poiPlugin": {
