@@ -1,17 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
+import { HTMLTable, Tag, Tooltip, Callout } from '@blueprintjs/core'
 import _ from 'lodash'
-import {
-  Table,
-  Grid,
-  Row,
-  Col,
-  OverlayTrigger,
-  Tooltip,
-  Label,
-  Panel,
-} from 'react-bootstrap'
 
 import CountupTimer from './countup-timer'
 import { AKASHI_INTERVAL } from './functions'
@@ -57,25 +48,45 @@ interface GameResponseEvent extends CustomEvent {
   }
 }
 
-const InfoRow = styled(Row)`
-  padding: 2em 0;
+const GridContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
 `
 
-const InfoCol = styled(Col)`
+const InfoRow = styled.div`
+  display: flex;
+  padding: 2em 0;
+  gap: 1em;
+`
+
+const InfoCol = styled.div<{ $xs?: number }>`
+  flex: ${(props) => (props.$xs === 4 ? '1' : '0 0 auto')};
   align-content: center;
   text-align: center;
 `
 
-const HiddenPanel = styled(Panel)<{ $hidden: boolean }>`
+const HiddenCallout = styled(Callout)<{ $hidden: boolean }>`
   display: ${(props) => (props.$hidden ? 'none' : 'block')};
 `
 
-const StyledTable = styled(Table)`
+const StyledTable = styled(HTMLTable)`
+  width: 100%;
+
   td,
   th {
     text-align: center;
     vertical-align: middle;
   }
+`
+
+const RowContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`
+
+const ColContainer = styled.div<{ $xs?: number }>`
+  width: 100%;
 `
 
 const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
@@ -148,29 +159,30 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
     setTimeElapsed(0)
   }, [])
 
+  const tooltipContent = (
+    <div>
+      <p>{fleet.canRepair ? t('Akashi loves you!') : ''}</p>
+      <p>{fleet.akashiFlagship ? '' : t('Akashi not flagship')}</p>
+      <p>{fleet.inExpedition ? t('fleet in expedition') : ''}</p>
+      <p>{fleet.flagShipInRepair ? t('flagship in dock') : ''}</p>
+    </div>
+  )
+
   return (
-    <Grid>
+    <GridContainer>
       <InfoRow>
-        <InfoCol xs={4}>
-          <OverlayTrigger
-            placement="bottom"
-            trigger={fleet.canRepair ? 'click' : ['hover', 'focus']}
-            overlay={
-              <Tooltip id={`anchorage-refresh-notify-${fleet.api_id}`}>
-                <p>{fleet.canRepair ? t('Akashi loves you!') : ''}</p>
-                <p>{fleet.akashiFlagship ? '' : t('Akashi not flagship')}</p>
-                <p>{fleet.inExpedition ? t('fleet in expedition') : ''}</p>
-                <p>{fleet.flagShipInRepair ? t('flagship in dock') : ''}</p>
-              </Tooltip>
-            }
-          >
-            <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
+        <InfoCol $xs={4}>
+          <Tooltip content={tooltipContent} placement="bottom">
+            <Tag
+              intent={fleet.canRepair ? 'success' : 'warning'}
+              interactive={fleet.canRepair}
+            >
               {fleet.canRepair ? t('Repairing') : t('Not ready')}
-            </Label>
-          </OverlayTrigger>
+            </Tag>
+          </Tooltip>
         </InfoCol>
-        <InfoCol xs={4}>
-          <Label bsStyle={fleet.canRepair ? 'success' : 'warning'}>
+        <InfoCol $xs={4}>
+          <Tag intent={fleet.canRepair ? 'success' : 'warning'}>
             <span>{t('Elapsed:')} </span>
             <CountupTimer
               countdownId={`akashi-${fleet.api_id}`}
@@ -178,63 +190,48 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
               tickCallback={tick}
               startCallback={resetTimeElapsed}
             />
-          </Label>
+          </Tag>
         </InfoCol>
-        <InfoCol xs={4}>
-          <Label bsStyle={fleet.repairCount ? 'success' : 'warning'}>
+        <InfoCol $xs={4}>
+          <Tag intent={fleet.repairCount ? 'success' : 'warning'}>
             {t('Capacity: {{count}}', { count: fleet.repairCount })}
-          </Label>
+          </Tag>
         </InfoCol>
       </InfoRow>
-      <Row>
-        <Col xs={12}>
-          <HiddenPanel bsStyle="warning" $hidden={lastRefresh !== 0}>
+      <RowContainer>
+        <ColContainer $xs={12}>
+          <HiddenCallout intent="warning" $hidden={lastRefresh !== 0}>
             {t('refresh_notice')}
-          </HiddenPanel>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={12}>
-          <StyledTable bordered condensed>
+          </HiddenCallout>
+        </ColContainer>
+      </RowContainer>
+      <RowContainer>
+        <ColContainer $xs={12}>
+          <StyledTable striped bordered>
             <thead>
               <tr>
                 <th>{t('Ship')}</th>
                 <th>{t('HP')}</th>
                 <th>
-                  <OverlayTrigger
-                    placement="top"
-                    overlay={
-                      <Tooltip id={'akashi-time-desc'}>
-                        {t('Total time required')}
-                      </Tooltip>
-                    }
-                  >
+                  <Tooltip content={t('Total time required')} placement="top">
                     <span>{t('Akashi Time')}</span>
-                  </OverlayTrigger>
+                  </Tooltip>
                 </th>
                 <th>
-                  <OverlayTrigger
+                  <Tooltip
+                    content={t('Time required for 1 HP recovery')}
                     placement="top"
-                    overlay={
-                      <Tooltip id={'akashi-time-desc'}>
-                        {t('Time required for 1 HP recovery')}
-                      </Tooltip>
-                    }
                   >
                     <span>{t('Per HP')}</span>
-                  </OverlayTrigger>
+                  </Tooltip>
                 </th>
                 <th>
-                  <OverlayTrigger
+                  <Tooltip
+                    content={t('Estimated HP recovery since last refresh')}
                     placement="top"
-                    overlay={
-                      <Tooltip id={'akashi-time-desc'}>
-                        {t('Estimated HP recovery since last refresh')}
-                      </Tooltip>
-                    }
                   >
                     <span>{t('Estimated repaired')}</span>
-                  </OverlayTrigger>
+                  </Tooltip>
                 </th>
               </tr>
             </thead>
@@ -250,9 +247,9 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
               ))}
             </tbody>
           </StyledTable>
-        </Col>
-      </Row>
-    </Grid>
+        </ColContainer>
+      </RowContainer>
+    </GridContainer>
   )
 }
 

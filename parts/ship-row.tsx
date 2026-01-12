@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { join } from 'path'
-import { Label } from 'react-bootstrap'
+import { Tag } from '@blueprintjs/core'
 import FontAwesome from 'react-fontawesome'
 
 import { resolveTime } from 'views/utils/tools'
@@ -19,11 +19,6 @@ import { RootState } from '../poi-types'
 declare global {
   interface Window {
     ROOT: string
-    i18n: {
-      resources: {
-        __: (key: string) => string
-      }
-    }
   }
 }
 
@@ -90,16 +85,17 @@ const ShipRow: React.FC<ShipRowProps> = ({
         <LvLabel>Lv.{api_lv}</LvLabel>
       </td>
       <td>
-        <Label
-          bsStyle={getHPLabelStyle(
-            api_nowhp,
-            api_maxhp,
-            availableSRF,
-            inRepair,
-          )}
+        <Tag
+          intent={
+            getHPLabelStyle(api_nowhp, api_maxhp, availableSRF, inRepair) as
+              | 'success'
+              | 'warning'
+              | 'danger'
+              | 'none'
+          }
         >
           {`${api_nowhp} / ${api_maxhp}`}
-        </Label>
+        </Tag>
       </td>
       <td>
         {estimate > 0 &&
@@ -117,14 +113,14 @@ const ShipRow: React.FC<ShipRowProps> = ({
                 return {
                   ...basicNotifyConfig,
                   completeTime,
-                  args: window.i18n.resources.__(api_name),
+                  args: t(api_name, { ns: 'resources' }),
                 }
               }}
             />
           ) : inRepair ? (
-            <Label bsStyle="success">
+            <Tag intent="success">
               <FontAwesome name="wrench" /> {t('Docking')}
-            </Label>
+            </Tag>
           ) : (
             ''
           ))}

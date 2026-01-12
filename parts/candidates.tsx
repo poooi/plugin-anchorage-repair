@@ -1,12 +1,11 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { createSelector } from 'reselect'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
+import { ButtonGroup, Button } from '@blueprintjs/core'
 import fp from 'lodash/fp'
 import { mapValues, findIndex, includes, map } from 'lodash'
-import { AutoSizer, List, ListRowProps } from 'react-virtualized'
-import { ButtonGroup, Button } from 'react-bootstrap'
 import FA from 'react-fontawesome'
 import chroma from 'chroma-js'
 
@@ -124,6 +123,13 @@ const getHPBackgroundColor = (nowhp: number, maxhp: number): string => {
 
 const CandidateListContainer = styled.div`
   height: 100%;
+  display: flex;
+  flex-direction: column;
+`
+
+const ScrollContainer = styled.div`
+  flex: 1;
+  overflow: auto;
 
   ::-webkit-scrollbar {
     width: 1em;
@@ -136,6 +142,7 @@ const CandidateShipItem = styled.div<{
 }>`
   display: flex;
   align-items: center;
+  padding: 0.5em;
   background: linear-gradient(
     90deg,
     ${(props) => props.$background} ${(props) => props.$percentage}%,
@@ -170,42 +177,16 @@ const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
   )
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
-  const rowRenderer = useCallback(
-    ({ key, index, style }: ListRowProps) => {
-      const ship = ships[index]
-      const color = getHPBackgroundColor(ship.api_nowhp, ship.api_maxhp)
-      const percentage = Math.round((100 * ship.api_nowhp) / ship.api_maxhp)
-      return (
-        <CandidateShipItem
-          key={key}
-          style={style}
-          $background={color}
-          $percentage={percentage}
-        >
-          <ShipName>
-            {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
-              ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
-            }`}
-          </ShipName>
-          <HPSpan>{`(${ship.api_nowhp} / ${ship.api_maxhp})`}</HPSpan>
-          <TimeSpan>{`${resolveTime(ship.akashi / 1000)} / ${resolveTime(
-            ship.perHP / 1000,
-          )}`}</TimeSpan>
-        </CandidateShipItem>
-      )
-    },
-    [ships, t],
-  )
-
   return (
     <CandidateListContainer id="candidate-list">
       <ButtonGroupContainer>
-        <ButtonGroup bsSize="small">
+        <ButtonGroup>
           {[...new Array(6).keys()].map((index) => (
             <Button
               key={index}
               onClick={handleSort(index)}
-              bsStyle={index === sortIndex ? 'success' : 'default'}
+              intent={index === sortIndex ? 'success' : 'none'}
+              small
             >
               {t(sortable[Math.floor(index / 2)])}
               <FA name={index % 2 === 0 ? 'arrow-up' : 'arrow-down'} />
@@ -213,18 +194,29 @@ const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
           ))}
         </ButtonGroup>
       </ButtonGroupContainer>
-      <AutoSizer>
-        {({ height, width }) => (
-          <List
-            sortIndex={sortIndex}
-            height={height}
-            width={width}
-            rowHeight={40}
-            rowCount={ships.length}
-            rowRenderer={rowRenderer}
-          />
-        )}
-      </AutoSizer>
+      <ScrollContainer>
+        {ships.map((ship) => {
+          const color = getHPBackgroundColor(ship.api_nowhp, ship.api_maxhp)
+          const percentage = Math.round((100 * ship.api_nowhp) / ship.api_maxhp)
+          return (
+            <CandidateShipItem
+              key={ship.api_id}
+              $background={color}
+              $percentage={percentage}
+            >
+              <ShipName>
+                {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
+                  ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
+                }`}
+              </ShipName>
+              <HPSpan>{`(${ship.api_nowhp} / ${ship.api_maxhp})`}</HPSpan>
+              <TimeSpan>{`${resolveTime(ship.akashi / 1000)} / ${resolveTime(
+                ship.perHP / 1000,
+              )}`}</TimeSpan>
+            </CandidateShipItem>
+          )
+        })}
+      </ScrollContainer>
     </CandidateListContainer>
   )
 }

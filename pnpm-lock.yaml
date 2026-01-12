@@ -12,9 +12,18 @@ importers:
         specifier: ^1.3.4
         version: 1.3.4
     devDependencies:
+      '@blueprintjs/core':
+        specifier: ^6.5.0
+        version: 6.5.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@eslint/js':
         specifier: ^9.39.2
         version: 9.39.2
+      '@tanstack/react-table':
+        specifier: ^8.21.3
+        version: 8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@tanstack/react-virtual':
+        specifier: ^3.13.18
+        version: 3.13.18(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/lodash':
         specifier: ^4.17.23
         version: 4.17.23
@@ -152,6 +161,30 @@ packages:
     resolution: {integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==}
     engines: {node: '>=6.9.0'}
 
+  '@blueprintjs/colors@5.1.12':
+    resolution: {integrity: sha512-7GQWUQ82eLE1te++DC8fRO2B31bsSwia82NLamZfKgjHY9V4zxafMT1DK5gKlmmy0nCjpdcCc+df4aVZMHGLww==}
+
+  '@blueprintjs/core@6.5.0':
+    resolution: {integrity: sha512-6GmER7/UdaRibKkmTc5yz7se9Rpc1cnauU2jfwg1UXYhqK/pgfpzKT+KB9UM+cda1qexcjkXYA/N46i+C8xFfA==}
+    hasBin: true
+    peerDependencies:
+      '@types/react': '18'
+      react: '18'
+      react-dom: '18'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@blueprintjs/icons@6.4.0':
+    resolution: {integrity: sha512-8THDnE4Cz6V0DGNX0tQys6IiIYyKKvmMBZHHiFviBsdkduUqle096UdD+1XROa2dcwmGYSjvMQ/wKqYowCJINQ==}
+    peerDependencies:
+      '@types/react': '18'
+      react: '18'
+      react-dom: '18'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
   '@emotion/is-prop-valid@1.4.0':
     resolution: {integrity: sha512-QgD4fyscGcbbKwJmqNvUMSE02OsHUa+lAWKdEUIJKgqe5IwRSKd7+KhibEWdaKwgjLj0DRSHA9biAIqGBk05lw==}
 
@@ -234,6 +267,29 @@ packages:
   '@pkgr/core@0.2.9':
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
+
+  '@popperjs/core@2.11.8':
+    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
+
+  '@tanstack/react-table@8.21.3':
+    resolution: {integrity: sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/react-virtual@3.13.18':
+    resolution: {integrity: sha512-dZkhyfahpvlaV0rIKnvQiVoWPyURppl6w4m9IwMDpuIjcJ1sD9YGWrt0wISvgU7ewACXx2Ct46WPgI6qAD4v6A==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@tanstack/table-core@8.21.3':
+    resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
+    engines: {node: '>=12'}
+
+  '@tanstack/virtual-core@3.13.18':
+    resolution: {integrity: sha512-Mx86Hqu1k39icq2Zusq+Ey2J6dDWTjDvEv43PJtRCoEYTLyfaPnxIQ6iy7YAOK0NV/qOEmZQ/uCufrppZxTgcg==}
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
@@ -622,6 +678,9 @@ packages:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
 
+  camel-case@4.1.2:
+    resolution: {integrity: sha512-gxGWBrTT1JuMx6R+o5PTXMmUnhnVzLQ9SNutD4YqKtI6ap897t3tKECYla6gCWEkplXnlNybEkZg9GEGxKFCgw==}
+
   camelcase@4.1.0:
     resolution: {integrity: sha512-FxAv7HpHrXbh3aPo4o2qxHay2lkLY3x5Mw3KeE4KQE8ysVfziWeRZDwcjauvwBSGEC/nXUPzZy8zeh4HokqOnw==}
     engines: {node: '>=4'}
@@ -632,6 +691,9 @@ packages:
   caniuse-lite@1.0.30001763:
     resolution: {integrity: sha512-mh/dGtq56uN98LlNX9qdbKnzINhX0QzhiWBFEkFfsFO4QyCvL8YegrJAazCwXIeqkIob8BlZPGM3xdnY+sgmvQ==}
 
+  capital-case@1.0.4:
+    resolution: {integrity: sha512-ds37W8CytHgwnhGGTi88pcPyR15qoNkOpYwmMMfnWqqWgESapLqvDx6huFjQ5vqWSn2Z06173XNA7LtMOeUh1A==}
+
   chalk@1.1.3:
     resolution: {integrity: sha512-U3lRVLMSlsCfjqYPbLyVv11M9CPW4I728d6TCKMAOJueEeB9/8o+eSsMnxPJD+Q+K909sdESg7C+tIkoH6on1A==}
     engines: {node: '>=0.10.0'}
@@ -640,8 +702,14 @@ packages:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
 
+  change-case@4.1.2:
+    resolution: {integrity: sha512-bSxY2ws9OtviILG1EiY5K7NNxkqg/JnRnFxLtKQ96JaviiIxi7djMrSd0ECT9AC+lttClmYwKw53BWpOMblo7A==}
+
   chroma-js@1.3.4:
     resolution: {integrity: sha512-9/f9ckjukIAoQwBgUIzESrZs9CMx6wVcPjwDj3778PpJBmpE8xFaVC5nNC6XT6oq15steIa8dnT50qWMw8SBKg==}
+
+  classnames@2.5.1:
+    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
 
   cliui@3.2.0:
     resolution: {integrity: sha512-0yayqDxWQbqk3ojkYqUKqaAQ6AfNKeKWRNA8kR0WXzAsdHpP4BIaOmMAG87JGuO6qcobyW4GjxHd9PmhEd+T9w==}
@@ -659,6 +727,9 @@ packages:
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+
+  constant-case@3.0.4:
+    resolution: {integrity: sha512-I2hSBi7Vvs7BEuJDr5dDHfzb/Ruj3FyvFyh7KLilAjNQw3Be+xgqUBA2W6scVEcL0hL1dwPRtIqEPVUCKkSsyQ==}
 
   convert-source-map@1.5.0:
     resolution: {integrity: sha512-6q8sJj3dAkO4VXQNpkykQf5ZWMZPHi1xxTYE8BlbbIgQ8Gx8iHzRqaytIuuR4HRSH5Yz0EdrwdRgOHHrJ0xZqQ==}
@@ -741,6 +812,12 @@ packages:
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
+
+  dom-helpers@5.2.1:
+    resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
+
+  dot-case@3.0.4:
+    resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -1033,6 +1110,9 @@ packages:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
 
+  header-case@2.0.4:
+    resolution: {integrity: sha512-H/vuk5TEEVZwrR0lp2zed9OCo1uAILMlx0JEMgC26rzyJJ3N1v6XkwHHXJQdR2doSjcGPM6OKPYoJgf0plJ11Q==}
+
   hermes-estree@0.25.1:
     resolution: {integrity: sha512-0wUoCcLp+5Ev5pDW2OriHC2MJCbwLwuRx+gAqMTOkGKJJiBCLjtrvy4PWUGn6MIVefecRpzoOZ/UV6iGdOr+Cw==}
 
@@ -1308,6 +1388,9 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
+  lower-case@2.0.2:
+    resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
+
   lru-cache@4.1.0:
     resolution: {integrity: sha512-aHGs865JXz6bkB4AHL+3AhyvTFKL3iZamKVWjIUKnXOXyasJvqPK8WAjOnAQKQZVpeXDVz19u1DD0r/12bWAdQ==}
 
@@ -1358,11 +1441,17 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  no-case@3.0.4:
+    resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
+
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
 
   normalize-package-data@2.3.8:
     resolution: {integrity: sha512-tRXZ2ujyDLIynwO6Dw81AvuedQ6tLgfdD5GCvT4K6yOFgYeanngGfW+eeqd9msmRgUuiZxd5kwrQrb2nsncOZw==}
+
+  normalize.css@8.0.1:
+    resolution: {integrity: sha512-qizSNPO93t1YUuUhP22btGOo3chcvDFqFaj2TRybP0DMxkHOCTYwp3n34fel4a31ORXy4m1Xq0Gyqpb5m33qIg==}
 
   npm-run-path@2.0.2:
     resolution: {integrity: sha512-lJxZYlT4DW/bRUtFh1MQIWqmLwQfAxnqWG4HhEdjMlkrJYnJn0Jrr2u3mgxqaWsdiBc76TYkTG/mhrnYTuzfHw==}
@@ -1440,6 +1529,9 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
+  param-case@3.0.4:
+    resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
+
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
@@ -1447,6 +1539,12 @@ packages:
   parse-json@2.2.0:
     resolution: {integrity: sha512-QR/GGaKCkhwk1ePQNYDRKYZ3mwU9ypsKhB0XyFnLQdomyEqk3e8wpW3V5Jp88zbxK4n5ST1nqo+g9juTpownhQ==}
     engines: {node: '>=0.10.0'}
+
+  pascal-case@3.1.2:
+    resolution: {integrity: sha512-uWlGT3YSnK9x3BQJaOdcZwrnV6hPpd8jFH1/ucpiLRPh/2zCVJKS19E4GvYHvaCcACn3foXZ0cLB9Wrx1KGe5g==}
+
+  path-case@3.0.4:
+    resolution: {integrity: sha512-qO4qCFjXqVTrcbPt/hQfhTQ+VhFsqNKOPtytgNKkKxSoEp3XPUQ8ObFuePylOIok5gjn69ry8XiULxCwot3Wfg==}
 
   path-exists@3.0.0:
     resolution: {integrity: sha512-bpC7GYwiDYQ4wYLe+FA8lhRjhQCMcQGuSgGGqDkg/QerRWw9CmGRT0iSOVRSZJ29NMLZgIzqaljJ63oaL4NIJQ==}
@@ -1542,6 +1640,9 @@ packages:
     peerDependencies:
       react: ^19.2.3
 
+  react-fast-compare@3.2.2:
+    resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
+
   react-i18next@16.5.2:
     resolution: {integrity: sha512-GG/SBVxx9dvrO1uCs8VYdKfOP8NEBUhNP+2VDQLCifRJ8DL1qPq296k2ACNGyZMDe7iyIlz/LMJTQOs8HXSRvw==}
     peerDependencies:
@@ -1561,6 +1662,13 @@ packages:
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
+  react-popper@2.3.0:
+    resolution: {integrity: sha512-e1hj8lL3uM+sgSR4Lxzn5h1GxBlpa4CQz0XLF8kx4MDrDRWY0Ena4c97PUeSX9i5W3UAfDP0z0FXCTQkoXUl3Q==}
+    peerDependencies:
+      '@popperjs/core': ^2.0.0
+      react: ^16.8.0 || ^17 || ^18
+      react-dom: ^16.8.0 || ^17 || ^18
+
   react-redux@9.2.0:
     resolution: {integrity: sha512-ROY9fvHhwOD9ySfrF0wmvu//bKCQ6AeZZq1nJNtbDC+kk5DuSuNX/n6YWYF/SYy7bSba4D4FSz8DJeKY/S/r+g==}
     peerDependencies:
@@ -1572,6 +1680,12 @@ packages:
         optional: true
       redux:
         optional: true
+
+  react-transition-group@4.4.5:
+    resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
+    peerDependencies:
+      react: '>=16.6.0'
+      react-dom: '>=16.6.0'
 
   react@19.2.3:
     resolution: {integrity: sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==}
@@ -1646,6 +1760,9 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  sentence-case@3.0.4:
+    resolution: {integrity: sha512-8LS0JInaQMCRoQ7YUytAo/xUu5W2XnQxV2HI/6uM6U7CITS1RqPElr30V6uIqyMKM9lJGRVFy5/4CuzcixNYSg==}
+
   set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
 
@@ -1694,6 +1811,9 @@ packages:
   slash@1.0.0:
     resolution: {integrity: sha512-3TYDR7xWt4dIqV2JauJr+EJeW356RXijHeUlO+8djJ+uBXPn8/2dpzBc8yQhh583sVvc9CvFAeQVgijsH+PNNg==}
     engines: {node: '>=0.10.0'}
+
+  snake-case@3.0.4:
+    resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -1810,6 +1930,9 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
+  tslib@2.6.3:
+    resolution: {integrity: sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==}
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -1858,6 +1981,12 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
+  upper-case-first@2.0.2:
+    resolution: {integrity: sha512-514ppYHBaKwfJRK/pNC6c/OxfGa0obSnAl106u97Ed0I625Nin96KAjttZF6ZL3e1XLtphxnqrOi9iWgm+u+bg==}
+
+  upper-case@2.0.2:
+    resolution: {integrity: sha512-KgdgDGJt2TpuwBUIjgG6lzw2GWFRCW9Qkfkiv0DxqHHLYJHmtmdUIKcZd8rHgFSjopVTlw6ggzCm1b8MFQwikg==}
+
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
@@ -1875,6 +2004,9 @@ packages:
 
   walk@2.3.9:
     resolution: {integrity: sha512-nEvC/LocusNlMqpnY76juQYCx7H/ZNhtEQ3qTI+Kbh9zw8nc8jp5v0C3g+V1RNTH7TXrp4YC8qtzk6FN03+lMg==}
+
+  warning@4.0.3:
+    resolution: {integrity: sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w==}
 
   which-boxed-primitive@1.1.1:
     resolution: {integrity: sha512-TbX3mj8n0odCBFVlY8AxkqcHASw3L60jIuF8jFP78az3C2YhmGvqbHBpAjTRH2/xqYunrJ9g1jSyjCjpoWzIAA==}
@@ -2044,6 +2176,36 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@blueprintjs/colors@5.1.12':
+    dependencies:
+      tslib: 2.6.3
+
+  '@blueprintjs/core@6.5.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@blueprintjs/colors': 5.1.12
+      '@blueprintjs/icons': 6.4.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@popperjs/core': 2.11.8
+      classnames: 2.5.1
+      normalize.css: 8.0.1
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      react-popper: 2.3.0(@popperjs/core@2.11.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react-transition-group: 4.4.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      tslib: 2.6.3
+      use-sync-external-store: 1.6.0(react@19.2.3)
+    optionalDependencies:
+      '@types/react': 19.2.8
+
+  '@blueprintjs/icons@6.4.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      change-case: 4.1.2
+      classnames: 2.5.1
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      tslib: 2.6.3
+    optionalDependencies:
+      '@types/react': 19.2.8
+
   '@emotion/is-prop-valid@1.4.0':
     dependencies:
       '@emotion/memoize': 0.9.0
@@ -2129,6 +2291,24 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@pkgr/core@0.2.9': {}
+
+  '@popperjs/core@2.11.8': {}
+
+  '@tanstack/react-table@8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@tanstack/table-core': 8.21.3
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+
+  '@tanstack/react-virtual@3.13.18(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      '@tanstack/virtual-core': 3.13.18
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+
+  '@tanstack/table-core@8.21.3': {}
+
+  '@tanstack/virtual-core@3.13.18': {}
 
   '@types/estree@1.0.8': {}
 
@@ -2760,11 +2940,22 @@ snapshots:
 
   callsites@3.1.0: {}
 
+  camel-case@4.1.2:
+    dependencies:
+      pascal-case: 3.1.2
+      tslib: 2.8.1
+
   camelcase@4.1.0: {}
 
   camelize@1.0.1: {}
 
   caniuse-lite@1.0.30001763: {}
+
+  capital-case@1.0.4:
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.8.1
+      upper-case-first: 2.0.2
 
   chalk@1.1.3:
     dependencies:
@@ -2779,7 +2970,24 @@ snapshots:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
+  change-case@4.1.2:
+    dependencies:
+      camel-case: 4.1.2
+      capital-case: 1.0.4
+      constant-case: 3.0.4
+      dot-case: 3.0.4
+      header-case: 2.0.4
+      no-case: 3.0.4
+      param-case: 3.0.4
+      pascal-case: 3.1.2
+      path-case: 3.0.4
+      sentence-case: 3.0.4
+      snake-case: 3.0.4
+      tslib: 2.8.1
+
   chroma-js@1.3.4: {}
+
+  classnames@2.5.1: {}
 
   cliui@3.2.0:
     dependencies:
@@ -2796,6 +3004,12 @@ snapshots:
   color-name@1.1.4: {}
 
   concat-map@0.0.1: {}
+
+  constant-case@3.0.4:
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.8.1
+      upper-case: 2.0.2
 
   convert-source-map@1.5.0: {}
 
@@ -2875,6 +3089,16 @@ snapshots:
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
+
+  dom-helpers@5.2.1:
+    dependencies:
+      '@babel/runtime': 7.28.4
+      csstype: 3.2.3
+
+  dot-case@3.0.4:
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.8.1
 
   dunder-proto@1.0.1:
     dependencies:
@@ -3279,6 +3503,11 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
+  header-case@2.0.4:
+    dependencies:
+      capital-case: 1.0.4
+      tslib: 2.8.1
+
   hermes-estree@0.25.1: {}
 
   hermes-parser@0.25.1:
@@ -3546,6 +3775,10 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
+  lower-case@2.0.2:
+    dependencies:
+      tslib: 2.8.1
+
   lru-cache@4.1.0:
     dependencies:
       pseudomap: 1.0.2
@@ -3589,6 +3822,11 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
+  no-case@3.0.4:
+    dependencies:
+      lower-case: 2.0.2
+      tslib: 2.8.1
+
   node-releases@2.0.27: {}
 
   normalize-package-data@2.3.8:
@@ -3597,6 +3835,8 @@ snapshots:
       is-builtin-module: 1.0.0
       semver: 5.3.0
       validate-npm-package-license: 3.0.1
+
+  normalize.css@8.0.1: {}
 
   npm-run-path@2.0.2:
     dependencies:
@@ -3681,6 +3921,11 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
+  param-case@3.0.4:
+    dependencies:
+      dot-case: 3.0.4
+      tslib: 2.8.1
+
   parent-module@1.0.1:
     dependencies:
       callsites: 3.1.0
@@ -3688,6 +3933,16 @@ snapshots:
   parse-json@2.2.0:
     dependencies:
       error-ex: 1.3.1
+
+  pascal-case@3.1.2:
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.8.1
+
+  path-case@3.0.4:
+    dependencies:
+      dot-case: 3.0.4
+      tslib: 2.8.1
 
   path-exists@3.0.0: {}
 
@@ -3766,6 +4021,8 @@ snapshots:
       react: 19.2.3
       scheduler: 0.27.0
 
+  react-fast-compare@3.2.2: {}
+
   react-i18next@16.5.2(i18next@25.7.4(typescript@5.9.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -3779,6 +4036,14 @@ snapshots:
 
   react-is@16.13.1: {}
 
+  react-popper@2.3.0(@popperjs/core@2.11.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+    dependencies:
+      '@popperjs/core': 2.11.8
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      react-fast-compare: 3.2.2
+      warning: 4.0.3
+
   react-redux@9.2.0(@types/react@19.2.8)(react@19.2.3):
     dependencies:
       '@types/use-sync-external-store': 0.0.6
@@ -3786,6 +4051,15 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.3)
     optionalDependencies:
       '@types/react': 19.2.8
+
+  react-transition-group@4.4.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+    dependencies:
+      '@babel/runtime': 7.28.4
+      dom-helpers: 5.2.1
+      loose-envify: 1.4.0
+      prop-types: 15.8.1
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   react@19.2.3: {}
 
@@ -3867,6 +4141,12 @@ snapshots:
 
   semver@7.7.3: {}
 
+  sentence-case@3.0.4:
+    dependencies:
+      no-case: 3.0.4
+      tslib: 2.8.1
+      upper-case-first: 2.0.2
+
   set-blocking@2.0.0: {}
 
   set-function-length@1.2.2:
@@ -3930,6 +4210,11 @@ snapshots:
   signal-exit@3.0.2: {}
 
   slash@1.0.0: {}
+
+  snake-case@3.0.4:
+    dependencies:
+      dot-case: 3.0.4
+      tslib: 2.8.1
 
   source-map-js@1.2.1: {}
 
@@ -4064,6 +4349,8 @@ snapshots:
     dependencies:
       typescript: 5.9.3
 
+  tslib@2.6.3: {}
+
   tslib@2.8.1: {}
 
   type-check@0.4.0:
@@ -4131,6 +4418,14 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
+  upper-case-first@2.0.2:
+    dependencies:
+      tslib: 2.8.1
+
+  upper-case@2.0.2:
+    dependencies:
+      tslib: 2.8.1
+
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
@@ -4149,6 +4444,10 @@ snapshots:
   walk@2.3.9:
     dependencies:
       foreachasync: 3.0.0
+
+  warning@4.0.3:
+    dependencies:
+      loose-envify: 1.4.0
 
   which-boxed-primitive@1.1.1:
     dependencies:

@@ -1,9 +1,10 @@
+import '@blueprintjs/core/lib/css/blueprint.css'
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { createSelector, Selector } from 'reselect'
 import styled from 'styled-components'
+import { Tabs, Tab } from '@blueprintjs/core'
 import _ from 'lodash'
-import { Tabs, Tab } from 'react-bootstrap'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { useTranslation } from 'react-i18next'
 
@@ -158,33 +159,32 @@ const AnchorageRepairContainer = styled.div`
   padding: 1em;
   height: 100%;
 
-  #anchorage-tabs {
+  .bp5-tabs {
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
-  .tab-content {
+  .bp5-tab-panel {
     height: 100%;
+    overflow: auto;
   }
 
-  .nav li.can-repair {
+  .bp5-tab-list .bp5-tab.can-repair {
     flex: 2;
   }
 `
 
-const CandidatePaneTab = styled(Tab)`
+const StyledTabs = styled(Tabs)`
   height: 100%;
 `
 
 const PluginAnchorageRepair: React.FC = () => {
   const { fleets } = useSelector(fleetSelector)
-  const [activeTab, setActiveTab] = useState(1)
+  const [activeTab, setActiveTab] = useState<string | number>(1)
   const [sortIndex, setSortIndex] = useState(0)
 
   const { t } = useTranslation('poi-plugin-anchorage-repair')
-
-  const handleSelectTab = (key: number) => {
-    setActiveTab(key)
-  }
 
   const handleSort = (index: number) => () => {
     setSortIndex(index)
@@ -192,25 +192,29 @@ const PluginAnchorageRepair: React.FC = () => {
 
   return (
     <AnchorageRepairContainer id="anchorage-repair">
-      <Tabs
-        activeKey={activeTab}
-        onSelect={handleSelectTab}
+      <StyledTabs
+        selectedTabId={activeTab}
+        onChange={(tabId) => setActiveTab(tabId)}
         id="anchorage-tabs"
       >
         {_.map(fleets, (fleet, index) => (
           <Tab
-            eventKey={fleet.api_id}
-            title={fleet.api_id}
+            id={fleet.api_id}
+            title={String(fleet.api_id)}
             key={`anchorage-tab-${index}`}
-            tabClassName={fleet.canRepair ? 'can-repair' : ''}
-          >
-            <FleetList fleet={fleet} />
-          </Tab>
+            panel={
+              <div className={fleet.canRepair ? 'can-repair' : ''}>
+                <FleetList fleet={fleet} />
+              </div>
+            }
+          />
         ))}
-        <CandidatePaneTab eventKey={-1} title={t('Candidates')}>
-          <Candidates handleSort={handleSort} sortIndex={sortIndex} />
-        </CandidatePaneTab>
-      </Tabs>
+        <Tab
+          id={-1}
+          title={t('Candidates')}
+          panel={<Candidates handleSort={handleSort} sortIndex={sortIndex} />}
+        />
+      </StyledTabs>
     </AnchorageRepairContainer>
   )
 }
