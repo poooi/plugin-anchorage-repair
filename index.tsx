@@ -182,13 +182,8 @@ const StyledTabs = styled(Tabs)`
 const PluginAnchorageRepair: React.FC = () => {
   const { fleets } = useSelector(fleetSelector)
   const [activeTab, setActiveTab] = useState<string | number>(1)
-  const [sortIndex, setSortIndex] = useState(0)
 
   const { t } = useTranslation('poi-plugin-anchorage-repair')
-
-  const handleSort = (index: number) => () => {
-    setSortIndex(index)
-  }
 
   return (
     <AnchorageRepairContainer id="anchorage-repair">
@@ -212,7 +207,7 @@ const PluginAnchorageRepair: React.FC = () => {
         <Tab
           id={-1}
           title={t('Candidates')}
-          panel={<Candidates handleSort={handleSort} sortIndex={sortIndex} />}
+          panel={<Candidates />}
         />
       </StyledTabs>
     </AnchorageRepairContainer>

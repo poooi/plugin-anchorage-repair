@@ -1,12 +1,19 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import { createSelector } from 'reselect'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
-import { ButtonGroup, Button } from '@blueprintjs/core'
+import { HTMLTable } from '@blueprintjs/core'
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  ColumnDef,
+  SortingState,
+} from '@tanstack/react-table'
 import fp from 'lodash/fp'
 import { mapValues, findIndex, includes, map } from 'lodash'
-import FA from 'react-fontawesome'
 import chroma from 'chroma-js'
 
 import {
@@ -20,29 +27,13 @@ import { APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { RootState } from '../poi-types'
 
-const sortable = ['HP', 'Akashi Time', 'Per HP']
-
 interface EnhancedShip extends APIShip {
   akashi: number
   perHP: number
   fleetId: number
   api_name: string
   api_stype: number
-}
-
-const getSortValue = (sortIndex: number) => (ship: EnhancedShip) => {
-  const direction = sortIndex % 2 ? -1 : 1
-
-  switch (Math.floor(sortIndex / 2)) {
-    case 0:
-      return (ship.api_nowhp / ship.api_maxhp) * direction
-    case 1:
-      return ship.akashi * direction
-    case 2:
-      return ship.perHP * direction
-    default:
-      return ship.api_id
-  }
+  hpPercentage: number
 }
 
 const allFleetShipIdSelector = createSelector(
@@ -66,37 +57,36 @@ const repairIdSelector = createSelector([repairsSelector], (repair) =>
   map(repair, (dock) => dock.api_ship_id),
 )
 
-const candidateShipsSelector = (sortIndex: number) =>
-  createSelector(
-    [
-      (state: RootState) => state.info.ships,
-      (state: RootState) => state.const.$ships,
-      shipFleetIdMapSelector,
-      repairIdSelector,
-    ],
-    (
-      ships: Record<number, APIShip>,
-      $ships: Record<number, APIMstShip>,
-      shipFleetIdMap: Record<number, number>,
-      repairIds: number[],
-    ): EnhancedShip[] =>
-      fp.flow(
-        fp.filter(
-          (ship: APIShip) =>
-            akashiEstimate(ship) > 0 && !includes(repairIds, ship.api_id),
-        ),
-        fp.map(
-          (ship: APIShip): EnhancedShip => ({
-            ...$ships[ship.api_ship_id],
-            ...ship,
-            akashi: akashiEstimate(ship),
-            perHP: timePerHPCalc(ship),
-            fleetId: shipFleetIdMap[ship.api_id],
-          }),
-        ),
-        fp.sortBy((ship: EnhancedShip) => getSortValue(sortIndex)(ship)),
-      )(ships),
-  )
+const candidateShipsSelector = createSelector(
+  [
+    (state: RootState) => state.info.ships,
+    (state: RootState) => state.const.$ships,
+    shipFleetIdMapSelector,
+    repairIdSelector,
+  ],
+  (
+    ships: Record<number, APIShip>,
+    $ships: Record<number, APIMstShip>,
+    shipFleetIdMap: Record<number, number>,
+    repairIds: number[],
+  ): EnhancedShip[] =>
+    fp.flow(
+      fp.filter(
+        (ship: APIShip) =>
+          akashiEstimate(ship) > 0 && !includes(repairIds, ship.api_id),
+      ),
+      fp.map(
+        (ship: APIShip): EnhancedShip => ({
+          ...$ships[ship.api_ship_id],
+          ...ship,
+          akashi: akashiEstimate(ship),
+          perHP: timePerHPCalc(ship),
+          fleetId: shipFleetIdMap[ship.api_id],
+          hpPercentage: ship.api_nowhp / ship.api_maxhp,
+        }),
+      ),
+    )(ships),
+)
 
 const getHPBackgroundColor = (nowhp: number, maxhp: number): string => {
   const percentage = nowhp / maxhp
@@ -136,13 +126,31 @@ const ScrollContainer = styled.div`
   }
 `
 
-const CandidateShipItem = styled.div<{
+const StyledTable = styled(HTMLTable)`
+  width: 100%;
+  border-collapse: collapse;
+
+  thead th {
+    padding: 0.5em;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  tbody td {
+    padding: 0.5em;
+    vertical-align: middle;
+  }
+`
+
+const TableRow = styled.tr<{
   $background: string
   $percentage: number
 }>`
-  display: flex;
-  align-items: center;
-  padding: 0.5em;
   background: linear-gradient(
     90deg,
     ${(props) => props.$background} ${(props) => props.$percentage}%,
@@ -154,68 +162,135 @@ const ShipName = styled.span`
   font-size: 120%;
 `
 
-const ButtonGroupContainer = styled.div`
-  margin-bottom: 1ex;
+const SortIndicator = styled.span`
+  margin-left: 0.5em;
 `
 
-const HPSpan = styled.span`
-  margin-left: 1em;
-`
-
-const TimeSpan = styled.span`
-  margin-left: 2em;
-`
-
-interface CandidatesProps {
-  handleSort: (index: number) => () => void
-  sortIndex: number
-}
-
-const Candidates: React.FC<CandidatesProps> = ({ handleSort, sortIndex }) => {
-  const ships = useSelector((state: RootState) =>
-    candidateShipsSelector(sortIndex)(state),
-  )
+const Candidates: React.FC = () => {
+  const ships = useSelector(candidateShipsSelector)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
+  const [sorting, setSorting] = useState<SortingState>([])
+
+  const columns = useMemo<ColumnDef<EnhancedShip>[]>(
+    () => [
+      {
+        id: 'ship',
+        header: t('Ship'),
+        cell: (info) => {
+          const ship = info.row.original
+          return (
+            <ShipName>
+              {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
+                ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
+              }`}
+            </ShipName>
+          )
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'hpPercentage',
+        header: t('HP'),
+        cell: (info) => {
+          const ship = info.row.original
+          return `(${ship.api_nowhp} / ${ship.api_maxhp})`
+        },
+        sortingFn: (rowA, rowB) => {
+          return rowA.original.hpPercentage - rowB.original.hpPercentage
+        },
+      },
+      {
+        accessorKey: 'akashi',
+        header: t('Akashi Time'),
+        cell: (info) => {
+          const ship = info.row.original
+          return resolveTime(ship.akashi / 1000)
+        },
+        sortingFn: (rowA, rowB) => {
+          return rowA.original.akashi - rowB.original.akashi
+        },
+      },
+      {
+        accessorKey: 'perHP',
+        header: t('Per HP'),
+        cell: (info) => {
+          const ship = info.row.original
+          return resolveTime(ship.perHP / 1000)
+        },
+        sortingFn: (rowA, rowB) => {
+          return rowA.original.perHP - rowB.original.perHP
+        },
+      },
+    ],
+    [t],
+  )
+
+  const table = useReactTable({
+    data: ships,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
 
   return (
     <CandidateListContainer id="candidate-list">
-      <ButtonGroupContainer>
-        <ButtonGroup>
-          {[...new Array(6).keys()].map((index) => (
-            <Button
-              key={index}
-              onClick={handleSort(index)}
-              intent={index === sortIndex ? 'success' : 'none'}
-              small
-            >
-              {t(sortable[Math.floor(index / 2)])}
-              <FA name={index % 2 === 0 ? 'arrow-up' : 'arrow-down'} />
-            </Button>
-          ))}
-        </ButtonGroup>
-      </ButtonGroupContainer>
       <ScrollContainer>
-        {ships.map((ship) => {
-          const color = getHPBackgroundColor(ship.api_nowhp, ship.api_maxhp)
-          const percentage = Math.round((100 * ship.api_nowhp) / ship.api_maxhp)
-          return (
-            <CandidateShipItem
-              key={ship.api_id}
-              $background={color}
-              $percentage={percentage}
-            >
-              <ShipName>
-                {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
-                  ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
-                }`}
-              </ShipName>
-              <HPSpan>{`(${ship.api_nowhp} / ${ship.api_maxhp})`}</HPSpan>
-              <TimeSpan>{`${resolveTime(ship.akashi / 1000)} / ${resolveTime(
-                ship.perHP / 1000,
-              )}`}</TimeSpan>
-            </CandidateShipItem>
-          )
-        })}
+        <StyledTable>
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    onClick={header.column.getToggleSortingHandler()}
+                    style={{ width: header.getSize() }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                    {header.column.getIsSorted() && (
+                      <SortIndicator>
+                        {header.column.getIsSorted() === 'asc' ? '↑' : '↓'}
+                      </SortIndicator>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => {
+              const ship = row.original
+              const color = getHPBackgroundColor(ship.api_nowhp, ship.api_maxhp)
+              const percentage = Math.round(
+                (100 * ship.api_nowhp) / ship.api_maxhp,
+              )
+              return (
+                <TableRow
+                  key={row.id}
+                  $background={color}
+                  $percentage={percentage}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
+                  ))}
+                </TableRow>
+              )
+            })}
+          </tbody>
+        </StyledTable>
       </ScrollContainer>
     </CandidateListContainer>
   )
