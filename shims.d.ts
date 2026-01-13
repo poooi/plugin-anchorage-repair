@@ -1,5 +1,3 @@
-declare const __dirname: string
-
 declare module 'views/utils/selectors' {
   import { Selector, createSelector } from 'reselect'
   import { APIShip } from 'kcsapi/api_port/port/response'

@@ -191,6 +191,7 @@ const PluginAnchorageRepair: React.FC = () => {
         selectedTabId={activeTab}
         onChange={(tabId) => setActiveTab(tabId)}
         id="anchorage-tabs"
+        animate={false}
       >
         {_.map(fleets, (fleet, index) => (
           <Tab
@@ -204,11 +205,7 @@ const PluginAnchorageRepair: React.FC = () => {
             }
           />
         ))}
-        <Tab
-          id={-1}
-          title={t('Candidates')}
-          panel={<Candidates />}
-        />
+        <Tab id={-1} title={t('Candidates')} panel={<Candidates />} />
       </StyledTabs>
     </AnchorageRepairContainer>
   )

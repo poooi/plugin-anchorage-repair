@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useRef } from 'react'
 import { createSelector } from 'reselect'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +12,7 @@ import {
   ColumnDef,
   SortingState,
 } from '@tanstack/react-table'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import fp from 'lodash/fp'
 import { mapValues, findIndex, includes, map } from 'lodash'
 import chroma from 'chroma-js'
@@ -130,6 +131,12 @@ const StyledTable = styled(HTMLTable)`
   width: 100%;
   border-collapse: collapse;
 
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
   thead th {
     padding: 0.5em;
     text-align: left;
@@ -139,6 +146,11 @@ const StyledTable = styled(HTMLTable)`
     &:hover {
       background-color: rgba(0, 0, 0, 0.05);
     }
+  }
+
+  tbody {
+    display: grid;
+    position: relative;
   }
 
   tbody td {
@@ -151,6 +163,8 @@ const TableRow = styled.tr<{
   $background: string
   $percentage: number
 }>`
+  position: absolute;
+  width: 100%;
   background: linear-gradient(
     90deg,
     ${(props) => props.$background} ${(props) => props.$percentage}%,
@@ -170,6 +184,7 @@ const Candidates: React.FC = () => {
   const ships = useSelector(candidateShipsSelector)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
   const [sorting, setSorting] = useState<SortingState>([])
+  const tableContainerRef = useRef<HTMLDivElement>(null)
 
   const columns = useMemo<ColumnDef<EnhancedShip>[]>(
     () => [
@@ -236,9 +251,18 @@ const Candidates: React.FC = () => {
     getSortedRowModel: getSortedRowModel(),
   })
 
+  const { rows } = table.getRowModel()
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 40,
+    overscan: 5,
+  })
+
   return (
     <CandidateListContainer id="candidate-list">
-      <ScrollContainer>
+      <ScrollContainer ref={tableContainerRef}>
         <StyledTable>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -265,8 +289,14 @@ const Candidates: React.FC = () => {
               </tr>
             ))}
           </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => {
+          <tbody
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index]
+              if (!row) return null
               const ship = row.original
               const color = getHPBackgroundColor(ship.api_nowhp, ship.api_maxhp)
               const percentage = Math.round(
@@ -277,9 +307,12 @@ const Candidates: React.FC = () => {
                   key={row.id}
                   $background={color}
                   $percentage={percentage}
+                  style={{
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
+                    <td key={cell.id} style={{ width: cell.column.getSize() }}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
