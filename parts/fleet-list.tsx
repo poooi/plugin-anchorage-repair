@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 import { HTMLTable, Tag, Tooltip, Callout } from '@blueprintjs/core'
@@ -6,35 +7,16 @@ import _ from 'lodash'
 
 import CountupTimer from './countup-timer'
 import { AKASHI_INTERVAL } from './functions'
-
 import ShipRow from './ship-row'
-
-interface FleetAkashiInfo {
-  api_id: number
-  shipId: number[]
-  canRepair: boolean
-  akashiFlagship: boolean
-  inExpedition: boolean
-  flagShipInRepair: boolean
-  repairCount: number
-  repairDetail: Array<{
-    api_id: number
-    api_ship_id: number
-    api_lv: number
-    api_nowhp: number
-    api_maxhp: number
-    api_ndock_time: number
-    api_name: string
-    api_stype: number
-    estimate: number
-    timePerHP: number
-    inRepair: boolean
-    availableSRF: boolean
-  }>
-}
+import {
+  createFleetBasicInfoSelector,
+  createFleetStatusSelector,
+  createFleetRepairCountSelector,
+  createFleetRepairDetailSelector,
+} from './fleet-selectors'
 
 interface FleetListProps {
-  fleet: FleetAkashiInfo
+  fleetId: number
 }
 
 interface GameResponseEvent extends CustomEvent {
@@ -89,10 +71,38 @@ const ColContainer = styled.div<{ $xs?: number }>`
   width: 100%;
 `
 
-const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
+const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const [lastRefresh, setLastRefresh] = useState(0)
   const [timeElapsed, setTimeElapsed] = useState(0)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
+
+  // Create selectors for this specific fleet
+  const basicInfoSelector = useMemo(
+    () => createFleetBasicInfoSelector(fleetId),
+    [fleetId],
+  )
+  const statusSelector = useMemo(
+    () => createFleetStatusSelector(fleetId),
+    [fleetId],
+  )
+  const repairCountSelector = useMemo(
+    () => createFleetRepairCountSelector(fleetId),
+    [fleetId],
+  )
+  const repairDetailSelector = useMemo(
+    () => createFleetRepairDetailSelector(fleetId),
+    [fleetId],
+  )
+
+  const basicInfo = useSelector(basicInfoSelector)
+  const status = useSelector(statusSelector)
+  const repairCount = useSelector(repairCountSelector)
+  const repairDetail = useSelector(repairDetailSelector)
+
+  // Early return if fleet not found
+  if (!basicInfo || !status) {
+    return null
+  }
 
   const handleResponse = useCallback(
     (e: Event) => {
@@ -108,11 +118,11 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
           break
 
         case '/kcsapi/api_req_hensei/change': {
-          const fleetId = parseInt(postBody.api_id || '', 10)
+          const changedFleetId = parseInt(postBody.api_id || '', 10)
           const shipId = parseInt(postBody.api_ship_id || '', 10)
           if (
-            !Number.isNaN(fleetId) &&
-            fleetId === fleet.api_id &&
+            !Number.isNaN(changedFleetId) &&
+            changedFleetId === basicInfo.api_id &&
             shipId >= 0
           ) {
             if (timeElapsed < AKASHI_INTERVAL / 1000) {
@@ -129,7 +139,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
         }
         case '/kcsapi/api_req_nyukyo/start': {
           const shipId = parseInt(postBody.api_ship_id || '', 10)
-          const infleet = _.filter(fleet.shipId, (id) => shipId === id)
+          const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
           if (postBody.api_highspeed === 1 && infleet.length > 0) {
             setLastRefresh(Date.now())
           }
@@ -138,7 +148,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
         default:
       }
     },
-    [fleet.api_id, fleet.shipId, timeElapsed, lastRefresh],
+    [basicInfo.api_id, basicInfo.shipId, timeElapsed, lastRefresh],
   )
 
   useEffect(() => {
@@ -161,10 +171,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
 
   const tooltipContent = (
     <div>
-      <p>{fleet.canRepair ? t('Akashi loves you!') : ''}</p>
-      <p>{fleet.akashiFlagship ? '' : t('Akashi not flagship')}</p>
-      <p>{fleet.inExpedition ? t('fleet in expedition') : ''}</p>
-      <p>{fleet.flagShipInRepair ? t('flagship in dock') : ''}</p>
+      <p>{status.canRepair ? t('Akashi loves you!') : ''}</p>
+      <p>{status.akashiFlagship ? '' : t('Akashi not flagship')}</p>
+      <p>{status.inExpedition ? t('fleet in expedition') : ''}</p>
+      <p>{status.flagShipInRepair ? t('flagship in dock') : ''}</p>
     </div>
   )
 
@@ -174,18 +184,18 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
         <InfoCol $xs={4}>
           <Tooltip content={tooltipContent} placement="bottom">
             <Tag
-              intent={fleet.canRepair ? 'success' : 'warning'}
-              interactive={fleet.canRepair}
+              intent={status.canRepair ? 'success' : 'warning'}
+              interactive={status.canRepair}
             >
-              {fleet.canRepair ? t('Repairing') : t('Not ready')}
+              {status.canRepair ? t('Repairing') : t('Not ready')}
             </Tag>
           </Tooltip>
         </InfoCol>
         <InfoCol $xs={4}>
-          <Tag intent={fleet.canRepair ? 'success' : 'warning'}>
+          <Tag intent={status.canRepair ? 'success' : 'warning'}>
             <span>{t('Elapsed:')} </span>
             <CountupTimer
-              countdownId={`akashi-${fleet.api_id}`}
+              countdownId={`akashi-${basicInfo.api_id}`}
               startTime={lastRefresh}
               tickCallback={tick}
               startCallback={resetTimeElapsed}
@@ -193,8 +203,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
           </Tag>
         </InfoCol>
         <InfoCol $xs={4}>
-          <Tag intent={fleet.repairCount ? 'success' : 'warning'}>
-            {t('Capacity: {{count}}', { count: fleet.repairCount })}
+          <Tag intent={repairCount ? 'success' : 'warning'}>
+            {t('Capacity: {{count}}', { count: repairCount })}
           </Tag>
         </InfoCol>
       </InfoRow>
@@ -236,13 +246,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleet }) => {
               </tr>
             </thead>
             <tbody>
-              {_.map(fleet.repairDetail, (ship) => (
+              {_.map(repairDetail, (ship) => (
                 <ShipRow
                   key={`anchorage-ship-${ship.api_id}`}
                   ship={ship}
                   lastRefresh={lastRefresh}
                   timeElapsed={timeElapsed}
-                  canRepair={fleet.canRepair}
+                  canRepair={status.canRepair}
                 />
               ))}
             </tbody>
