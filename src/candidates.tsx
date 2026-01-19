@@ -180,7 +180,7 @@ const SortIndicator = styled.span`
   margin-left: 0.5em;
 `
 
-const Candidates: React.FC = () => {
+export const RepairQueue: React.FC = () => {
   const ships = useSelector(candidateShipsSelector)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
   const [sorting, setSorting] = useState<SortingState>([])
@@ -328,5 +328,3 @@ const Candidates: React.FC = () => {
     </CandidateListContainer>
   )
 }
-
-export default Candidates

@@ -2,7 +2,7 @@
   "Anchorage repair": "泊地修理",
   "Akashi not flagship": "明石は旗艦ではありません",
   "Not ready": "準備ができていません",
-  "Capacity: {{count}}": "修理可能の數: {{count}}",
+  "capacity-count": "修理可能の數: {{count}}",
   "refresh_notice": "タイマーをリセットするために、母港画面に戻ってください。",
   "Ship": "艦娘",
   "HP": "耐久",
@@ -10,7 +10,7 @@
   "Per HP": "單位修理時間",
   "Estimated repaired": "推定回復量",
   "fleet in expedition": "艦隊遠征中",
-  "Elapsed:": "タイマー：",
+  "elapsed": "タイマー：",
   "Repairing": "修理中",
   "Akashi loves you!": "明石はあなたを愛してるよ！",
   "flagship in dock": "旗艦入渠中",
@@ -20,5 +20,5 @@
   "Total time required": "完全回復に掛かる時間",
   "Time required for 1 HP recovery": "耐久１ポイント回復に掛かる時間",
   "Estimated HP recovery since last refresh": "前回のリセット以降の推定回復量",
-  "Candidates": "適格者"
+  "Repair Queue": "整備待機表"
 }

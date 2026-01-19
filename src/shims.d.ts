@@ -5,7 +5,7 @@ declare module 'views/utils/selectors' {
   import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
   import { APIDeckPort } from 'kcsapi/api_port/port/response'
 
-  type RootState = import('./poi-types').RootState
+  type RootState = import('../poi-types').RootState
 
   export const fleetsSelector: Selector<RootState, APIDeckPort[]>
   export const shipsSelector: Selector<RootState, Record<number, APIShip>>
@@ -47,4 +47,8 @@ declare module 'views/components/main/parts/countdown-timer' {
 
 declare module 'views/utils/tools' {
   export const resolveTime: (timeElapsed: number) => string
+}
+
+declare module 'views/components/etc/overlay' {
+  export { Tooltip, Popover, Dialog } from '@blueprintjs/core'
 }

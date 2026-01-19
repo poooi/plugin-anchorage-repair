@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
-import { HTMLTable, Tag, Tooltip, Callout } from '@blueprintjs/core'
+import { HTMLTable, Tag, Callout } from '@blueprintjs/core'
+import { Tooltip } from 'views/components/etc/overlay'
 import _ from 'lodash'
 
 import CountupTimer from './countup-timer'
@@ -193,7 +194,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         </InfoCol>
         <InfoCol $xs={4}>
           <Tag intent={status.canRepair ? 'success' : 'warning'}>
-            <span>{t('Elapsed:')} </span>
+            <span>{t('elapsed')} </span>
             <CountupTimer
               countdownId={`akashi-${basicInfo.api_id}`}
               startTime={lastRefresh}
@@ -204,7 +205,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         </InfoCol>
         <InfoCol $xs={4}>
           <Tag intent={repairCount ? 'success' : 'warning'}>
-            {t('Capacity: {{count}}', { count: repairCount })}
+            {t('capacity-count', { count: repairCount })}
           </Tag>
         </InfoCol>
       </InfoRow>

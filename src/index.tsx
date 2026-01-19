@@ -1,4 +1,3 @@
-import '@blueprintjs/core/lib/css/blueprint.css'
 import React, { useState } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
@@ -12,16 +11,16 @@ declare global {
   }
 }
 
-import FleetList from './parts/fleet-list'
-import Candidates from './parts/candidates'
+import FleetList from './fleet-list'
+import { RepairQueue } from './candidates'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
 import {
   fleetIdsSelector,
   createFleetCanRepairSelector,
-} from './parts/fleet-selectors'
-import { akashiEstimate } from './parts/functions'
-import { AKASHI_ID } from './parts/fleet-utils'
+} from './fleet-selectors'
+import { akashiEstimate } from './functions'
+import { AKASHI_ID } from './fleet-utils'
 
 const AnchorageRepairContainer = styled.div`
   padding: 1em;
@@ -80,7 +79,7 @@ const PluginAnchorageRepair: React.FC = () => {
               panel={<FleetTabPanel fleetId={fleetId} />}
             />
           ))}
-          <Tab id={-1} title={t('Candidates')} panel={<Candidates />} />
+          <Tab id={-1} title={t('Repair Queue')} panel={<RepairQueue />} />
         </Tabs>
       </div>
     </AnchorageRepairContainer>

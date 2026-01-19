@@ -1,3 +1,7 @@
 *.styl
 .npmignore
 .eslintrc.js
+src/
+*.mts
+*.ts
+*.tsx

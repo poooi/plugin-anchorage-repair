@@ -1,1 +1,24 @@
-{}
+{
+  "Anchorage repair": "Anchorage repair",
+  "Akashi not flagship": "Akashi is not flagship",
+  "Not ready": "Not ready",
+  "capacity-count": "Repair capacity: {{count}}",
+  "refresh_notice": "Please return to the home port screen to reset the timer.",
+  "Ship": "Ship",
+  "HP": "HP",
+  "Akashi Time": "Akashi Time",
+  "Per HP": "Per HP",
+  "Estimated repaired": "Estimated repaired",
+  "fleet in expedition": "Fleet in expedition",
+  "elapsed": "Elapsed:",
+  "Repairing": "Repairing",
+  "Akashi loves you!": "Akashi loves you!",
+  "flagship in dock": "Flagship in dock",
+  "anchorage repair completed": "Anchorage repair completed",
+  "A plugin to help in Akashi's anchorage repair arrangement": "A plugin to help in Akashi's anchorage repair arrangement",
+  "Docking": "Docking",
+  "Total time required": "Total time required",
+  "Time required for 1 HP recovery": "Time required for 1 HP recovery",
+  "Estimated HP recovery since last refresh": "Estimated HP recovery since last refresh",
+  "Repair Queue": "Repair Queue"
+}

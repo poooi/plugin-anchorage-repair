@@ -4,7 +4,9 @@
   "description": "Anchorage repair plugin for poi",
   "main": "index.es",
   "scripts": {
-    "prepack": "poi-util-transpile --replace --sm",
+    "prepack": "tsdown",
+    "dev": "tsdown --watch",
+    "build": "tsdown",
     "postpublish": "git clean -f && git checkout .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,7 +24,7 @@
   },
   "homepage": "https://github.com/KagamiChan/plugin-anchorage-repair#readme",
   "devDependencies": {
-    "@blueprintjs/core": "^6.5.0",
+    "@blueprintjs/core": "^5.19.1",
     "@eslint/js": "^9.39.2",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.18",
@@ -40,6 +42,8 @@
     "globals": "^17.0.0",
     "jiti": "^2.6.1",
     "kcsapi": "^1.191214.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-i18next": "^16.5.2",
     "react-redux": "^9.2.0",
     "reselect": "^5.1.1",
