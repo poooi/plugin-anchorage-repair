@@ -73,7 +73,7 @@ The formula base on HP loss, level and ship type is already proved, while this v
 
 ### Timer reset rules
 - **Repair timer (global/shared)** resets when:
-  - Changing fleet composition of a fleet with repair ship flagship (except dragging out or disbanding)
+  - Changing fleet composition of a fleet with repair ship flagship (including additions and removals)
   - Docking fleet member with bucket (instant repair) in a fleet with repair ship flagship
   - Sending fleet with repair ship flagship to expedition
   - Returns to normal after minimum 20 minutes at port
