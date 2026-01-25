@@ -168,12 +168,6 @@ export const getFleetRepairDetail = (
       // Calculate morale boost potential
       const moraleEstimate = nosakiMoraleEstimate({
         api_cond: ship.api_cond,
-        api_nowhp: ship.api_nowhp,
-        api_maxhp: ship.api_maxhp,
-        api_fuel: ship.api_fuel,
-        api_fuel_max,
-        api_bull: ship.api_bull,
-        api_bull_max,
         nosakiShipId,
       })
 

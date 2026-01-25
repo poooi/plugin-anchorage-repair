@@ -134,32 +134,14 @@ export const getCountdownLabelStyle = (
  * Other requirements (Nosaki's HP, fuel, etc.) are validated in getFleetStatus.
  * 
  * @param api_cond - Current morale/condition value of the ship
- * @param api_nowhp - Current HP (unused but kept for interface consistency)
- * @param api_maxhp - Maximum HP (unused but kept for interface consistency)
- * @param api_fuel - Current fuel (unused but kept for interface consistency)
- * @param api_fuel_max - Maximum fuel (unused but kept for interface consistency)
- * @param api_bull - Current ammo (unused but kept for interface consistency)
- * @param api_bull_max - Maximum ammo (unused but kept for interface consistency)
  * @param nosakiShipId - ID of the Nosaki ship (996 or 1002) to determine boost amount
  * @returns Object with canBoost flag and boostAmount value
  */
 export const nosakiMoraleEstimate = ({
   api_cond,
-  api_nowhp,
-  api_maxhp,
-  api_fuel,
-  api_fuel_max,
-  api_bull,
-  api_bull_max,
   nosakiShipId,
 }: {
   api_cond: number
-  api_nowhp: number
-  api_maxhp: number
-  api_fuel: number
-  api_fuel_max: number
-  api_bull: number
-  api_bull_max: number
   nosakiShipId: number
 }): { canBoost: boolean; boostAmount: number } => {
   // Check if ship can receive morale boost
