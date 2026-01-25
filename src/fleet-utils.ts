@@ -76,12 +76,22 @@ export const getFleetStatus = (
     flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
   }
 
-  // Repair ship must be flagship, not in expedition, not in repair, and healthy (HP > 50%)
-  const canRepair = repairShipFlagship && !inExpedition && !flagShipInRepair && flagshipHealthy
+  // Check if Asahi Kai has at least 1 SRF (required for it to repair even itself)
+  let asahiKaiHasSRF = true // Default true for non-Asahi Kai ships
+  if (flagship && flagship.api_ship_id === ASAHI_KAI_ID && equips) {
+    const flagshipSrfCount = _.filter(
+      flagship.api_slot,
+      (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
+    ).length
+    asahiKaiHasSRF = flagshipSrfCount > 0
+  }
+
+  // Repair ship must be flagship, not in expedition, not in repair, healthy (HP > 50%), and if Asahi Kai must have SRF
+  const canRepair = repairShipFlagship && !inExpedition && !flagShipInRepair && flagshipHealthy && asahiKaiHasSRF
 
   // Check for paired repair bonus: Akashi/Asahi at 1-2 positions with SRF on position 2
   let pairedRepairBonus = false
-  if (repairShipFlagship && equips) {
+  if (canRepair && equips) {
     const secondShip = ships[_.get(fleet, 'api_ship.1', -1)]
     if (secondShip && _.includes(REPAIR_SHIP_ID, secondShip.api_ship_id)) {
       // WIKI: "2番艦も小破未満である必要がある" = 2nd position must be below minor damage (HP > 75%)
@@ -93,7 +103,7 @@ export const getFleetStatus = (
         (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
       ).length
       
-      // Paired bonus only works if 2nd position has SRF and is healthy
+      // Paired bonus only works if 2nd position has SRF and is healthy, AND repairs are active
       if (secondShipSRF > 0 && secondShipHealthy) {
         pairedRepairBonus = true
       }
@@ -185,14 +195,22 @@ export const getFleetRepairCount = (
   
   let totalSrfCount = flagshipSrfCount
   
-  // Check for paired repair: if second position also has repair ship, add its SRF count
+  // Check for paired repair: WIKI says SRF from position 2 only counts when:
+  // - Position 2 has a repair ship
+  // - Position 2 is below minor damage (HP > 75%)
+  // - Position 2 has SRF equipped
   const secondShip = ships[_.get(fleet, 'api_ship.1', -1)]
   if (secondShip && _.includes(REPAIR_SHIP_ID, secondShip.api_ship_id)) {
+    const secondShipHealthy = secondShip.api_nowhp > secondShip.api_maxhp * BELOW_MINOR_PERCENT
     const secondShipSrfCount = _.filter(
       secondShip.api_slot,
       (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
     ).length
-    totalSrfCount += secondShipSrfCount
+    
+    // Only add second ship's SRF if it's healthy (HP > 75%) and has SRF
+    if (secondShipHealthy && secondShipSrfCount > 0) {
+      totalSrfCount += secondShipSrfCount
+    }
   }
 
   return baseCount + totalSrfCount
