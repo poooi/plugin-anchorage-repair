@@ -1,5 +1,8 @@
 import { defineConfig } from 'vitest/config'
 
+/** Helper to create a path alias from a relative path */
+const alias = (path: string) => new URL(path, import.meta.url).pathname
+
 export default defineConfig({
   test: {
     globals: true,
@@ -17,11 +20,11 @@ export default defineConfig({
       ],
     },
     alias: {
-      'views/utils/selectors': new URL('./src/__tests__/mocks/views-utils-selectors.ts', import.meta.url).pathname,
-      'views/utils/tools': new URL('./src/__tests__/mocks/views-utils-tools.ts', import.meta.url).pathname,
-      'views/components/main/parts/countdown-timer': new URL('./src/__tests__/mocks/countdown-timer.tsx', import.meta.url).pathname,
-      'views/components/etc/overlay': new URL('./src/__tests__/mocks/overlay.tsx', import.meta.url).pathname,
-      'react-fontawesome': new URL('./src/__tests__/mocks/react-fontawesome.tsx', import.meta.url).pathname,
+      'views/utils/selectors': alias('./src/__tests__/mocks/views-utils-selectors.ts'),
+      'views/utils/tools': alias('./src/__tests__/mocks/views-utils-tools.ts'),
+      'views/components/main/parts/countdown-timer': alias('./src/__tests__/mocks/countdown-timer.tsx'),
+      'views/components/etc/overlay': alias('./src/__tests__/mocks/overlay.tsx'),
+      'react-fontawesome': alias('./src/__tests__/mocks/react-fontawesome.tsx'),
     },
   },
 })
