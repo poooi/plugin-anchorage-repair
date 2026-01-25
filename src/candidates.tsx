@@ -78,20 +78,18 @@ const candidateShipsSelector = createSelector(
         (ship: APIShip) =>
           akashiEstimate(ship) > 0 && !includes(repairIds, ship.api_id),
       ),
-      fp.map(
-        (ship: APIShip): EnhancedShip => {
-          return {
-            ...$ships[ship.api_ship_id],
-            ...ship,
-            akashi: akashiEstimate(ship),
-            perHP: timePerHPCalc(ship),
-            fleetId: shipFleetIdMap[ship.api_id],
-            hpPercentage: ship.api_nowhp / ship.api_maxhp,
-            canBoostMorale: false, // Candidates are for repair, not morale boost
-            moraleBoostAmount: 0,
-          }
-        },
-      ),
+      fp.map((ship: APIShip): EnhancedShip => {
+        return {
+          ...$ships[ship.api_ship_id],
+          ...ship,
+          akashi: akashiEstimate(ship),
+          perHP: timePerHPCalc(ship),
+          fleetId: shipFleetIdMap[ship.api_id],
+          hpPercentage: ship.api_nowhp / ship.api_maxhp,
+          canBoostMorale: false, // Candidates are for repair, not morale boost
+          moraleBoostAmount: 0,
+        }
+      }),
     )(ships),
 )
 

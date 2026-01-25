@@ -110,8 +110,11 @@ const PluginAnchorageRepair: React.FC = () => {
           const { active } = checkRepairActive(fleet, ships, repairId, equips)
           return active
         })
-        
-        if (anyFleetRepairsActive && (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0)) {
+
+        if (
+          anyFleetRepairsActive &&
+          (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0)
+        ) {
           timerState.setLastRepairRefresh(currentTime)
         }
         break
@@ -120,14 +123,15 @@ const PluginAnchorageRepair: React.FC = () => {
       case '/kcsapi/api_req_hensei/change': {
         const body = postBody as APIReqHenseiChangeRequest
         const changedFleetId = parseInt(body.api_id, 10)
-        
+
         if (!Number.isNaN(changedFleetId)) {
           const changedFleet = fleets.find((f) => f.api_id === changedFleetId)
           if (changedFleet) {
             const flagship = ships[_.get(changedFleet, 'api_ship.0', -1)]
             // WIKI: Reset only if "the fleet whose flagship is the repair ship gets a composition change"
-            const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
-            
+            const repairShipFlagship =
+              flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+
             // Any composition change in a fleet whose flagship is a repair ship resets the count
             // WIKI: "編成の変更によってカウントはリセットされる" (composition changes reset the count)
             if (repairShipFlagship) {
@@ -145,17 +149,19 @@ const PluginAnchorageRepair: React.FC = () => {
       case '/kcsapi/api_req_mission/start': {
         const body = postBody as APIReqMissionStartRequest
         const expedFleetId = parseInt(body.api_deck_id, 10)
-        
+
         if (!Number.isNaN(expedFleetId)) {
           const expedFleet = fleets.find((f) => f.api_id === expedFleetId)
           if (expedFleet) {
             // WIKI: "工作艦を含む艦隊が遠征...カウントはリセット" (fleet containing repair ship goes on expedition)
             // Check if any ship in the expedition fleet is a repair ship
-            const hasRepairShip = _.get(expedFleet, 'api_ship', []).some((shipId: number) => {
-              const ship = ships[shipId]
-              return ship && _.includes(REPAIR_SHIP_ID, ship.api_ship_id)
-            })
-            
+            const hasRepairShip = _.get(expedFleet, 'api_ship', []).some(
+              (shipId: number) => {
+                const ship = ships[shipId]
+                return ship && _.includes(REPAIR_SHIP_ID, ship.api_ship_id)
+              },
+            )
+
             if (hasRepairShip) {
               timerState.resetRepairTimer()
             }
@@ -167,17 +173,18 @@ const PluginAnchorageRepair: React.FC = () => {
       case '/kcsapi/api_req_nyukyo/start': {
         const body = postBody as APIReqNyukyoStartRequest
         const shipId = parseInt(body.api_ship_id, 10)
-        
+
         if (!Number.isNaN(shipId) && body.api_highspeed === '1') {
           // Check if ship belongs to a fleet with repair ship flagship
           const affectedFleet = fleets.find((fleet) =>
-            _.includes(fleet.api_ship, shipId)
+            _.includes(fleet.api_ship, shipId),
           )
-          
+
           if (affectedFleet) {
             const flagship = ships[_.get(affectedFleet, 'api_ship.0', -1)]
-            const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
-            
+            const repairShipFlagship =
+              flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+
             if (repairShipFlagship) {
               timerState.resetRepairTimer()
             }
@@ -269,13 +276,18 @@ export const switchPluginPath = [
         fleets: APIDeckPort[]
         ships: Record<number, APIShip>
         repairs: APIGetMemberNdockResponse[]
-        equips?: Record<number, any>
+        equips?: Record<number, APIGetMemberSlotItemResponse>
       } = window.getStore('info') || {}
       const repairId = repairs.map((dock) => dock.api_ship_id)
 
       return fleets.some((fleet) => {
         // Use centralized helper to check repair activation
-        const { active: canRepair } = checkRepairActive(fleet, ships, repairId, equips)
+        const { active: canRepair } = checkRepairActive(
+          fleet,
+          ships,
+          repairId,
+          equips,
+        )
 
         if (!canRepair) return false
 

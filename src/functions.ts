@@ -85,7 +85,7 @@ export const repairEstimate = (
   // timeElapsed is in seconds
   // WIKI: Only ships at minor damage or better (HP > 50%) can be repaired
   if (api_nowhp >= api_maxhp || timePerHP === 0 || !availableSRF) return 0
-  
+
   // Check damage threshold: cannot repair moderate damage (中破) or worse
   if (api_nowhp <= api_maxhp * MODERATE_DAMAGE_THRESHOLD) return 0
 
@@ -142,7 +142,7 @@ export const getCountdownLabelStyle = (
  * Note: This function only checks if the ship can receive morale boost based on cond level.
  * Other requirements (Nosaki's HP, supply status, etc.) are validated in getFleetStatus.
  * Fuel consumption: 1 fuel per ship boosted from fleet resources (not from Nosaki's fuel).
- * 
+ *
  * @param api_cond - Current morale/condition value of the ship
  * @param nosakiShipId - ID of the Nosaki ship (996 or 1002) to determine boost amount
  * @returns Object with canBoost flag and boostAmount value

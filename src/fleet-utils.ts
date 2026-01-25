@@ -2,7 +2,16 @@ import _ from 'lodash'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID, PAIRED_REPAIR_TIME_MULTIPLIER, MODERATE_DAMAGE_THRESHOLD, BELOW_MINOR_PERCENT } from './functions'
+import {
+  akashiEstimate,
+  getTimePerHP,
+  nosakiMoraleEstimate,
+  NOSAKI_ID,
+  NOSAKI_KAI_ID,
+  PAIRED_REPAIR_TIME_MULTIPLIER,
+  MODERATE_DAMAGE_THRESHOLD,
+  BELOW_MINOR_PERCENT,
+} from './functions'
 
 export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
 export const ASAHI_KAI_ID = 958 // asahi kai ID in $ships
@@ -76,7 +85,8 @@ export const checkRepairActive = (
     return { active: false, repairShip: false, flagship }
   }
 
-  const flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_DAMAGE_THRESHOLD
+  const flagshipHealthy =
+    flagship.api_nowhp > flagship.api_maxhp * MODERATE_DAMAGE_THRESHOLD
 
   // Check if Asahi Kai has at least 1 SRF (required for it to repair even itself)
   let asahiKaiHasSRF = true
@@ -92,7 +102,8 @@ export const checkRepairActive = (
     }
   }
 
-  const active = !inExpedition && !flagShipInRepair && flagshipHealthy && asahiKaiHasSRF
+  const active =
+    !inExpedition && !flagShipInRepair && flagshipHealthy && asahiKaiHasSRF
 
   return { active, repairShip: repairShipFlagship, flagship }
 }
@@ -104,13 +115,17 @@ export const getFleetStatus = (
   repairId: number[],
   equips?: Record<number, APIGetMemberSlotItemResponse>,
 ): FleetStatus => {
-  const { active: canRepairActive, repairShip: repairShipFlagship, flagship } = checkRepairActive(fleet, ships, repairId, equips)
-  
+  const {
+    active: canRepairActive,
+    repairShip: repairShipFlagship,
+    flagship,
+  } = checkRepairActive(fleet, ships, repairId, equips)
+
   const inExpedition = Boolean(_.get(fleet, 'api_mission.0'))
   const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
 
   let akashiFlagship = false
-  
+
   if (flagship != null) {
     akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
   }
@@ -128,20 +143,23 @@ export const getFleetStatus = (
       const flagshipIsAsahiKai = flagship.api_ship_id === ASAHI_KAI_ID
       const secondIsAkashi = _.includes(AKASHI_ID, secondShip.api_ship_id)
       const secondIsAsahiKai = secondShip.api_ship_id === ASAHI_KAI_ID
-      
+
       // Valid pairs: (Akashi/Akashi Kai at pos 1 AND Asahi Kai at pos 2) OR (Asahi Kai at pos 1 AND Akashi/Akashi Kai at pos 2)
-      const isValidPair = (flagshipIsAkashi && secondIsAsahiKai) || (flagshipIsAsahiKai && secondIsAkashi)
-      
+      const isValidPair =
+        (flagshipIsAkashi && secondIsAsahiKai) ||
+        (flagshipIsAsahiKai && secondIsAkashi)
+
       if (isValidPair) {
         // WIKI: "2番艦も小破未満である必要がある" = 2nd position must be below minor damage (HP > 75%)
-        const secondShipHealthy = secondShip.api_nowhp > secondShip.api_maxhp * BELOW_MINOR_PERCENT
-        
+        const secondShipHealthy =
+          secondShip.api_nowhp > secondShip.api_maxhp * BELOW_MINOR_PERCENT
+
         // Check if second position has SRF equipped
         const secondShipSRF = _.filter(
           secondShip.api_slot,
           (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
         ).length
-        
+
         // Paired bonus only works if 2nd position has SRF and is healthy, AND repairs are active
         if (secondShipSRF > 0 && secondShipHealthy) {
           pairedRepairBonus = true
@@ -164,12 +182,12 @@ export const getFleetStatus = (
       if (!constShip) {
         return false
       }
-      
+
       // Mark Nosaki as present (for timer management)
       nosakiPosition = position
       nosakiShipId = ship.api_ship_id
       nosakiPresent = true
-      
+
       // Check eligibility conditions (for morale boost application)
       const isFullySupplied =
         ship.api_fuel === (constShip.api_fuel_max || 0) &&
@@ -220,20 +238,20 @@ export const getFleetRepairCount = (
 ): number => {
   // Use centralized helper to check if repairs are active
   const { active, flagship } = checkRepairActive(fleet, ships, repairId, equips)
-  
+
   if (!active || !flagship) return 0
-  
+
   // Base repair count: Akashi/Akashi Kai = 2, Asahi Kai = 0
   const baseCount = _.includes(AKASHI_ID, flagship.api_ship_id) ? 2 : 0
-  
+
   // Count SRF on flagship
   const flagshipSrfCount = _.filter(
     flagship.api_slot,
     (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
   ).length
-  
+
   let totalSrfCount = flagshipSrfCount
-  
+
   // Check for paired repair: WIKI specifically says "明石と朝日改" (Akashi + Asahi Kai)
   // Position 2 SRF only counts when it's a valid Akashi + Asahi Kai pair
   const secondShip = ships[_.get(fleet, 'api_ship.1', -1)]
@@ -243,17 +261,20 @@ export const getFleetRepairCount = (
     const flagshipIsAsahiKai = flagship.api_ship_id === ASAHI_KAI_ID
     const secondIsAkashi = _.includes(AKASHI_ID, secondShip.api_ship_id)
     const secondIsAsahiKai = secondShip.api_ship_id === ASAHI_KAI_ID
-    
+
     // Valid pairs: (Akashi/Akashi Kai at pos 1 AND Asahi Kai at pos 2) OR (Asahi Kai at pos 1 AND Akashi/Akashi Kai at pos 2)
-    const isValidPair = (flagshipIsAkashi && secondIsAsahiKai) || (flagshipIsAsahiKai && secondIsAkashi)
-    
+    const isValidPair =
+      (flagshipIsAkashi && secondIsAsahiKai) ||
+      (flagshipIsAsahiKai && secondIsAkashi)
+
     if (isValidPair) {
-      const secondShipHealthy = secondShip.api_nowhp > secondShip.api_maxhp * BELOW_MINOR_PERCENT
+      const secondShipHealthy =
+        secondShip.api_nowhp > secondShip.api_maxhp * BELOW_MINOR_PERCENT
       const secondShipSrfCount = _.filter(
         secondShip.api_slot,
         (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
       ).length
-      
+
       // Only add second ship's SRF if it's healthy (HP > 75%) and has SRF
       if (secondShipHealthy && secondShipSrfCount > 0) {
         totalSrfCount += secondShipSrfCount
@@ -297,7 +318,7 @@ export const getFleetRepairDetail = (
       // Calculate morale boost potential
       // Exclude Nosaki herself from receiving morale boost (wiki requirement)
       const isNosaki = NOSAKI_ID_LIST.includes(ship.api_ship_id)
-      const moraleEstimate = isNosaki 
+      const moraleEstimate = isNosaki
         ? { canBoost: false, boostAmount: 0 }
         : nosakiMoraleEstimate({
             api_cond: ship.api_cond,
@@ -306,7 +327,7 @@ export const getFleetRepairDetail = (
 
       // Calculate base timePerHP
       let timePerHP = getTimePerHP(ship.api_lv, constShip.api_stype)
-      
+
       // Apply paired repair bonus (15% faster repair speed)
       if (pairedRepairBonus && timePerHP > 0) {
         timePerHP = timePerHP * PAIRED_REPAIR_TIME_MULTIPLIER
@@ -319,7 +340,8 @@ export const getFleetRepairDetail = (
         timePerHP,
         inRepair: _.includes(repairId, ship.api_id),
         availableSRF: index < repairCount,
-        canBoostMorale: moraleEstimate.canBoost && !_.includes(repairId, ship.api_id),
+        canBoostMorale:
+          moraleEstimate.canBoost && !_.includes(repairId, ship.api_id),
         moraleBoostAmount: moraleEstimate.boostAmount,
       }
     },

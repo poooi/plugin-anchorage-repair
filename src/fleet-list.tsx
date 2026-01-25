@@ -8,7 +8,7 @@ import _ from 'lodash'
 import { shipsSelector } from 'views/utils/selectors'
 
 import CountupTimer from './countup-timer'
-import { AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
+import { NOSAKI_INTERVAL } from './functions'
 import { timerState } from './timer-state'
 import { NOSAKI_ID_LIST } from './fleet-utils'
 import ShipRow from './ship-row'
@@ -94,17 +94,21 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   useEffect(() => {
     const updateElapsedTimes = () => {
       const lastNosakiRefresh = timerState.getLastNosakiRefresh()
-      setMoraleTimeElapsed(lastNosakiRefresh > 0 ? (Date.now() - lastNosakiRefresh) / 1000 : 0)
-      
+      setMoraleTimeElapsed(
+        lastNosakiRefresh > 0 ? (Date.now() - lastNosakiRefresh) / 1000 : 0,
+      )
+
       const lastRepairRefresh = timerState.getLastRepairRefresh()
-      setTimeElapsed(lastRepairRefresh > 0 ? (Date.now() - lastRepairRefresh) / 1000 : 0)
+      setTimeElapsed(
+        lastRepairRefresh > 0 ? (Date.now() - lastRepairRefresh) / 1000 : 0,
+      )
     }
-    
+
     const unsubscribe = timerState.subscribe(updateElapsedTimes)
-    
+
     // Initial calculation
     updateElapsedTimes()
-    
+
     return unsubscribe
   }, [])
 
@@ -152,7 +156,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
               // Timer not started yet - start it now
               timerState.setLastNosakiRefresh(Date.now())
               setMoraleTimeElapsed(0)
-            } else if (status.canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000) {
+            } else if (
+              status.canBoostMorale &&
+              moraleTimeElapsed >= NOSAKI_INTERVAL / 1000
+            ) {
               // Eligible and timer elapsed - apply boost and reset timer
               timerState.setLastNosakiRefresh(Date.now())
               setMoraleTimeElapsed(0)
@@ -176,26 +183,29 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             changedFleetId === basicInfo.api_id
           ) {
             // Note: Global repair timer reset is now handled in index.tsx
-            
+
             // For Nosaki: Start timer when placed in slot 1/2, clear when removed
             // shipIdx is 0-based position, so 0 = flagship, 1 = second position
             if (!Number.isNaN(shipIdx) && (shipIdx === 0 || shipIdx === 1)) {
               // Check current ship in this slot (before the change)
               const currentShipId = basicInfo.shipId?.[shipIdx]
               const currentShip = currentShipId ? ships[currentShipId] : null
-              const wasNosaki = currentShip && NOSAKI_ID_LIST.includes(currentShip.api_ship_id)
-              
+              const wasNosaki =
+                currentShip && NOSAKI_ID_LIST.includes(currentShip.api_ship_id)
+
               if (shipId >= 0) {
                 // Placing a ship in slot 1 or 2
                 const newShip = ships[shipId]
-                const isNosaki = newShip && NOSAKI_ID_LIST.includes(newShip.api_ship_id)
-                
+                const isNosaki =
+                  newShip && NOSAKI_ID_LIST.includes(newShip.api_ship_id)
+
                 if (isNosaki) {
                   // Placing Nosaki - start/reset timer
                   // Compute elapsed time directly from lastMoraleRefresh (not stale state)
-                  const elapsedTime = lastMoraleRefresh > 0 
-                    ? (Date.now() - lastMoraleRefresh) / 1000 
-                    : 0
+                  const elapsedTime =
+                    lastMoraleRefresh > 0
+                      ? (Date.now() - lastMoraleRefresh) / 1000
+                      : 0
                   if (elapsedTime < NOSAKI_INTERVAL / 1000) {
                     timerState.resetNosakiTimer()
                     setMoraleTimeElapsed(0)
@@ -215,9 +225,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
               // Composition change in other slots while Nosaki is in slot 1/2
               // Wiki: before 15min, ANY composition changes reset timer (not just additions)
               // Compute elapsed time directly from lastMoraleRefresh (not stale state)
-              const elapsedTime = lastMoraleRefresh > 0 
-                ? (Date.now() - lastMoraleRefresh) / 1000 
-                : 0
+              const elapsedTime =
+                lastMoraleRefresh > 0
+                  ? (Date.now() - lastMoraleRefresh) / 1000
+                  : 0
               if (elapsedTime < NOSAKI_INTERVAL / 1000) {
                 // Before 15 min, composition changes reset timer (including removals)
                 timerState.resetNosakiTimer()
@@ -390,7 +401,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                 {status.canRepair && (
                   <>
                     <th>
-                      <Tooltip content={t('Total time required')} placement="top">
+                      <Tooltip
+                        content={t('Total time required')}
+                        placement="top"
+                      >
                         <span>{t('Akashi Time')}</span>
                       </Tooltip>
                     </th>
@@ -414,7 +428,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                 )}
                 {status.nosakiPresent && (
                   <th>
-                    <Tooltip content={t('Morale boost per application')} placement="top">
+                    <Tooltip
+                      content={t('Morale boost per application')}
+                      placement="top"
+                    >
                       <span>{t('Morale Boost')}</span>
                     </Tooltip>
                   </th>
