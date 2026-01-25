@@ -128,7 +128,7 @@ const PluginAnchorageRepair: React.FC = () => {
             // WIKI: Reset only if "the fleet whose flagship is the repair ship gets a composition change"
             const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
             
-            // Reset for both additions (shipId >= 0) and removals (shipId < 0) per WIKI
+            // Any composition change in a fleet whose flagship is a repair ship resets the count
             // WIKI: "編成の変更によってカウントはリセットされる" (composition changes reset the count)
             if (repairShipFlagship) {
               if (timeElapsed < AKASHI_INTERVAL / 1000) {
