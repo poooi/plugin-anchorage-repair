@@ -59,7 +59,7 @@
   },
   "poiPlugin": {
     "title": "Anchorage repair",
-    "description": "A plugin to help in Akashi's anchorage repair arrangement",
+    "description": "A plugin to help in Akashi/Nosaki's anchorage repair arrangement",
     "icon": "ti/anchor",
     "priority": 9,
     "apiVer": {

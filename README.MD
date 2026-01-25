@@ -5,7 +5,7 @@
 [简体中文说明](README-CN.MD)
 
 ## Description
-A plugin to help in Akashi's anchorage repair arrangement, features:
+A plugin to help in Akashi's and Nosaki's anchorage repair arrangement, features:
 
 - [x] estimate anchorage repair time
 - [x] notify upon ship repair completes
@@ -17,9 +17,9 @@ A plugin to help in Akashi's anchorage repair arrangement, features:
 ### Docking repair time
 The formula base on HP loss, level and ship type is already proved, while this value is also given in API's *api_ndock_time*.
 
-### Akashi's anchorage repair requirement
-- Akashi (or Kai) must be fleet flagship, with minor damage or less, and is not in docking.
-- Akashi can repair herslf and ship in 2nd lot, and plus one ship slot per Ship Repair Facility.
+### Akashi's and Nosaki's anchorage repair requirement
+- Akashi (or Kai) or Nosaki (or Kai) must be fleet flagship, with minor damage or less, and is not in docking.
+- Akashi/Nosaki can repair herself and ship in 2nd slot, and plus one ship slot per Ship Repair Facility.
 - Ships get repaired at minor damage (HP > 50% max HP) or less.
 - ship is not in docking.
 
@@ -35,7 +35,7 @@ The formula base on HP loss, level and ship type is already proved, while this v
 
 ### Corner cases
 Following corner cases are not taken into consideration, thus the result may not behave as it could be.
-- changing Akashi's slot itmes, more precisely, changing the numbers of Ship Repair Facilities,
+- changing Akashi's or Nosaki's slot items, more precisely, changing the numbers of Ship Repair Facilities,
 - sending fleet to sortie.
 
 ### Experimental

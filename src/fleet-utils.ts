@@ -4,7 +4,7 @@ import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
 import { akashiEstimate, getTimePerHP } from './functions'
 
-export const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
+export const AKASHI_ID = [182, 187, 996, 1002] // akashi, akashi kai, nosaki, nosaki kai ID in $ships
 export const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
 export type FleetBasicInfo = {
