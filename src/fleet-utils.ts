@@ -53,34 +53,35 @@ export const getFleetBasicInfo = (fleet: APIDeckPort): FleetBasicInfo => ({
   shipId: fleet.api_ship || [],
 })
 
-export const getFleetStatus = (
+/**
+ * Helper function to check if repairs are active for a fleet
+ * Centralizes the logic to avoid duplication between getFleetStatus and getFleetRepairCount
+ */
+export const checkRepairActive = (
   fleet: APIDeckPort,
   ships: Record<number, APIShip>,
-  $ships: Record<number, APIMstShip>,
   repairId: number[],
   equips?: Record<number, APIGetMemberSlotItemResponse>,
-): FleetStatus => {
+): { active: boolean; repairShip: boolean; flagship: APIShip | undefined } => {
   const inExpedition = Boolean(_.get(fleet, 'api_mission.0'))
   const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
   const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
 
-  let akashiFlagship = false
-  let repairShipFlagship = false
-  let flagshipHealthy = false // Flagship HP > 50% (not 中破 or worse)
-  
-  if (flagship != null) {
-    akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
-    repairShipFlagship = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
-    // WIKI: "工作艦が中破以上の損傷を受けている" = cannot be 中破 or worse
-    // Repair ship must have HP > 50% to function
-    flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
+  if (!flagship) {
+    return { active: false, repairShip: false, flagship: undefined }
   }
 
+  const repairShipFlagship = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+  if (!repairShipFlagship) {
+    return { active: false, repairShip: false, flagship }
+  }
+
+  const flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
+
   // Check if Asahi Kai has at least 1 SRF (required for it to repair even itself)
-  let asahiKaiHasSRF = true // Default true for non-Asahi Kai ships
-  if (flagship && flagship.api_ship_id === ASAHI_KAI_ID) {
+  let asahiKaiHasSRF = true
+  if (flagship.api_ship_id === ASAHI_KAI_ID) {
     if (!equips) {
-      // If equips is not provided, we cannot verify Asahi Kai has SRF - treat as unable to repair
       asahiKaiHasSRF = false
     } else {
       const flagshipSrfCount = _.filter(
@@ -91,13 +92,37 @@ export const getFleetStatus = (
     }
   }
 
-  // Repair ship must be flagship, not in expedition, not in repair, healthy (HP > 50%), and if Asahi Kai must have SRF
-  const canRepair = repairShipFlagship && !inExpedition && !flagShipInRepair && flagshipHealthy && asahiKaiHasSRF
+  const active = !inExpedition && !flagShipInRepair && flagshipHealthy && asahiKaiHasSRF
+
+  return { active, repairShip: repairShipFlagship, flagship }
+}
+
+export const getFleetStatus = (
+  fleet: APIDeckPort,
+  ships: Record<number, APIShip>,
+  $ships: Record<number, APIMstShip>,
+  repairId: number[],
+  equips?: Record<number, APIGetMemberSlotItemResponse>,
+): FleetStatus => {
+  const { active: canRepairActive, repairShip: repairShipFlagship, flagship } = checkRepairActive(fleet, ships, repairId, equips)
+  
+  const inExpedition = Boolean(_.get(fleet, 'api_mission.0'))
+  const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
+
+  let akashiFlagship = false
+  let flagshipHealthy = false
+  
+  if (flagship != null) {
+    akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
+    flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
+  }
+
+  const canRepair = canRepairActive
 
   // Check for paired repair bonus: WIKI specifically says "明石と朝日改" (Akashi + Asahi Kai)
   // One must be from Akashi series (Akashi/Akashi Kai) and the other must be Asahi Kai
   let pairedRepairBonus = false
-  if (canRepair && equips) {
+  if (canRepair && equips && flagship) {
     const secondShip = ships[_.get(fleet, 'api_ship.1', -1)]
     if (secondShip) {
       // Check if we have the specific Akashi + Asahi Kai pairing
@@ -195,33 +220,19 @@ export const getFleetRepairCount = (
   equips: Record<number, APIGetMemberSlotItemResponse>,
   repairId: number[],
 ): number => {
-  const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
-  if (!flagship) return 0
-
-  // Check if flagship is a repair ship
-  const isRepairShip = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
-  if (!isRepairShip) return 0
-
-  // Check if repairs are actually active
-  const inExpedition = Boolean(_.get(fleet, 'api_mission.0'))
-  const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
-  const flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
+  // Use centralized helper to check if repairs are active
+  const { active, flagship } = checkRepairActive(fleet, ships, repairId, equips)
   
-  // Check if Asahi Kai has at least 1 SRF (required for it to repair even itself)
-  const isAsahiKai = flagship.api_ship_id === ASAHI_KAI_ID
+  if (!active || !flagship) return 0
+  
+  // Base repair count: Akashi/Akashi Kai = 2, Asahi Kai = 0
+  const baseCount = _.includes(AKASHI_ID, flagship.api_ship_id) ? 2 : 0
+  
+  // Count SRF on flagship
   const flagshipSrfCount = _.filter(
     flagship.api_slot,
     (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
   ).length
-  const asahiKaiHasSRF = !isAsahiKai || flagshipSrfCount > 0
-  
-  // Return 0 if repairs cannot actually happen
-  if (inExpedition || flagShipInRepair || !flagshipHealthy || !asahiKaiHasSRF) {
-    return 0
-  }
-  
-  // Base repair count: Akashi/Akashi Kai = 2, Asahi Kai = 0
-  const baseCount = _.includes(AKASHI_ID, flagship.api_ship_id) ? 2 : 0
   
   let totalSrfCount = flagshipSrfCount
   

@@ -308,7 +308,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const tooltipContent = (
     <div>
       <p>{status.canRepair ? t('Akashi loves you!') : ''}</p>
-      <p>{status.akashiFlagship ? '' : t('Akashi not flagship')}</p>
+      <p>{status.repairShipFlagship ? '' : t('Akashi not flagship')}</p>
       <p>{status.inExpedition ? t('fleet in expedition') : ''}</p>
       <p>{status.flagShipInRepair ? t('flagship in dock') : ''}</p>
     </div>

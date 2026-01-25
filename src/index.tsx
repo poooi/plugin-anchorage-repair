@@ -19,8 +19,8 @@ import {
   fleetIdsSelector,
   createFleetCanRepairSelector,
 } from './fleet-selectors'
-import { akashiEstimate } from './functions'
-import { AKASHI_ID } from './fleet-utils'
+import { akashiEstimate, MODERATE_PERCENT } from './functions'
+import { AKASHI_ID, REPAIR_SHIP_ID, ASAHI_KAI_ID, SRF_ID } from './fleet-utils'
 
 const AnchorageRepairContainer = styled.div`
   padding: 1em;
@@ -128,10 +128,12 @@ export const switchPluginPath = [
         fleets = [],
         ships = {},
         repairs = [],
+        equips = {},
       }: {
         fleets: APIDeckPort[]
         ships: Record<number, APIShip>
         repairs: APIGetMemberNdockResponse[]
+        equips?: Record<number, any>
       } = window.getStore('info') || {}
       const repairId = repairs.map((dock) => dock.api_ship_id)
 
@@ -142,16 +144,35 @@ export const switchPluginPath = [
           _.get(fleet, 'api_ship.0', -1),
         )
         const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
-        const akashiFlagship =
-          flagship != null && _.includes(AKASHI_ID, flagship.api_ship_id)
-        const canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
+        
+        if (!flagship) return false
+        
+        const repairShipFlagship = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+        if (!repairShipFlagship) return false
+        
+        const flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
+        
+        // Check if Asahi Kai has at least 1 SRF
+        let asahiKaiHasSRF = true
+        if (flagship.api_ship_id === ASAHI_KAI_ID && equips) {
+          const flagshipSrfCount = _.filter(
+            flagship.api_slot,
+            (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
+          ).length
+          asahiKaiHasSRF = flagshipSrfCount > 0
+        } else if (flagship.api_ship_id === ASAHI_KAI_ID && !equips) {
+          // Conservative: if Asahi Kai but no equips data, assume can't repair
+          asahiKaiHasSRF = false
+        }
+        
+        const canRepair = !inExpedition && !flagShipInRepair && flagshipHealthy && asahiKaiHasSRF
 
         if (!canRepair) return false
 
         // Check if any ship in fleet needs repair
         return _.filter(fleet.api_ship, (shipId) => shipId > 0)
           .map((shipId) => ships[shipId])
-          .some((ship) => ship && akashiEstimate(ship) > 0)
+          .some((ship: APIShip) => ship && akashiEstimate(ship) > 0)
       })
     },
   },
