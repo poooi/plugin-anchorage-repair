@@ -19,6 +19,7 @@ export type FleetStatus = {
   inExpedition: boolean
   flagShipInRepair: boolean
   canBoostMorale: boolean
+  nosakiPresent: boolean // Nosaki is in position 1 or 2 (may not be eligible yet)
   nosakiPosition: number // -1 if not present, 0 for flagship, 1 for second position
   nosakiShipId: number // 996 or 1002, or -1 if not present
 }
@@ -66,9 +67,11 @@ export const getFleetStatus = (
   const canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
 
   // Check for Nosaki in position 1 or 2
+  // Timer starts when Nosaki is placed, eligibility checked at port return
   let nosakiPosition = -1
   let nosakiShipId = -1
-  let canBoostMorale = false
+  let nosakiPresent = false // Nosaki is in position 1 or 2
+  let canBoostMorale = false // Nosaki is eligible to boost morale
 
   const checkNosakiAtPosition = (position: number) => {
     const ship = ships[_.get(fleet, `api_ship.${position}`, -1)]
@@ -77,6 +80,13 @@ export const getFleetStatus = (
       if (!constShip) {
         return false
       }
+      
+      // Mark Nosaki as present (for timer management)
+      nosakiPosition = position
+      nosakiShipId = ship.api_ship_id
+      nosakiPresent = true
+      
+      // Check eligibility conditions (for morale boost application)
       const isFullySupplied =
         ship.api_fuel === (constShip.api_fuel_max || 0) &&
         ship.api_bull === (constShip.api_bull_max || 0)
@@ -92,11 +102,9 @@ export const getFleetStatus = (
         !inExpedition &&
         notInRepair
       ) {
-        nosakiPosition = position
-        nosakiShipId = ship.api_ship_id
         canBoostMorale = true
-        return true
       }
+      return true
     }
     return false
   }
@@ -112,6 +120,7 @@ export const getFleetStatus = (
     inExpedition,
     flagShipInRepair,
     canBoostMorale,
+    nosakiPresent,
     nosakiPosition,
     nosakiShipId,
   }

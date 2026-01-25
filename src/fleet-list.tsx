@@ -126,8 +126,9 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             setLastRefresh(Date.now())
             setTimeElapsed(0)
           }
-          // Refresh Nosaki timer (global) when returning to port, but only if Nosaki is eligible
-          if (status.canBoostMorale && (moraleTimeElapsed >= NOSAKI_INTERVAL / 1000 || lastMoraleRefresh === 0)) {
+          // Refresh Nosaki timer (global) when returning to port if Nosaki is present
+          // Wiki: Timer starts when Nosaki is placed, eligibility checked at port return
+          if (status.nosakiPresent && (moraleTimeElapsed >= NOSAKI_INTERVAL / 1000 || lastMoraleRefresh === 0)) {
             timerState.setLastNosakiRefresh(Date.now())
             setMoraleTimeElapsed(0)
           }
@@ -157,9 +158,9 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             }
             // shipId < 0: Removing ship (drag out or disband) doesn't reset - do nothing
             
-            // For Nosaki: only modify global timer if this fleet has Nosaki active or timer was running
-            // Prevent non-Nosaki fleets from mutating the global timer
-            if (shipId >= 0 && (status.canBoostMorale || status.nosakiPosition >= 0 || lastMoraleRefresh > 0)) {
+            // For Nosaki: only modify global timer if this fleet has Nosaki present
+            // Wiki: Timer starts when Nosaki is placed in position 1 or 2
+            if (shipId >= 0 && status.nosakiPresent) {
               const currentMoraleElapsed = lastMoraleRefresh > 0 
                 ? (Date.now() - lastMoraleRefresh) / 1000 
                 : moraleTimeElapsed
@@ -194,7 +195,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         default:
       }
     },
-    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh, status.canBoostMorale],
+    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh, status.canBoostMorale, status.nosakiPresent],
   )
 
   useEffect(() => {
