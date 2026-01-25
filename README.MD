@@ -55,12 +55,19 @@ The formula base on HP loss, level and ship type is already proved, while this v
 - Above 20 minutes, the amount will be the same as ships in docking, rounded down.
 - In the docking time formula, a 30-second bias is always added; the docking is actually finished, however, 1 minute earlier. And anchorage repair time will be **rounded up** to next minute.
 
-### Timer reset rules (Both Akashi and Nosaki)
-- The repair timer and morale boost timer share similar reset behavior:
-  - returning to the HQ screen after the minimum time (20min for Akashi, 15min for Nosaki) from the time the composition changed,
-  - changing fleet composition while dragging a ship out of fleet or disbanding the whole fleet won't,
-  - docking fleet member with Bucket, normal docking won't reset,
-  - sending the fleet to expedition.
+### Timer reset rules
+- **Akashi timer (per-fleet)** resets when:
+  - Changing fleet composition (except dragging out or disbanding)
+  - Docking fleet member with bucket (instant repair)
+  - Sending fleet to expedition
+  - Returns to normal after minimum 20 minutes at port
+
+- **Nosaki timer (global)** resets when:
+  - Placing Nosaki in position 1 or 2 (timer starts immediately)
+  - Changing fleet composition while Nosaki in position 1/2 and timer < 15 minutes
+  - Removing Nosaki from position 1 or 2 (timer cleared)
+  - After 15 minutes: composition changes do NOT reset the timer
+  - Note: Expedition does NOT reset Nosaki timer ("not in expedition" is an eligibility check, not a reset trigger)
 
 ### Nosaki-specific Timer Behavior (Important!)
 - **Global timer**: Nosaki timer is shared across ALL fleets, not per-fleet

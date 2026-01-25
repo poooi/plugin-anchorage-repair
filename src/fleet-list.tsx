@@ -9,6 +9,7 @@ import _ from 'lodash'
 import CountupTimer from './countup-timer'
 import { AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
 import { timerState } from './timer-state'
+import { NOSAKI_ID_LIST } from './fleet-utils'
 import ShipRow from './ship-row'
 import {
   createFleetBasicInfoSelector,
@@ -27,6 +28,7 @@ interface GameResponseEvent extends CustomEvent {
     postBody: {
       api_id?: string
       api_ship_id?: string
+      api_ship_idx?: string
       api_highspeed?: number
       api_deck_id?: string
     }
@@ -128,20 +130,14 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             setLastRefresh(Date.now())
             setTimeElapsed(0)
           }
-          // Nosaki timer: only reset if eligible AND timer has elapsed (or initial start)
+          // Nosaki timer: only reset if eligible AND timer has elapsed
           // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
-          if (status.nosakiPresent) {
-            if (lastMoraleRefresh === 0) {
-              // Initial start when Nosaki is first placed
-              timerState.setLastNosakiRefresh(Date.now())
-              setMoraleTimeElapsed(0)
-            } else if (status.canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000) {
-              // Eligible and timer elapsed - apply boost and reset timer
-              timerState.setLastNosakiRefresh(Date.now())
-              setMoraleTimeElapsed(0)
-            }
-            // If timer running but not eligible or not elapsed yet, keep timer running
+          if (status.nosakiPresent && status.canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000) {
+            // Eligible and timer elapsed - apply boost and reset timer
+            timerState.setLastNosakiRefresh(Date.now())
+            setMoraleTimeElapsed(0)
           }
+          // If timer not started yet or not eligible or not elapsed, keep timer as is
           break
 
         case '/kcsapi/api_req_hensei/preset_select':
@@ -152,6 +148,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         case '/kcsapi/api_req_hensei/change': {
           const changedFleetId = parseInt(postBody.api_id || '', 10)
           const shipId = parseInt(postBody.api_ship_id || '', 10)
+          const shipIdx = parseInt(postBody.api_ship_idx || '', 10)
           if (
             !Number.isNaN(changedFleetId) &&
             changedFleetId === basicInfo.api_id
@@ -168,21 +165,46 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             }
             // shipId < 0: Removing ship (drag out or disband) doesn't reset - do nothing
             
-            // For Nosaki: only modify global timer if this fleet has Nosaki present
-            // Wiki: Timer starts when Nosaki is placed in position 1 or 2
-            if (shipId >= 0 && status.nosakiPresent) {
+            // For Nosaki: Start timer when placed in slot 1/2, clear when removed
+            // shipIdx is 0-based position, so 0 = flagship, 1 = second position
+            if (!Number.isNaN(shipIdx) && (shipIdx === 0 || shipIdx === 1)) {
+              // Check if we're placing or removing a ship
+              if (shipId >= 0) {
+                // Placing a ship in slot 1 or 2
+                const ship = ships[shipId]
+                if (ship && NOSAKI_ID_LIST.includes(ship.api_ship_id)) {
+                  // Placing Nosaki - start timer immediately
+                  const currentMoraleElapsed = lastMoraleRefresh > 0 
+                    ? (Date.now() - lastMoraleRefresh) / 1000 
+                    : moraleTimeElapsed
+                  if (currentMoraleElapsed < NOSAKI_INTERVAL / 1000) {
+                    // Before 15 min, start/reset timer
+                    timerState.resetNosakiTimer()
+                    setMoraleTimeElapsed(0)
+                  }
+                  // After 15 min: don't reset (wiki requirement)
+                } else if (status.nosakiPresent) {
+                  // Replacing Nosaki with another ship - clear timer
+                  timerState.clearNosakiTimer()
+                  setMoraleTimeElapsed(0)
+                }
+              } else if (status.nosakiPresent) {
+                // Removing ship from slot 1 or 2 where Nosaki was - clear timer
+                timerState.clearNosakiTimer()
+                setMoraleTimeElapsed(0)
+              }
+            } else if (status.nosakiPresent && shipId >= 0) {
+              // Composition change not in slot 1/2, but Nosaki is present
               const currentMoraleElapsed = lastMoraleRefresh > 0 
                 ? (Date.now() - lastMoraleRefresh) / 1000 
                 : moraleTimeElapsed
               if (currentMoraleElapsed < NOSAKI_INTERVAL / 1000) {
-                // Before 15 min activation, composition changes reset the timer
+                // Before 15 min, composition changes reset timer
                 timerState.resetNosakiTimer()
                 setMoraleTimeElapsed(0)
               }
-              // After 15 min: composition changes don't reset timer (wiki requirement)
-              // Timer keeps running, just needs port refresh to apply the boost
+              // After 15 min: composition changes don't reset
             }
-            // shipId < 0: Removing ship doesn't reset - do nothing
           }
           break
         }
@@ -193,16 +215,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           break
 
         case '/kcsapi/api_req_mission/start': {
-          // Sending fleet to expedition resets both timers (wiki requirement)
+          // Sending fleet to expedition resets Akashi timer
+          // Wiki: "not in expedition" is an eligibility condition for Nosaki, not a timer reset trigger
           const expedFleetId = parseInt(postBody.api_deck_id || '', 10)
           if (!Number.isNaN(expedFleetId) && expedFleetId === basicInfo.api_id) {
             setLastRefresh(Date.now())
             setTimeElapsed(0)
-            // Reset Nosaki timer only if this fleet has Nosaki
-            if (status.nosakiPresent) {
-              timerState.resetNosakiTimer()
-              setMoraleTimeElapsed(0)
-            }
+            // Note: Nosaki timer NOT reset on expedition start per wiki analysis
           }
           break
         }
@@ -386,7 +405,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                     </th>
                   </>
                 )}
-                {status.canBoostMorale && (
+                {status.nosakiPresent && (
                   <th>
                     <Tooltip content={t('Morale boost per application')} placement="top">
                       <span>{t('Morale Boost')}</span>
@@ -403,7 +422,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                   lastRefresh={lastRefresh}
                   timeElapsed={timeElapsed}
                   canRepair={status.canRepair}
-                  canBoostMorale={status.canBoostMorale}
+                  canBoostMorale={status.nosakiPresent}
                 />
               ))}
             </tbody>
