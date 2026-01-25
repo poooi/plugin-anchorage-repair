@@ -131,7 +131,8 @@ export const getCountdownLabelStyle = (
 /**
  * Calculate morale boost potential for a ship when Nosaki is active
  * Note: This function only checks if the ship can receive morale boost based on cond level.
- * Other requirements (Nosaki's HP, fuel, etc.) are validated in getFleetStatus.
+ * Other requirements (Nosaki's HP, supply status, etc.) are validated in getFleetStatus.
+ * Fuel consumption: 1 fuel per ship boosted from fleet resources (not from Nosaki's fuel).
  * 
  * @param api_cond - Current morale/condition value of the ship
  * @param nosakiShipId - ID of the Nosaki ship (996 or 1002) to determine boost amount
