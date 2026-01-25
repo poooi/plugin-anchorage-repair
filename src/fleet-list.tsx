@@ -132,10 +132,17 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           }
           // Nosaki timer: only reset if eligible AND timer has elapsed
           // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
-          if (status.nosakiPresent && status.canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000) {
-            // Eligible and timer elapsed - apply boost and reset timer
-            timerState.setLastNosakiRefresh(Date.now())
-            setMoraleTimeElapsed(0)
+          // Also initialize timer if Nosaki present but timer not started yet
+          if (status.nosakiPresent) {
+            if (lastMoraleRefresh === 0) {
+              // Timer not started yet - start it now
+              timerState.setLastNosakiRefresh(Date.now())
+              setMoraleTimeElapsed(0)
+            } else if (status.canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000) {
+              // Eligible and timer elapsed - apply boost and reset timer
+              timerState.setLastNosakiRefresh(Date.now())
+              setMoraleTimeElapsed(0)
+            }
           }
           // If timer not started yet or not eligible or not elapsed, keep timer as is
           break
@@ -169,8 +176,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             // shipIdx is 0-based position, so 0 = flagship, 1 = second position
             if (!Number.isNaN(shipIdx) && (shipIdx === 0 || shipIdx === 1)) {
               // Check current ship in this slot (before the change)
-              const currentShipId = basicInfo.shipId[shipIdx]
-              const currentShip = ships[currentShipId]
+              const currentShipId = basicInfo.shipId?.[shipIdx]
+              const currentShip = currentShipId ? ships[currentShipId] : null
               const wasNosaki = currentShip && NOSAKI_ID_LIST.includes(currentShip.api_ship_id)
               
               if (shipId >= 0) {
