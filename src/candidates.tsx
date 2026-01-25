@@ -35,6 +35,8 @@ interface EnhancedShip extends APIShip {
   api_name: string
   api_stype: number
   hpPercentage: number
+  canBoostMorale: boolean
+  moraleBoostAmount: number
 }
 
 const allFleetShipIdSelector = createSelector(
@@ -77,14 +79,18 @@ const candidateShipsSelector = createSelector(
           akashiEstimate(ship) > 0 && !includes(repairIds, ship.api_id),
       ),
       fp.map(
-        (ship: APIShip): EnhancedShip => ({
-          ...$ships[ship.api_ship_id],
-          ...ship,
-          akashi: akashiEstimate(ship),
-          perHP: timePerHPCalc(ship),
-          fleetId: shipFleetIdMap[ship.api_id],
-          hpPercentage: ship.api_nowhp / ship.api_maxhp,
-        }),
+        (ship: APIShip): EnhancedShip => {
+          return {
+            ...$ships[ship.api_ship_id],
+            ...ship,
+            akashi: akashiEstimate(ship),
+            perHP: timePerHPCalc(ship),
+            fleetId: shipFleetIdMap[ship.api_id],
+            hpPercentage: ship.api_nowhp / ship.api_maxhp,
+            canBoostMorale: false, // Candidates are for repair, not morale boost
+            moraleBoostAmount: 0,
+          }
+        },
       ),
     )(ships),
 )

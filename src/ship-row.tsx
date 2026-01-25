@@ -13,6 +13,8 @@ import {
   repairEstimate,
   getHPLabelStyle,
   getCountdownLabelStyle,
+  NOSAKI_COND_MAX,
+  NOSAKI_INTERVAL,
 } from './functions'
 import { RootState } from '../poi-types'
 
@@ -32,6 +34,9 @@ interface ShipData {
   estimate: number
   timePerHP: number
   inRepair: boolean
+  api_cond: number
+  canBoostMorale: boolean
+  moraleBoostAmount: number
 }
 
 interface ShipRowProps {
@@ -39,6 +44,8 @@ interface ShipRowProps {
   lastRefresh: number
   ship: ShipData
   canRepair: boolean
+  canBoostMorale: boolean
+  moraleTimeElapsed: number
 }
 
 const LvLabel = styled.span`
@@ -50,6 +57,8 @@ const ShipRow: React.FC<ShipRowProps> = ({
   timeElapsed,
   lastRefresh,
   canRepair,
+  canBoostMorale,
+  moraleTimeElapsed,
   ship,
 }) => {
   const canNotify = useSelector((state: RootState) => state.misc.canNotify)
@@ -65,7 +74,13 @@ const ShipRow: React.FC<ShipRowProps> = ({
     api_lv,
     inRepair,
     api_name,
+    api_cond,
+    canBoostMorale: shipCanBoostMorale,
+    moraleBoostAmount,
   } = ship
+
+  // Only show boost when both eligible AND timer complete
+  const isBoostReady = canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000
 
   const completeTime = lastRefresh + estimate
 
@@ -97,41 +112,54 @@ const ShipRow: React.FC<ShipRowProps> = ({
           {`${api_nowhp} / ${api_maxhp}`}
         </Tag>
       </td>
-      <td>
-        {estimate > 0 &&
-          canRepair &&
-          availableSRF &&
-          (!inRepair ? (
-            <CountdownNotifierLabel
-              timerKey={`anchorage-ship-${api_id}`}
-              completeTime={completeTime}
-              getLabelStyle={getCountdownLabelStyle}
-              getNotifyOptions={() => {
-                if (!canNotify || lastRefresh <= 0) {
-                  return undefined
-                }
-                return {
-                  ...basicNotifyConfig,
-                  completeTime,
-                  args: t(api_name, { ns: 'resources' }),
-                }
-              }}
-            />
-          ) : inRepair ? (
-            <Tag intent="success">
-              <FontAwesome name="wrench" /> {t('Docking')}
+      {canRepair && (
+        <>
+          <td>
+            {estimate > 0 &&
+              availableSRF &&
+              (!inRepair ? (
+                <CountdownNotifierLabel
+                  timerKey={`anchorage-ship-${api_id}`}
+                  completeTime={completeTime}
+                  getLabelStyle={getCountdownLabelStyle}
+                  getNotifyOptions={() => {
+                    if (!canNotify || lastRefresh <= 0) {
+                      return undefined
+                    }
+                    return {
+                      ...basicNotifyConfig,
+                      completeTime,
+                      args: t(api_name, { ns: 'resources' }),
+                    }
+                  }}
+                />
+              ) : (
+                <Tag intent="success">
+                  <FontAwesome name="wrench" /> {t('Docking')}
+                </Tag>
+              ))}
+          </td>
+          <td>{timePerHP ? resolveTime(timePerHP / 1000) : ''}</td>
+          <td>
+            {api_nowhp !== api_maxhp &&
+              !inRepair &&
+              repairEstimate(ship, timeElapsed, availableSRF)}
+          </td>
+        </>
+      )}
+      {canBoostMorale && (
+        <td>
+          {isBoostReady && shipCanBoostMorale && !inRepair ? (
+            <Tag intent="primary">
+              {t('Cond')}: {api_cond} (+{moraleBoostAmount})
             </Tag>
+          ) : api_cond >= NOSAKI_COND_MAX ? (
+            <Tag intent="success">{t('Cond')}: {api_cond} (MAX)</Tag>
           ) : (
-            ''
-          ))}
-      </td>
-      <td>{timePerHP ? resolveTime(timePerHP / 1000) : ''}</td>
-      <td>
-        {canRepair &&
-          api_nowhp !== api_maxhp &&
-          !inRepair &&
-          repairEstimate(ship, timeElapsed, availableSRF)}
-      </td>
+            <Tag intent="none">{t('Cond')}: {api_cond}</Tag>
+          )}
+        </td>
+      )}
     </tr>
   )
 }

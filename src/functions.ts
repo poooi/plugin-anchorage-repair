@@ -1,8 +1,12 @@
 import FACTOR from './factor'
 
 export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
+export const NOSAKI_INTERVAL = 15 * 60 * 1000 // nosaki morale boost interval, in ms
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 const MINOR_PERCENT = 0.5 // minor damage determination
+export const NOSAKI_COND_MAX = 54 // maximum cond value for morale boost
+export const NOSAKI_ID = 996 // Nosaki ship ID
+export const NOSAKI_KAI_ID = 1002 // Nosaki Kai ship ID
 
 const minuteCeil = (time: number) => {
   const minute = 60 * 1000
@@ -121,5 +125,41 @@ export const getCountdownLabelStyle = (
       return 'success'
     default:
       return 'default'
+  }
+}
+
+/**
+ * Calculate morale boost potential for a ship when Nosaki is active
+ * Note: This function only checks if the ship can receive morale boost based on cond level.
+ * Other requirements (Nosaki's HP, supply status, etc.) are validated in getFleetStatus.
+ * Fuel consumption: 1 fuel per ship boosted from fleet resources (not from Nosaki's fuel).
+ * 
+ * @param api_cond - Current morale/condition value of the ship
+ * @param nosakiShipId - ID of the Nosaki ship (996 or 1002) to determine boost amount
+ * @returns Object with canBoost flag and boostAmount value
+ */
+export const nosakiMoraleEstimate = ({
+  api_cond,
+  nosakiShipId,
+}: {
+  api_cond: number
+  nosakiShipId: number
+}): { canBoost: boolean; boostAmount: number } => {
+  // Validate Nosaki ship ID
+  if (nosakiShipId !== NOSAKI_ID && nosakiShipId !== NOSAKI_KAI_ID) {
+    return { canBoost: false, boostAmount: 0 }
+  }
+
+  // Check if ship can receive morale boost based on current cond
+  if (api_cond >= NOSAKI_COND_MAX) {
+    return { canBoost: false, boostAmount: 0 }
+  }
+
+  // Boost amount depends on Nosaki or Nosaki Kai
+  const boostAmount = nosakiShipId === NOSAKI_KAI_ID ? 3 : 2
+
+  return {
+    canBoost: true,
+    boostAmount: Math.min(boostAmount, NOSAKI_COND_MAX - api_cond),
   }
 }

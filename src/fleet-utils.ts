@@ -2,9 +2,10 @@ import _ from 'lodash'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-import { akashiEstimate, getTimePerHP } from './functions'
+import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID } from './functions'
 
-export const AKASHI_ID = [182, 187] // akashi and kai ID in $ships
+export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
+export const NOSAKI_ID_LIST = [NOSAKI_ID, NOSAKI_KAI_ID] // nosaki, nosaki kai ID in $ships
 export const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
 export type FleetBasicInfo = {
@@ -17,6 +18,10 @@ export type FleetStatus = {
   akashiFlagship: boolean
   inExpedition: boolean
   flagShipInRepair: boolean
+  canBoostMorale: boolean
+  nosakiPresent: boolean // Nosaki is in position 1 or 2 (may not be eligible yet)
+  nosakiPosition: number // -1 if not present, 0 for flagship, 1 for second position
+  nosakiShipId: number // 996 or 1002, or -1 if not present
 }
 
 export type ShipRepairDetail = {
@@ -32,6 +37,11 @@ export type ShipRepairDetail = {
   timePerHP: number
   inRepair: boolean
   availableSRF: boolean
+  api_cond: number
+  api_fuel: number
+  api_bull: number
+  canBoostMorale: boolean
+  moraleBoostAmount: number
 }
 
 export const getFleetBasicInfo = (fleet: APIDeckPort): FleetBasicInfo => ({
@@ -42,6 +52,7 @@ export const getFleetBasicInfo = (fleet: APIDeckPort): FleetBasicInfo => ({
 export const getFleetStatus = (
   fleet: APIDeckPort,
   ships: Record<number, APIShip>,
+  $ships: Record<number, APIMstShip>,
   repairId: number[],
 ): FleetStatus => {
   const inExpedition = Boolean(_.get(fleet, 'api_mission.0'))
@@ -55,11 +66,63 @@ export const getFleetStatus = (
 
   const canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
 
+  // Check for Nosaki in position 1 or 2
+  // Timer starts when Nosaki is placed, eligibility checked at port return
+  let nosakiPosition = -1
+  let nosakiShipId = -1
+  let nosakiPresent = false // Nosaki is in position 1 or 2
+  let canBoostMorale = false // Nosaki is eligible to boost morale
+
+  const checkNosakiAtPosition = (position: number) => {
+    const ship = ships[_.get(fleet, `api_ship.${position}`, -1)]
+    if (ship && _.includes(NOSAKI_ID_LIST, ship.api_ship_id)) {
+      const constShip = $ships[ship.api_ship_id]
+      if (!constShip) {
+        return false
+      }
+      
+      // Mark Nosaki as present (for timer management)
+      nosakiPosition = position
+      nosakiShipId = ship.api_ship_id
+      nosakiPresent = true
+      
+      // Check eligibility conditions (for morale boost application)
+      const isFullySupplied =
+        ship.api_fuel === (constShip.api_fuel_max || 0) &&
+        ship.api_bull === (constShip.api_bull_max || 0)
+      // Wiki: "無傷～小破未満" means undamaged to below minor damage (HP > 75%, not > 50%)
+      const isHealthy = ship.api_nowhp > ship.api_maxhp * 0.75
+      const hasGoodMorale = ship.api_cond >= 30
+      const notInRepair = !_.includes(repairId, ship.api_id)
+
+      if (
+        isFullySupplied &&
+        isHealthy &&
+        hasGoodMorale &&
+        !inExpedition &&
+        notInRepair
+      ) {
+        canBoostMorale = true
+      }
+      return true
+    }
+    return false
+  }
+
+  // Check flagship first, then second position
+  if (!checkNosakiAtPosition(0)) {
+    checkNosakiAtPosition(1)
+  }
+
   return {
     canRepair,
     akashiFlagship,
     inExpedition,
     flagShipInRepair,
+    canBoostMorale,
+    nosakiPresent,
+    nosakiPosition,
+    nosakiShipId,
   }
 }
 
@@ -86,6 +149,7 @@ export const getFleetRepairDetail = (
   ships: Record<number, APIShip>,
   repairId: number[],
   repairCount: number,
+  nosakiShipId: number = -1,
 ): ShipRepairDetail[] => {
   const pickKey: (keyof APIShip)[] = [
     'api_id',
@@ -94,6 +158,9 @@ export const getFleetRepairDetail = (
     'api_nowhp',
     'api_maxhp',
     'api_ndock_time',
+    'api_cond',
+    'api_fuel',
+    'api_bull',
   ]
 
   return _.map(
@@ -105,6 +172,16 @@ export const getFleetRepairDetail = (
         'api_stype',
       ])
 
+      // Calculate morale boost potential
+      // Exclude Nosaki herself from receiving morale boost (wiki requirement)
+      const isNosaki = NOSAKI_ID_LIST.includes(ship.api_ship_id)
+      const moraleEstimate = isNosaki 
+        ? { canBoost: false, boostAmount: 0 }
+        : nosakiMoraleEstimate({
+            api_cond: ship.api_cond,
+            nosakiShipId,
+          })
+
       return {
         ...ship,
         ...constShip,
@@ -112,6 +189,8 @@ export const getFleetRepairDetail = (
         timePerHP: getTimePerHP(ship.api_lv, constShip.api_stype),
         inRepair: _.includes(repairId, ship.api_id),
         availableSRF: index < repairCount,
+        canBoostMorale: moraleEstimate.canBoost && !_.includes(repairId, ship.api_id),
+        moraleBoostAmount: moraleEstimate.boostAmount,
       }
     },
   )
@@ -120,8 +199,9 @@ export const getFleetRepairDetail = (
 export const canFleetRepair = (
   fleet: APIDeckPort,
   ships: Record<number, APIShip>,
+  $ships: Record<number, APIMstShip>,
   repairId: number[],
 ): boolean => {
-  const status = getFleetStatus(fleet, ships, repairId)
+  const status = getFleetStatus(fleet, ships, $ships, repairId)
   return status.canRepair
 }
