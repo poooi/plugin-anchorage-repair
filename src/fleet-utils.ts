@@ -5,6 +5,8 @@ import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/re
 import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID } from './functions'
 
 export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
+export const ASAHI_KAI_ID = 958 // asahi kai ID in $ships
+export const REPAIR_SHIP_ID = [182, 187, 958] // akashi, akashi kai, asahi kai
 export const NOSAKI_ID_LIST = [NOSAKI_ID, NOSAKI_KAI_ID] // nosaki, nosaki kai ID in $ships
 export const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
@@ -22,6 +24,8 @@ export type FleetStatus = {
   nosakiPresent: boolean // Nosaki is in position 1 or 2 (may not be eligible yet)
   nosakiPosition: number // -1 if not present, 0 for flagship, 1 for second position
   nosakiShipId: number // 996 or 1002, or -1 if not present
+  repairShipFlagship: boolean // Any repair ship (Akashi or Asahi Kai) is flagship
+  pairedRepairBonus: boolean // Akashi/Asahi Kai paired at positions 1-2 with SRF on position 2
 }
 
 export type ShipRepairDetail = {
@@ -54,17 +58,36 @@ export const getFleetStatus = (
   ships: Record<number, APIShip>,
   $ships: Record<number, APIMstShip>,
   repairId: number[],
+  equips?: Record<number, APIGetMemberSlotItemResponse>,
 ): FleetStatus => {
   const inExpedition = Boolean(_.get(fleet, 'api_mission.0'))
   const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
   const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
 
   let akashiFlagship = false
+  let repairShipFlagship = false
   if (flagship != null) {
     akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
+    repairShipFlagship = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
   }
 
-  const canRepair = akashiFlagship && !inExpedition && !flagShipInRepair
+  const canRepair = repairShipFlagship && !inExpedition && !flagShipInRepair
+
+  // Check for paired repair bonus: Akashi/Asahi at 1-2 positions with SRF on position 2
+  let pairedRepairBonus = false
+  if (repairShipFlagship && equips) {
+    const secondShip = ships[_.get(fleet, 'api_ship.1', -1)]
+    if (secondShip && _.includes(REPAIR_SHIP_ID, secondShip.api_ship_id)) {
+      // Check if second position has SRF equipped
+      const secondShipSRF = _.filter(
+        secondShip.api_slot,
+        (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
+      ).length
+      if (secondShipSRF > 0) {
+        pairedRepairBonus = true
+      }
+    }
+  }
 
   // Check for Nosaki in position 1 or 2
   // Timer starts when Nosaki is placed, eligibility checked at port return
@@ -123,6 +146,8 @@ export const getFleetStatus = (
     nosakiPresent,
     nosakiPosition,
     nosakiShipId,
+    repairShipFlagship,
+    pairedRepairBonus,
   }
 }
 
@@ -135,12 +160,35 @@ export const getFleetRepairCount = (
   if (!flagship) return 0
 
   const akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
-  const srfCount = _.filter(
+  const asahiKaiFlagship = flagship.api_ship_id === ASAHI_KAI_ID
+  
+  // Count SRF on flagship
+  const flagshipSrfCount = _.filter(
     flagship.api_slot,
     (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
   ).length
 
-  return srfCount + (akashiFlagship ? 2 : 0)
+  // Base repair count: Akashi = 2, Asahi Kai = 0
+  let baseCount = 0
+  if (akashiFlagship) {
+    baseCount = 2
+  } else if (asahiKaiFlagship) {
+    baseCount = 0
+  }
+  
+  let totalSrfCount = flagshipSrfCount
+  
+  // Check for paired repair: if second position also has repair ship, add its SRF count
+  const secondShip = ships[_.get(fleet, 'api_ship.1', -1)]
+  if (secondShip && _.includes(REPAIR_SHIP_ID, secondShip.api_ship_id)) {
+    const secondShipSrfCount = _.filter(
+      secondShip.api_slot,
+      (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
+    ).length
+    totalSrfCount += secondShipSrfCount
+  }
+
+  return baseCount + totalSrfCount
 }
 
 export const getFleetRepairDetail = (
@@ -150,6 +198,7 @@ export const getFleetRepairDetail = (
   repairId: number[],
   repairCount: number,
   nosakiShipId: number = -1,
+  pairedRepairBonus: boolean = false,
 ): ShipRepairDetail[] => {
   const pickKey: (keyof APIShip)[] = [
     'api_id',
@@ -182,11 +231,19 @@ export const getFleetRepairDetail = (
             nosakiShipId,
           })
 
+      // Calculate base timePerHP
+      let timePerHP = getTimePerHP(ship.api_lv, constShip.api_stype)
+      
+      // Apply paired repair bonus: 85% of normal time (15% faster)
+      if (pairedRepairBonus && timePerHP > 0) {
+        timePerHP = timePerHP * 0.85
+      }
+
       return {
         ...ship,
         ...constShip,
         estimate: akashiEstimate(ship),
-        timePerHP: getTimePerHP(ship.api_lv, constShip.api_stype),
+        timePerHP,
         inRepair: _.includes(repairId, ship.api_id),
         availableSRF: index < repairCount,
         canBoostMorale: moraleEstimate.canBoost && !_.includes(repairId, ship.api_id),
@@ -201,7 +258,8 @@ export const canFleetRepair = (
   ships: Record<number, APIShip>,
   $ships: Record<number, APIMstShip>,
   repairId: number[],
+  equips?: Record<number, APIGetMemberSlotItemResponse>,
 ): boolean => {
-  const status = getFleetStatus(fleet, ships, $ships, repairId)
+  const status = getFleetStatus(fleet, ships, $ships, repairId, equips)
   return status.canRepair
 }
