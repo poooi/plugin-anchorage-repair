@@ -143,15 +143,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
       switch (path) {
         case '/kcsapi/api_port/port':
-          // Refresh global repair timer when returning to port - but only if repairs are active
-          if (status.canRepair || status.repairShipFlagship) {
-            if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
-              timerState.setLastRepairRefresh(Date.now())
-            }
-          }
           // Nosaki timer: only reset if eligible AND timer has elapsed
           // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
           // Also initialize timer if Nosaki present but timer not started yet
+          // Note: Global repair timer is now handled in index.tsx
           if (status.nosakiPresent) {
             if (lastMoraleRefresh === 0) {
               // Timer not started yet - start it now
@@ -180,16 +175,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             !Number.isNaN(changedFleetId) &&
             changedFleetId === basicInfo.api_id
           ) {
-            // For repair ships: reset timer if under 20 minutes, otherwise require port refresh
-            if (shipId >= 0) {
-              if (timeElapsed < AKASHI_INTERVAL / 1000) {
-                timerState.resetRepairTimer()
-              } else {
-                // Over 20 minutes - need to refresh at port
-                timerState.clearRepairTimer()
-              }
-            }
-            // shipId < 0: Removing ship (drag out or disband) doesn't reset - do nothing
+            // Note: Global repair timer reset is now handled in index.tsx
             
             // For Nosaki: Start timer when placed in slot 1/2, clear when removed
             // shipIdx is 0-based position, so 0 = flagship, 1 = second position
@@ -249,28 +235,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           break
 
         case '/kcsapi/api_req_mission/start': {
-          // Sending fleet to expedition resets global repair timer
-          // Wiki: "not in expedition" is an eligibility condition for Nosaki, not a timer reset trigger
-          const body = postBody as APIReqMissionStartRequest
-          const expedFleetId = parseInt(body.api_deck_id, 10)
-          if (!Number.isNaN(expedFleetId) && expedFleetId === basicInfo.api_id) {
-            timerState.resetRepairTimer()
-            // Note: Nosaki timer NOT reset on expedition start per wiki analysis
-          }
+          // Note: Global repair timer reset is now handled in index.tsx
+          // Nosaki timer NOT reset on expedition start per wiki analysis
           break
         }
 
         case '/kcsapi/api_req_nyukyo/start': {
-          const body = postBody as APIReqNyukyoStartRequest
-          const shipId = parseInt(body.api_ship_id, 10)
-          const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
-          // Only instant repair (bucket) resets global repair timer
-          // api_highspeed is "1" (string) when using bucket
-          if (body.api_highspeed === '1' && infleet.length > 0) {
-            timerState.resetRepairTimer()
-            // Note: Wiki doesn't explicitly mention bucket resetting Nosaki timer
-            // Keeping repair timer behavior only for now
-          }
+          // Note: Global repair timer reset is now handled in index.tsx
           break
         }
         default:

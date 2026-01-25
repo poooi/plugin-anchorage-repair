@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import styled from 'styled-components'
 import { Tabs, Tab } from '@blueprintjs/core'
@@ -15,12 +15,17 @@ import FleetList from './fleet-list'
 import { RepairQueue } from './candidates'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
+import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
 import {
   fleetIdsSelector,
   createFleetCanRepairSelector,
 } from './fleet-selectors'
-import { akashiEstimate } from './functions'
-import { checkRepairActive } from './fleet-utils'
+import { akashiEstimate, AKASHI_INTERVAL } from './functions'
+import { checkRepairActive, REPAIR_SHIP_ID } from './fleet-utils'
+import { timerState } from './timer-state'
+import type { APIReqHenseiChangeRequest } from 'kcsapi/api_req_hensei/change/request'
+import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/request'
+import type { APIReqNyukyoStartRequest } from 'kcsapi/api_req_nyukyo/start/request'
 
 const AnchorageRepairContainer = styled.div`
   padding: 1em;
@@ -56,11 +61,136 @@ const FleetTabPanel: React.FC<{ fleetId: number }> = ({ fleetId }) => {
   )
 }
 
+type GameResponsePostBody =
+  | APIReqHenseiChangeRequest
+  | APIReqMissionStartRequest
+  | APIReqNyukyoStartRequest
+  | Record<string, string | number | undefined>
+
+interface GameResponseEvent extends CustomEvent {
+  detail: {
+    path: string
+    postBody: GameResponsePostBody
+  }
+}
+
 const PluginAnchorageRepair: React.FC = () => {
   const fleetIds = useSelector(fleetIdsSelector)
   const [activeTab, setActiveTab] = useState<string | number>(1)
 
   const { t } = useTranslation('poi-plugin-anchorage-repair')
+
+  // Global repair timer event handler - always active regardless of which tab is shown
+  const handleGlobalRepairTimerEvents = useCallback((e: Event) => {
+    const event = e as GameResponseEvent
+    const { path, postBody } = event.detail
+
+    const {
+      fleets = [],
+      ships = {},
+      repairs = [],
+      equips,
+    }: {
+      fleets: APIDeckPort[]
+      ships: Record<number, APIShip>
+      repairs: APIGetMemberNdockResponse[]
+      equips?: Record<number, APIGetMemberSlotItemResponse>
+    } = window.getStore('info') || {}
+    const repairId = repairs.map((dock) => dock.api_ship_id)
+
+    const currentTime = Date.now()
+    const lastRefresh = timerState.getLastRepairRefresh()
+    const timeElapsed = lastRefresh > 0 ? (currentTime - lastRefresh) / 1000 : 0
+
+    switch (path) {
+      case '/kcsapi/api_port/port': {
+        // Check if ANY fleet has active repair ship flagship
+        const anyFleetCanRepair = fleets.some((fleet) => {
+          const { active, repairShip } = checkRepairActive(fleet, ships, repairId, equips)
+          return active || repairShip
+        })
+        
+        if (anyFleetCanRepair && (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0)) {
+          timerState.setLastRepairRefresh(currentTime)
+        }
+        break
+      }
+
+      case '/kcsapi/api_req_hensei/change': {
+        const body = postBody as APIReqHenseiChangeRequest
+        const changedFleetId = parseInt(body.api_id, 10)
+        const shipId = parseInt(body.api_ship_id, 10)
+        
+        if (!Number.isNaN(changedFleetId) && shipId >= 0) {
+          const changedFleet = fleets.find((f) => f.api_id === changedFleetId)
+          if (changedFleet) {
+            const flagship = ships[_.get(changedFleet, 'api_ship.0', -1)]
+            // WIKI: Reset only if "the fleet whose flagship is the repair ship gets a composition change"
+            const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+            
+            if (repairShipFlagship) {
+              if (timeElapsed < AKASHI_INTERVAL / 1000) {
+                timerState.resetRepairTimer()
+              } else {
+                timerState.clearRepairTimer()
+              }
+            }
+          }
+        }
+        break
+      }
+
+      case '/kcsapi/api_req_mission/start': {
+        const body = postBody as APIReqMissionStartRequest
+        const expedFleetId = parseInt(body.api_deck_id, 10)
+        
+        if (!Number.isNaN(expedFleetId)) {
+          const expedFleet = fleets.find((f) => f.api_id === expedFleetId)
+          if (expedFleet) {
+            const flagship = ships[_.get(expedFleet, 'api_ship.0', -1)]
+            const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+            
+            if (repairShipFlagship) {
+              timerState.resetRepairTimer()
+            }
+          }
+        }
+        break
+      }
+
+      case '/kcsapi/api_req_nyukyo/start': {
+        const body = postBody as APIReqNyukyoStartRequest
+        const shipId = parseInt(body.api_ship_id, 10)
+        
+        if (!Number.isNaN(shipId) && body.api_highspeed === '1') {
+          // Check if ship belongs to a fleet with repair ship flagship
+          const affectedFleet = fleets.find((fleet) =>
+            _.includes(fleet.api_ship, shipId)
+          )
+          
+          if (affectedFleet) {
+            const flagship = ships[_.get(affectedFleet, 'api_ship.0', -1)]
+            const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+            
+            if (repairShipFlagship) {
+              timerState.resetRepairTimer()
+            }
+          }
+        }
+        break
+      }
+
+      default:
+        break
+    }
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('game.response', handleGlobalRepairTimerEvents)
+    return () => {
+      window.removeEventListener('game.response', handleGlobalRepairTimerEvents)
+    }
+  }, [handleGlobalRepairTimerEvents])
 
   return (
     <AnchorageRepairContainer id="anchorage-repair">

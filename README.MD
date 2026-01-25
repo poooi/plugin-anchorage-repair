@@ -32,7 +32,7 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
   - SRF on position 2 also counts toward repair range
   - If position 2 has SRF equipped and is healthy, repair speed increases by ~15% (time reduced to 85%)
   - With maximum 5 total SRF, can repair up to 7 ships in combined fleet operations
-- **Repair target eligibility**: Ships get repaired at minor damage (HP > 50% max HP) or less
+- **Repair target eligibility**: Ships can be repaired when at minor damage or better (HP > 50% max HP)
 - Target ships must not be in docking
 
 **Timer:** 20 minutes minimum for HP repair
