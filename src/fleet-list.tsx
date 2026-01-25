@@ -28,6 +28,7 @@ interface GameResponseEvent extends CustomEvent {
       api_id?: string
       api_ship_id?: string
       api_highspeed?: number
+      api_deck_id?: string
     }
   }
 }
@@ -181,6 +182,21 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           // Ship remodeling (including Nosaki -> Nosaki Kai) doesn't reset timer after activation
           // Do nothing - this is intentional per wiki
           break
+
+        case '/kcsapi/api_req_mission/start': {
+          // Sending fleet to expedition resets both timers (wiki requirement)
+          const expedFleetId = parseInt(postBody.api_deck_id || '', 10)
+          if (!Number.isNaN(expedFleetId) && expedFleetId === basicInfo.api_id) {
+            setLastRefresh(Date.now())
+            setTimeElapsed(0)
+            // Reset Nosaki timer only if this fleet has Nosaki
+            if (status.nosakiPresent) {
+              timerState.resetNosakiTimer()
+              setMoraleTimeElapsed(0)
+            }
+          }
+          break
+        }
 
         case '/kcsapi/api_req_nyukyo/start': {
           const shipId = parseInt(postBody.api_ship_id || '', 10)
