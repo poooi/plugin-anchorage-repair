@@ -42,10 +42,10 @@ export const createFleetStatusSelector = (fleetId: number) =>
 
 export const createFleetRepairCountSelector = (fleetId: number) =>
   createSelector(
-    [fleetsSelector, shipsSelector, equipsSelector],
-    (fleets, ships, equips) => {
+    [fleetsSelector, shipsSelector, equipsSelector, repairIdSelector],
+    (fleets, ships, equips, repairId) => {
       const fleet = getFleetById(fleets, fleetId)
-      return fleet ? getFleetRepairCount(fleet, ships, equips) : 0
+      return fleet ? getFleetRepairCount(fleet, ships, equips, repairId) : 0
     },
   )
 

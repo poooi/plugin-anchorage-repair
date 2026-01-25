@@ -26,7 +26,8 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
 - Base repair capability:
   - **Akashi/Akashi Kai**: Can repair herself and ship in 2nd slot (base: 2 ships) plus one ship slot per Ship Repair Facility equipped on flagship
   - **Asahi Kai**: Requires at least one Ship Repair Facility to repair even herself (base: 0 ships) plus one ship slot per Ship Repair Facility equipped on flagship
-- **Paired Repair Bonus**: When both repair ships (Akashi/Akashi Kai + Asahi Kai, or two of any repair ships) are at positions 1 and 2:
+- **Paired Repair Bonus**: When Akashi series (Akashi/Akashi Kai) and Asahi Kai are at positions 1 and 2:
+  - **Valid pairs**: Akashi + Asahi Kai OR Akashi Kai + Asahi Kai (in either order at positions 1-2)
   - **2nd position health requirement**: Must be below minor damage (HP > 75% max HP) for paired bonus to work
   - SRF on position 2 also counts toward repair range
   - If position 2 has SRF equipped and is healthy, repair speed increases by ~15% (time reduced to 85%)
