@@ -7,10 +7,11 @@
 ## Description
 A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring similar timer mechanics for both:
 
-- [x] estimate anchorage repair time (Akashi)
+- [x] estimate anchorage repair time (Akashi, Akashi Kai, Asahi Kai)
+- [x] support paired repair bonus (Akashi + Asahi Kai at positions 1-2)
 - [x] estimate morale boost timing (Nosaki)
 - [x] notify upon ship repair completes
-- [x] support combined operations (Akashi + Nosaki)
+- [x] support combined operations (Akashi + Nosaki, or Akashi + Asahi Kai + Nosaki)
 
 ## Limitations
 - When you change the fleet composition, Kancolle API will not renew ships' HP, which may lead to inaccurate repair time estimation. You have to return to HQ screen to refresh ship data.
@@ -19,8 +20,14 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
 
 ### Akashi's anchorage repair (HP Recovery)
 **Requirements:**
-- Akashi (or Kai) must be fleet **flagship** (position 1), with minor damage or less, and is not in docking.
-- Akashi can repair herself and ship in 2nd slot, and plus one ship slot per Ship Repair Facility.
+- Akashi (明石), Akashi Kai (明石改), or Asahi Kai (朝日改) must be fleet **flagship** (position 1), with minor damage or less, and is not in docking.
+- Base repair capability:
+  - **Akashi/Akashi Kai**: Can repair herself and ship in 2nd slot (base: 2 ships) plus one ship slot per Ship Repair Facility equipped on flagship
+  - **Asahi Kai**: Requires at least one Ship Repair Facility to repair even herself (base: 0 ships) plus one ship slot per Ship Repair Facility equipped on flagship
+- **Paired Repair Bonus**: When both repair ships (Akashi/Akashi Kai + Asahi Kai, or two of any repair ships) are at positions 1 and 2:
+  - SRF on position 2 also counts toward repair range
+  - If position 2 has SRF equipped, repair speed increases by ~15% (time reduced to 85%)
+  - With maximum 5 total SRF, can repair up to 7 ships in combined fleet operations
 - Ships get repaired at minor damage (HP > 50% max HP) or less.
 - Ship is not in docking.
 
@@ -44,8 +51,11 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
 
 ### Combined Operation
 - Both systems can work simultaneously in the same fleet
-- Example: Akashi as flagship (repairs HP, 20min timer) + Nosaki in 2nd position (boosts morale, 15min timer)
+- Example configurations:
+  - Akashi as flagship (repairs HP, 20min timer) + Nosaki in 2nd position (boosts morale, 15min timer)
+  - Akashi/Akashi Kai as flagship + Asahi Kai in 2nd position = paired repair bonus (faster repair speed, extended range)
 - Each system has its own independent timer
+- **Paired Repair**: When repair ships occupy positions 1-2, combine their Ship Repair Facilities for extended range and faster repairs
 
 ### Docking repair time
 The formula base on HP loss, level and ship type is already proved, while this value is also given in API's *api_ndock_time*.
