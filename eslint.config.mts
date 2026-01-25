@@ -6,6 +6,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import reactHooks from 'eslint-plugin-react-hooks'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
+import { version } from 'styled-components'
 
 export default defineConfig([
   {
@@ -15,7 +16,14 @@ export default defineConfig([
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
+  {
+    ...pluginReact.configs.flat.recommended,
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
+  },
   eslintPluginPrettierRecommended,
   reactHooks.configs.flat.recommended,
   jsxA11y.flatConfigs.recommended,
