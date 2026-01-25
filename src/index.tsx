@@ -104,13 +104,14 @@ const PluginAnchorageRepair: React.FC = () => {
 
     switch (path) {
       case '/kcsapi/api_port/port': {
-        // Check if ANY fleet has active repair ship flagship
-        const anyFleetCanRepair = fleets.some((fleet) => {
-          const { active, repairShip } = checkRepairActive(fleet, ships, repairId, equips)
-          return active || repairShip
+        // Check if ANY fleet has repairs actually active (not just repair ship present)
+        // WIKI: Timer should only run when repairs are functional (not in dock, expedition, HP >= 50%, etc.)
+        const anyFleetRepairsActive = fleets.some((fleet) => {
+          const { active } = checkRepairActive(fleet, ships, repairId, equips)
+          return active
         })
         
-        if (anyFleetCanRepair && (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0)) {
+        if (anyFleetRepairsActive && (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0)) {
           timerState.setLastRepairRefresh(currentTime)
         }
         break
@@ -121,13 +122,15 @@ const PluginAnchorageRepair: React.FC = () => {
         const changedFleetId = parseInt(body.api_id, 10)
         const shipId = parseInt(body.api_ship_id, 10)
         
-        if (!Number.isNaN(changedFleetId) && shipId >= 0) {
+        if (!Number.isNaN(changedFleetId)) {
           const changedFleet = fleets.find((f) => f.api_id === changedFleetId)
           if (changedFleet) {
             const flagship = ships[_.get(changedFleet, 'api_ship.0', -1)]
             // WIKI: Reset only if "the fleet whose flagship is the repair ship gets a composition change"
             const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
             
+            // Reset for both additions (shipId >= 0) and removals (shipId < 0) per WIKI
+            // WIKI: "編成の変更によってカウントはリセットされる" (composition changes reset the count)
             if (repairShipFlagship) {
               if (timeElapsed < AKASHI_INTERVAL / 1000) {
                 timerState.resetRepairTimer()
