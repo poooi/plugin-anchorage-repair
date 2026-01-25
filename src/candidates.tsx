@@ -23,7 +23,7 @@ import {
 } from 'views/utils/selectors'
 import { resolveTime } from 'views/utils/tools'
 
-import { akashiEstimate, timePerHPCalc, nosakiMoraleEstimate } from './functions'
+import { akashiEstimate, timePerHPCalc } from './functions'
 import { APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { RootState } from '../poi-types'
@@ -80,7 +80,6 @@ const candidateShipsSelector = createSelector(
       ),
       fp.map(
         (ship: APIShip): EnhancedShip => {
-          const constShip = $ships[ship.api_ship_id]
           return {
             ...$ships[ship.api_ship_id],
             ...ship,

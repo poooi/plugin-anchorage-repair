@@ -6,7 +6,6 @@ import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_K
 
 export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
 export const NOSAKI_ID_LIST = [NOSAKI_ID, NOSAKI_KAI_ID] // nosaki, nosaki kai ID in $ships
-export const REPAIR_SHIP_ID = [...AKASHI_ID, ...NOSAKI_ID_LIST] // all repair ships
 export const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
 export type FleetBasicInfo = {
@@ -75,9 +74,12 @@ export const getFleetStatus = (
     const ship = ships[_.get(fleet, `api_ship.${position}`, -1)]
     if (ship && _.includes(NOSAKI_ID_LIST, ship.api_ship_id)) {
       const constShip = $ships[ship.api_ship_id]
+      if (!constShip) {
+        return false
+      }
       const isFullySupplied =
-        ship.api_fuel === (constShip?.api_fuel_max || 0) &&
-        ship.api_bull === (constShip?.api_bull_max || 0)
+        ship.api_fuel === (constShip.api_fuel_max || 0) &&
+        ship.api_bull === (constShip.api_bull_max || 0)
       const isHealthy = ship.api_nowhp > ship.api_maxhp * 0.5
       const hasGoodMorale = ship.api_cond >= 30
       const notInRepair = !_.includes(repairId, ship.api_id)
@@ -162,14 +164,16 @@ export const getFleetRepairDetail = (
 
       // Get max fuel and ammo from const ship data
       const constShipFull = $ships[ship.api_ship_id]
-      const api_fuel_max = constShipFull?.api_fuel_max || 0
-      const api_bull_max = constShipFull?.api_bull_max || 0
 
       // Calculate morale boost potential
-      const moraleEstimate = nosakiMoraleEstimate({
-        api_cond: ship.api_cond,
-        nosakiShipId,
-      })
+      // Exclude Nosaki herself from receiving morale boost (wiki requirement)
+      const isNosaki = ship.api_ship_id === 996 || ship.api_ship_id === 1002
+      const moraleEstimate = isNosaki 
+        ? { canBoost: false, boostAmount: 0 }
+        : nosakiMoraleEstimate({
+            api_cond: ship.api_cond,
+            nosakiShipId,
+          })
 
       return {
         ...ship,

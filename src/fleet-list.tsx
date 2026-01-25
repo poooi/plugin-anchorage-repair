@@ -74,12 +74,13 @@ const ColContainer = styled.div<{ $xs?: number }>`
 `
 
 const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
+  const [lastRefresh, setLastRefresh] = useState(0) // Per-fleet Akashi timer
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [moraleTimeElapsed, setMoraleTimeElapsed] = useState(0)
-  const [timerTick, setTimerTick] = useState(0) // For triggering re-renders when global timer changes
+  const [timerTick, setTimerTick] = useState(0) // For triggering re-renders when global Nosaki timer changes
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
-  // Subscribe to global timer state changes
+  // Subscribe to global Nosaki timer state changes
   useEffect(() => {
     const unsubscribe = timerState.subscribe(() => {
       setTimerTick((prev) => prev + 1)
@@ -87,8 +88,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
     return unsubscribe
   }, [])
 
-  const lastRefresh = timerState.getLastAkashiRefresh()
-  const lastMoraleRefresh = timerState.getLastNosakiRefresh()
+  const lastMoraleRefresh = timerState.getLastNosakiRefresh() // Global Nosaki timer
 
   // Create selectors for this specific fleet
   const basicInfoSelector = useMemo(
@@ -121,12 +121,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
       switch (path) {
         case '/kcsapi/api_port/port':
-          // Refresh timers when returning to port
+          // Refresh Akashi timer (per-fleet) when returning to port
           if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
-            timerState.setLastAkashiRefresh(Date.now())
+            setLastRefresh(Date.now())
             setTimeElapsed(0)
           }
-          if (moraleTimeElapsed >= NOSAKI_INTERVAL / 1000 || lastMoraleRefresh === 0) {
+          // Refresh Nosaki timer (global) when returning to port, but only if Nosaki is eligible
+          if (status.canBoostMorale && (moraleTimeElapsed >= NOSAKI_INTERVAL / 1000 || lastMoraleRefresh === 0)) {
             timerState.setLastNosakiRefresh(Date.now())
             setMoraleTimeElapsed(0)
           }
@@ -142,31 +143,35 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           const shipId = parseInt(postBody.api_ship_id || '', 10)
           if (
             !Number.isNaN(changedFleetId) &&
-            changedFleetId === basicInfo.api_id &&
-            shipId >= 0
+            changedFleetId === basicInfo.api_id
           ) {
             // For Akashi: reset timer if under 20 minutes, otherwise require port refresh
-            if (timeElapsed < AKASHI_INTERVAL / 1000) {
-              timerState.resetAkashiTimer()
-              setTimeElapsed(0)
-            } else if (shipId < 0) {
-              // Removing ship (drag out or disband) doesn't reset - do nothing
-            } else {
-              // Over 20 minutes - need to refresh at port
-              timerState.clearAkashiTimer()
+            if (shipId >= 0) {
+              if (timeElapsed < AKASHI_INTERVAL / 1000) {
+                setLastRefresh(Date.now())
+                setTimeElapsed(0)
+              } else {
+                // Over 20 minutes - need to refresh at port
+                setLastRefresh(0)
+              }
             }
+            // shipId < 0: Removing ship (drag out or disband) doesn't reset - do nothing
             
             // For Nosaki: after 15 min, composition changes don't reset timer (wiki requirement)
-            if (moraleTimeElapsed < NOSAKI_INTERVAL / 1000) {
-              timerState.resetNosakiTimer()
-              setMoraleTimeElapsed(0)
-            } else if (shipId < 0) {
-              // Removing ship doesn't reset - do nothing
-            } else {
-              // Over 15 minutes - composition changes don't reset timer
-              // Just need port refresh
-              timerState.clearNosakiTimer()
+            if (shipId >= 0) {
+              const currentMoraleElapsed = lastMoraleRefresh > 0 
+                ? (Date.now() - lastMoraleRefresh) / 1000 
+                : moraleTimeElapsed
+              if (currentMoraleElapsed < NOSAKI_INTERVAL / 1000) {
+                timerState.resetNosakiTimer()
+                setMoraleTimeElapsed(0)
+              } else {
+                // Over 15 minutes - composition changes don't reset timer
+                // Just need port refresh
+                timerState.clearNosakiTimer()
+              }
             }
+            // shipId < 0: Removing ship doesn't reset - do nothing
           }
           break
         }
@@ -181,7 +186,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
           // Only instant repair (bucket) resets timer
           if (postBody.api_highspeed === 1 && infleet.length > 0) {
-            timerState.resetAkashiTimer()
+            setLastRefresh(Date.now())
             timerState.resetNosakiTimer()
           }
           break
@@ -189,7 +194,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         default:
       }
     },
-    [basicInfo, timeElapsed, moraleTimeElapsed, timerTick],
+    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh, status.canBoostMorale],
   )
 
   useEffect(() => {
@@ -311,7 +316,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
       </InfoRow>
       <RowContainer>
         <ColContainer $xs={12}>
-          <HiddenCallout intent="warning" $hidden={lastRefresh !== 0 && lastMoraleRefresh !== 0}>
+          <HiddenCallout
+            intent="warning"
+            $hidden={
+              (!status.canRepair || lastRefresh !== 0) &&
+              (!status.canBoostMorale || lastMoraleRefresh !== 0)
+            }
+          >
             {t('refresh_notice')}
           </HiddenCallout>
         </ColContainer>
@@ -366,7 +377,6 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                   timeElapsed={timeElapsed}
                   canRepair={status.canRepair}
                   canBoostMorale={status.canBoostMorale}
-                  moraleTimeElapsed={moraleTimeElapsed}
                 />
               ))}
             </tbody>

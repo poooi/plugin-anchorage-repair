@@ -145,7 +145,12 @@ export const nosakiMoraleEstimate = ({
   api_cond: number
   nosakiShipId: number
 }): { canBoost: boolean; boostAmount: number } => {
-  // Check if ship can receive morale boost
+  // Validate Nosaki ship ID
+  if (nosakiShipId !== NOSAKI_ID && nosakiShipId !== NOSAKI_KAI_ID) {
+    return { canBoost: false, boostAmount: 0 }
+  }
+
+  // Check if ship can receive morale boost based on current cond
   if (api_cond >= NOSAKI_COND_MAX) {
     return { canBoost: false, boostAmount: 0 }
   }

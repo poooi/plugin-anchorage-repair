@@ -44,7 +44,6 @@ interface ShipRowProps {
   ship: ShipData
   canRepair: boolean
   canBoostMorale: boolean
-  moraleTimeElapsed: number
 }
 
 const LvLabel = styled.span`
@@ -57,7 +56,6 @@ const ShipRow: React.FC<ShipRowProps> = ({
   lastRefresh,
   canRepair,
   canBoostMorale,
-  moraleTimeElapsed,
   ship,
 }) => {
   const canNotify = useSelector((state: RootState) => state.misc.canNotify)

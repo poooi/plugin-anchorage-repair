@@ -46,7 +46,7 @@ The formula base on HP loss, level and ship type is already proved, while this v
 
 ### Repair time (Akashi)
 - it takes at least 20 minutes to repair ships by at least 1 HP
-- Above 20 minutes, the the amount will be the same as ships in docking, rounded down.
+- Above 20 minutes, the amount will be the same as ships in docking, rounded down.
 - In the docking time formula, a 30-second bias is always added; the docking is actually finished, however, 1 minute earlier. And anchorage repair time will be **rounded up** to next minute.
 ### Timer reset rules (Both Akashi and Nosaki)
 - The repair timer and morale boost timer share similar reset behavior:
@@ -57,7 +57,8 @@ The formula base on HP loss, level and ship type is already proved, while this v
 
 ### Nosaki-specific Timer Behavior (Important!)
 - **Global timer**: Nosaki timer is shared across ALL fleets, not per-fleet
-- **After 15 minutes activation**: Composition changes no longer reset the timer
+- **Akashi timer is per-fleet**: Each fleet tracks its own Akashi repair timer independently
+- **After 15 minutes activation**: Composition changes no longer reset the Nosaki timer
 - **Fleet presets**: Loading composition presets does NOT reset the timer
 - **Ship remodeling**: Upgrading Nosaki to Nosaki Kai does NOT reset the timer
 - **Works everywhere**: Nosaki works in all fleets (1-4) and strike force (7 ships)
