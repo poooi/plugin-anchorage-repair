@@ -77,13 +77,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const [lastRefresh, setLastRefresh] = useState(0) // Per-fleet Akashi timer
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [moraleTimeElapsed, setMoraleTimeElapsed] = useState(0)
-  const [timerTick, setTimerTick] = useState(0) // For triggering re-renders when global Nosaki timer changes
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
   // Subscribe to global Nosaki timer state changes
   useEffect(() => {
     const unsubscribe = timerState.subscribe(() => {
-      setTimerTick((prev) => prev + 1)
+      // Force component to re-render when global Nosaki timer changes
+      setMoraleTimeElapsed((Date.now() - timerState.getLastNosakiRefresh()) / 1000)
     })
     return unsubscribe
   }, [])

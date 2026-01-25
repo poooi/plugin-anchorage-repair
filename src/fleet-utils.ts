@@ -162,12 +162,9 @@ export const getFleetRepairDetail = (
         'api_stype',
       ])
 
-      // Get max fuel and ammo from const ship data
-      const constShipFull = $ships[ship.api_ship_id]
-
       // Calculate morale boost potential
       // Exclude Nosaki herself from receiving morale boost (wiki requirement)
-      const isNosaki = ship.api_ship_id === 996 || ship.api_ship_id === 1002
+      const isNosaki = NOSAKI_ID_LIST.includes(ship.api_ship_id)
       const moraleEstimate = isNosaki 
         ? { canBoost: false, boostAmount: 0 }
         : nosakiMoraleEstimate({

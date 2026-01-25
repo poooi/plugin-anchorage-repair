@@ -1,27 +1,18 @@
 /**
- * Global timer state management for Akashi and Nosaki timers
+ * Global timer state management for the Nosaki timer.
  * According to wiki: "複数の艦隊でそれぞれ野埼を運用する場合でもタイマーは共通"
- * (Even when operating Nosaki in multiple fleets, the timer is shared)
+ * (Even when operating Nosaki in multiple fleets, the timer is shared).
+ * Akashi timers are per-fleet and are managed locally within each FleetList component.
  */
 
 type TimerStateListener = () => void
 
 class TimerStateManager {
-  private lastAkashiRefresh: number = 0
   private lastNosakiRefresh: number = 0
   private listeners: Set<TimerStateListener> = new Set()
 
-  getLastAkashiRefresh(): number {
-    return this.lastAkashiRefresh
-  }
-
   getLastNosakiRefresh(): number {
     return this.lastNosakiRefresh
-  }
-
-  setLastAkashiRefresh(timestamp: number): void {
-    this.lastAkashiRefresh = timestamp
-    this.notifyListeners()
   }
 
   setLastNosakiRefresh(timestamp: number): void {
@@ -29,18 +20,8 @@ class TimerStateManager {
     this.notifyListeners()
   }
 
-  resetAkashiTimer(): void {
-    this.lastAkashiRefresh = Date.now()
-    this.notifyListeners()
-  }
-
   resetNosakiTimer(): void {
     this.lastNosakiRefresh = Date.now()
-    this.notifyListeners()
-  }
-
-  clearAkashiTimer(): void {
-    this.lastAkashiRefresh = 0
     this.notifyListeners()
   }
 

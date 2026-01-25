@@ -110,7 +110,6 @@ const ShipRow: React.FC<ShipRowProps> = ({
         <>
           <td>
             {estimate > 0 &&
-              canRepair &&
               availableSRF &&
               (!inRepair ? (
                 <CountdownNotifierLabel
@@ -128,18 +127,15 @@ const ShipRow: React.FC<ShipRowProps> = ({
                     }
                   }}
                 />
-              ) : inRepair ? (
+              ) : (
                 <Tag intent="success">
                   <FontAwesome name="wrench" /> {t('Docking')}
                 </Tag>
-              ) : (
-                ''
               ))}
           </td>
           <td>{timePerHP ? resolveTime(timePerHP / 1000) : ''}</td>
           <td>
-            {canRepair &&
-              api_nowhp !== api_maxhp &&
+            {api_nowhp !== api_maxhp &&
               !inRepair &&
               repairEstimate(ship, timeElapsed, availableSRF)}
           </td>
