@@ -19,5 +19,11 @@ export const repairsSelector: Selector<RootState, APIGetMemberNdockResponse[]> =
 export const miscSelector: Selector<RootState, { canNotify: boolean }> = (state) =>
   state.misc
 
-export const fleetShipsIdSelectorFactory = (_fleetId: number): Selector<RootState, number[]> =>
-  () => []
+export const fleetShipsIdSelectorFactory = (fleetId: number): Selector<RootState, number[]> =>
+  (state: RootState) => {
+    const fleets = state.info.fleets || []
+    // fleetShipsIdSelectorFactory uses 0-indexed fleetId
+    const fleet = fleets[fleetId]
+    if (!fleet) return []
+    return (fleet.api_ship || []).filter((id: number) => id > 0)
+  }
