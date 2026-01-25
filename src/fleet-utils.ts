@@ -2,7 +2,7 @@ import _ from 'lodash'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID, PAIRED_REPAIR_TIME_MULTIPLIER } from './functions'
+import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID, PAIRED_REPAIR_TIME_MULTIPLIER, MODERATE_PERCENT, BELOW_MINOR_PERCENT } from './functions'
 
 export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
 export const ASAHI_KAI_ID = 958 // asahi kai ID in $ships
@@ -66,24 +66,35 @@ export const getFleetStatus = (
 
   let akashiFlagship = false
   let repairShipFlagship = false
+  let flagshipHealthy = false // Flagship HP > 50% (not 中破 or worse)
+  
   if (flagship != null) {
     akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
     repairShipFlagship = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+    // WIKI: "工作艦が中破以上の損傷を受けている" = cannot be 中破 or worse
+    // Repair ship must have HP > 50% to function
+    flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
   }
 
-  const canRepair = repairShipFlagship && !inExpedition && !flagShipInRepair
+  // Repair ship must be flagship, not in expedition, not in repair, and healthy (HP > 50%)
+  const canRepair = repairShipFlagship && !inExpedition && !flagShipInRepair && flagshipHealthy
 
   // Check for paired repair bonus: Akashi/Asahi at 1-2 positions with SRF on position 2
   let pairedRepairBonus = false
   if (repairShipFlagship && equips) {
     const secondShip = ships[_.get(fleet, 'api_ship.1', -1)]
     if (secondShip && _.includes(REPAIR_SHIP_ID, secondShip.api_ship_id)) {
+      // WIKI: "2番艦も小破未満である必要がある" = 2nd position must be below minor damage (HP > 75%)
+      const secondShipHealthy = secondShip.api_nowhp > secondShip.api_maxhp * BELOW_MINOR_PERCENT
+      
       // Check if second position has SRF equipped
       const secondShipSRF = _.filter(
         secondShip.api_slot,
         (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
       ).length
-      if (secondShipSRF > 0) {
+      
+      // Paired bonus only works if 2nd position has SRF and is healthy
+      if (secondShipSRF > 0 && secondShipHealthy) {
         pairedRepairBonus = true
       }
     }

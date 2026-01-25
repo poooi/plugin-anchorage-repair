@@ -20,16 +20,19 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
 
 ### Akashi's anchorage repair (HP Recovery)
 **Requirements:**
-- Akashi (明石), Akashi Kai (明石改), or Asahi Kai (朝日改) must be fleet **flagship** (position 1), with minor damage or less, and is not in docking.
+- Akashi (明石), Akashi Kai (明石改), or Asahi Kai (朝日改) must be fleet **flagship** (position 1)
+- **Flagship health**: Must NOT be in moderate damage or worse (HP must be > 50% max HP)
+- Flagship must not be in docking
 - Base repair capability:
   - **Akashi/Akashi Kai**: Can repair herself and ship in 2nd slot (base: 2 ships) plus one ship slot per Ship Repair Facility equipped on flagship
   - **Asahi Kai**: Requires at least one Ship Repair Facility to repair even herself (base: 0 ships) plus one ship slot per Ship Repair Facility equipped on flagship
 - **Paired Repair Bonus**: When both repair ships (Akashi/Akashi Kai + Asahi Kai, or two of any repair ships) are at positions 1 and 2:
+  - **2nd position health requirement**: Must be below minor damage (HP > 75% max HP) for paired bonus to work
   - SRF on position 2 also counts toward repair range
-  - If position 2 has SRF equipped, repair speed increases by ~15% (time reduced to 85%)
+  - If position 2 has SRF equipped and is healthy, repair speed increases by ~15% (time reduced to 85%)
   - With maximum 5 total SRF, can repair up to 7 ships in combined fleet operations
-- Ships get repaired at minor damage (HP > 50% max HP) or less.
-- Ship is not in docking.
+- **Repair target eligibility**: Ships get repaired at minor damage (HP > 50% max HP) or less
+- Target ships must not be in docking
 
 **Timer:** 20 minutes minimum for HP repair
 
