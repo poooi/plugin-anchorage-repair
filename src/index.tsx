@@ -19,8 +19,8 @@ import {
   fleetIdsSelector,
   createFleetCanRepairSelector,
 } from './fleet-selectors'
-import { akashiEstimate, MODERATE_PERCENT } from './functions'
-import { REPAIR_SHIP_ID, ASAHI_KAI_ID, SRF_ID, checkRepairActive } from './fleet-utils'
+import { akashiEstimate } from './functions'
+import { checkRepairActive } from './fleet-utils'
 
 const AnchorageRepairContainer = styled.div`
   padding: 1em;

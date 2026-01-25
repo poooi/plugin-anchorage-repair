@@ -90,15 +90,21 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
   // Subscribe to global timer state changes (both Nosaki and repair timers)
+  // When global timestamps change, recalculate elapsed times
   useEffect(() => {
-    const unsubscribe = timerState.subscribe(() => {
-      // Force component to re-render when global timers change
+    const updateElapsedTimes = () => {
       const lastNosakiRefresh = timerState.getLastNosakiRefresh()
       setMoraleTimeElapsed(lastNosakiRefresh > 0 ? (Date.now() - lastNosakiRefresh) / 1000 : 0)
       
       const lastRepairRefresh = timerState.getLastRepairRefresh()
       setTimeElapsed(lastRepairRefresh > 0 ? (Date.now() - lastRepairRefresh) / 1000 : 0)
-    })
+    }
+    
+    const unsubscribe = timerState.subscribe(updateElapsedTimes)
+    
+    // Initial calculation
+    updateElapsedTimes()
+    
     return unsubscribe
   }, [])
 
@@ -137,9 +143,11 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
       switch (path) {
         case '/kcsapi/api_port/port':
-          // Refresh global repair timer when returning to port
-          if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
-            timerState.setLastRepairRefresh(Date.now())
+          // Refresh global repair timer when returning to port - but only if repairs are active
+          if (status.canRepair || status.repairShipFlagship) {
+            if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
+              timerState.setLastRepairRefresh(Date.now())
+            }
           }
           // Nosaki timer: only reset if eligible AND timer has elapsed
           // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
@@ -279,23 +287,25 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   }, [handleResponse])
 
   const tick = useCallback((elapsed: number) => {
-    // Timer updates are now handled through global timerState subscription
-    // This callback is kept for CountupTimer but does nothing
+    if (elapsed % 5 === 0) {
+      // Limit component refresh rate
+      setTimeElapsed(elapsed)
+    }
   }, [])
 
   const tickMorale = useCallback((elapsed: number) => {
-    // Timer updates are now handled through global timerState subscription  
-    // This callback is kept for CountupTimer but does nothing
+    if (elapsed % 5 === 0) {
+      // Limit component refresh rate
+      setMoraleTimeElapsed(elapsed)
+    }
   }, [])
 
   const resetTimeElapsed = useCallback(() => {
-    // Timer resets are now handled through global timerState
-    // This callback is kept for CountupTimer compatibility but does nothing
+    setTimeElapsed(0)
   }, [])
 
   const resetMoraleTimeElapsed = useCallback(() => {
-    // Timer resets are now handled through global timerState
-    // This callback is kept for CountupTimer compatibility but does nothing
+    setMoraleTimeElapsed(0)
   }, [])
 
   // Early return if fleet not found

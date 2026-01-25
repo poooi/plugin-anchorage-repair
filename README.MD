@@ -72,26 +72,28 @@ The formula base on HP loss, level and ship type is already proved, while this v
 - In the docking time formula, a 30-second bias is always added; the docking is actually finished, however, 1 minute earlier. And anchorage repair time will be **rounded up** to next minute.
 
 ### Timer reset rules
-- **Akashi timer (per-fleet)** resets when:
-  - Changing fleet composition (except dragging out or disbanding)
-  - Docking fleet member with bucket (instant repair)
-  - Sending fleet to expedition
+- **Repair timer (global/shared)** resets when:
+  - Changing fleet composition of a fleet with repair ship flagship (except dragging out or disbanding)
+  - Docking fleet member with bucket (instant repair) in a fleet with repair ship flagship
+  - Sending fleet with repair ship flagship to expedition
   - Returns to normal after minimum 20 minutes at port
+  - **Important**: Per WIKI "修理時間のタイマーは共通", the repair timer is shared across ALL fleets
 
-- **Nosaki timer (global)** resets when:
+- **Nosaki timer (global/shared)** resets when:
   - Placing Nosaki in position 1 or 2 (timer starts immediately)
   - Changing fleet composition while Nosaki in position 1/2 and timer < 15 minutes
   - Removing Nosaki from position 1 or 2 (timer cleared)
   - After 15 minutes: composition changes do NOT reset the timer
   - Note: Expedition does NOT reset Nosaki timer ("not in expedition" is an eligibility check, not a reset trigger)
 
-### Nosaki-specific Timer Behavior (Important!)
-- **Global timer**: Nosaki timer is shared across ALL fleets, not per-fleet
-- **Akashi timer is per-fleet**: Each fleet tracks its own Akashi repair timer independently
+### Timer Behavior (Important!)
+- **Both timers are global/shared**: Per WIKI, both repair timer and Nosaki timer are shared across ALL fleets
+- **Repair timer**: "修理時間のタイマーは共通" - when any fleet has a repair ship flagship, all fleets share the same timer
+- **Nosaki timer**: "複数の艦隊でそれぞれ野埼を運用する場合でもタイマーは共通" - Nosaki timer is shared across all fleets
 - **After 15 minutes activation**: Composition changes no longer reset the Nosaki timer
-- **Fleet presets**: Loading composition presets does NOT reset the timer
-- **Ship remodeling**: Upgrading Nosaki to Nosaki Kai does NOT reset the timer
-- **Works everywhere**: Nosaki works in all fleets (1-4) and strike force (7 ships)
+- **Fleet presets**: Loading composition presets does NOT reset timers
+- **Ship remodeling**: Upgrading ships does NOT reset timers
+- **Works everywhere**: Both systems work in all fleets (1-4) and strike force (7 ships)
 
 ### Corner cases
 Following corner cases are not taken into consideration, thus the result may not behave as it could be.
