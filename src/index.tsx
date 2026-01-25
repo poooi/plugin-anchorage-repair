@@ -202,6 +202,20 @@ const PluginAnchorageRepair: React.FC = () => {
               equips,
             )
 
+            // Helper to check if any other fleet has Nosaki in position 1 or 2
+            const hasNosakiInOtherFleets = (excludeFleetId: number) =>
+              fleets.some((fleet) => {
+                if (fleet.api_id === excludeFleetId) return false
+                const status = getFleetStatus(
+                  fleet,
+                  ships,
+                  $ships,
+                  repairId,
+                  equips,
+                )
+                return status.nosakiPresent
+              })
+
             // Handle changes to slot 1/2 (position 0 or 1)
             if (!Number.isNaN(shipIdx) && (shipIdx === 0 || shipIdx === 1)) {
               // Check current ship in this slot (before the change)
@@ -232,37 +246,13 @@ const PluginAnchorageRepair: React.FC = () => {
                   // After 15 min: don't reset
                 } else if (wasNosaki) {
                   // Replacing Nosaki with non-Nosaki
-                  // Check if any other fleet still has Nosaki
-                  const otherFleetHasNosaki = fleets.some((fleet) => {
-                    if (fleet.api_id === changedFleetId) return false
-                    const status = getFleetStatus(
-                      fleet,
-                      ships,
-                      $ships,
-                      repairId,
-                      equips,
-                    )
-                    return status.nosakiPresent
-                  })
-                  if (!otherFleetHasNosaki) {
+                  if (!hasNosakiInOtherFleets(changedFleetId)) {
                     timerState.clearNosakiTimer()
                   }
                 }
               } else if (wasNosaki) {
                 // Removing Nosaki from slot 1 or 2 (shipId < 0 means removal)
-                // Check if any other fleet still has Nosaki
-                const otherFleetHasNosaki = fleets.some((fleet) => {
-                  if (fleet.api_id === changedFleetId) return false
-                  const status = getFleetStatus(
-                    fleet,
-                    ships,
-                    $ships,
-                    repairId,
-                    equips,
-                  )
-                  return status.nosakiPresent
-                })
-                if (!otherFleetHasNosaki) {
+                if (!hasNosakiInOtherFleets(changedFleetId)) {
                   timerState.clearNosakiTimer()
                 }
               }
