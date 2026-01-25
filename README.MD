@@ -35,7 +35,6 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
   - Nosaki cond ≥ 30
   - Nosaki not in expedition or docking
 - If eligible, boosts morale (cond value) for all fleet members except Nosaki herself.
-- Boosts morale (cond value) for all fleet members except Nosaki herself.
 - Nosaki: +2 cond per application, Nosaki Kai: +3 cond per application
 - Maximum cond: 54
 - Target ships: not in docking (damage state doesn't matter)

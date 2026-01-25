@@ -84,7 +84,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   useEffect(() => {
     const unsubscribe = timerState.subscribe(() => {
       // Force component to re-render when global Nosaki timer changes
-      setMoraleTimeElapsed((Date.now() - timerState.getLastNosakiRefresh()) / 1000)
+      const lastRefresh = timerState.getLastNosakiRefresh()
+      setMoraleTimeElapsed(lastRefresh > 0 ? (Date.now() - lastRefresh) / 1000 : 0)
     })
     return unsubscribe
   }, [])
@@ -211,7 +212,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         default:
       }
     },
-    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh, status.canBoostMorale, status.nosakiPresent],
+    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh, status],
   )
 
   useEffect(() => {
