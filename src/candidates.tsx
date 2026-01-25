@@ -240,6 +240,7 @@ export const RepairQueue: React.FC = () => {
     [t],
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: ships,
     columns,

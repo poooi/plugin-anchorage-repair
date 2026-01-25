@@ -103,7 +103,7 @@ export const reactClass = PluginAnchorageRepair
    and ignoring the immediately followed api_port/port call.
 
  */
-let expedReturnLock: number | null = null
+let expedReturnLock: ReturnType<typeof setTimeout> | null = null
 const clearExpedReturnLock = () => {
   if (expedReturnLock !== null) {
     clearTimeout(expedReturnLock)

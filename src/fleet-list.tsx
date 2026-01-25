@@ -100,13 +100,9 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const repairCount = useSelector(repairCountSelector)
   const repairDetail = useSelector(repairDetailSelector)
 
-  // Early return if fleet not found
-  if (!basicInfo || !status) {
-    return null
-  }
-
   const handleResponse = useCallback(
     (e: Event) => {
+      if (!basicInfo) return
       const event = e as GameResponseEvent
       const { path, postBody } = event.detail
 
@@ -149,7 +145,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         default:
       }
     },
-    [basicInfo.api_id, basicInfo.shipId, timeElapsed, lastRefresh],
+    [basicInfo, timeElapsed, lastRefresh],
   )
 
   useEffect(() => {
@@ -169,6 +165,11 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const resetTimeElapsed = useCallback(() => {
     setTimeElapsed(0)
   }, [])
+
+  // Early return if fleet not found
+  if (!basicInfo || !status) {
+    return null
+  }
 
   const tooltipContent = (
     <div>

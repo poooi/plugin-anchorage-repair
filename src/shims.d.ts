@@ -33,15 +33,17 @@ declare module 'views/components/main/parts/countdown-timer' {
   export const CountdownNotifierLabel: ComponentType<{
     timerKey: string
     completeTime: number
-    getLabelStyle: (_: any, timeRemaining: number) => string
-    getNotifyOptions: () => {
-      type: string
-      title: string
-      message: string
-      icon: string
-      preemptTime: number
-      groupKey: string
-    }
+    getLabelStyle: (_: unknown, timeRemaining: number) => string
+    getNotifyOptions: () =>
+      | {
+          type: string
+          title: string
+          message: string
+          icon: string
+          preemptTime: number
+          groupKey: string
+        }
+      | undefined
   }>
 }
 

@@ -108,7 +108,7 @@ const ShipRow: React.FC<ShipRowProps> = ({
               getLabelStyle={getCountdownLabelStyle}
               getNotifyOptions={() => {
                 if (!canNotify || lastRefresh <= 0) {
-                  return undefined as any
+                  return undefined
                 }
                 return {
                   ...basicNotifyConfig,

@@ -44,7 +44,7 @@ export const timePerHPCalc = ({
 
 // alternative way for timePerHP
 export const getTimePerHP = (api_lv = 1, api_stype = 1) => {
-  let factor
+  let factor = 0
   if (FACTOR[api_stype] != null) factor = FACTOR[api_stype].factor || 0
 
   if (factor === 0) return 0
@@ -108,7 +108,10 @@ export const getHPLabelStyle = (
   }
 }
 
-export const getCountdownLabelStyle = (props, timeRemaining) => {
+export const getCountdownLabelStyle = (
+  props: unknown,
+  timeRemaining: number,
+): string => {
   switch (true) {
     case timeRemaining > 600:
       return 'primary'

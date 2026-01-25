@@ -87,14 +87,12 @@ const CountupTimer: React.FC<CountupTimerProps> = ({
             startCallbackFiredRef.current = true
           }
         } catch (error) {
-          console.error(error.stack)
+          console.error(error instanceof Error ? error.stack : error)
         }
       }
     }
 
     window.ticker.reg(countdownId, tick)
-    setDisplayTime(getTimeElapsed(startTime))
-    startCallbackFiredRef.current = false
 
     return () => {
       window.ticker.unreg(countdownId)
