@@ -85,22 +85,25 @@ const ColContainer = styled.div<{ $xs?: number }>`
 `
 
 const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
-  const [lastRefresh, setLastRefresh] = useState(0) // Per-fleet Akashi timer
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [moraleTimeElapsed, setMoraleTimeElapsed] = useState(0)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
-  // Subscribe to global Nosaki timer state changes
+  // Subscribe to global timer state changes (both Nosaki and repair timers)
   useEffect(() => {
     const unsubscribe = timerState.subscribe(() => {
-      // Force component to re-render when global Nosaki timer changes
-      const lastRefresh = timerState.getLastNosakiRefresh()
-      setMoraleTimeElapsed(lastRefresh > 0 ? (Date.now() - lastRefresh) / 1000 : 0)
+      // Force component to re-render when global timers change
+      const lastNosakiRefresh = timerState.getLastNosakiRefresh()
+      setMoraleTimeElapsed(lastNosakiRefresh > 0 ? (Date.now() - lastNosakiRefresh) / 1000 : 0)
+      
+      const lastRepairRefresh = timerState.getLastRepairRefresh()
+      setTimeElapsed(lastRepairRefresh > 0 ? (Date.now() - lastRepairRefresh) / 1000 : 0)
     })
     return unsubscribe
   }, [])
 
   const lastMoraleRefresh = timerState.getLastNosakiRefresh() // Global Nosaki timer
+  const lastRefresh = timerState.getLastRepairRefresh() // Global repair timer
 
   // Create selectors for this specific fleet
   const basicInfoSelector = useMemo(
@@ -134,10 +137,9 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
       switch (path) {
         case '/kcsapi/api_port/port':
-          // Refresh Akashi timer (per-fleet) when returning to port
+          // Refresh global repair timer when returning to port
           if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
-            setLastRefresh(Date.now())
-            setTimeElapsed(0)
+            timerState.setLastRepairRefresh(Date.now())
           }
           // Nosaki timer: only reset if eligible AND timer has elapsed
           // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
@@ -170,14 +172,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             !Number.isNaN(changedFleetId) &&
             changedFleetId === basicInfo.api_id
           ) {
-            // For Akashi: reset timer if under 20 minutes, otherwise require port refresh
+            // For repair ships: reset timer if under 20 minutes, otherwise require port refresh
             if (shipId >= 0) {
               if (timeElapsed < AKASHI_INTERVAL / 1000) {
-                setLastRefresh(Date.now())
-                setTimeElapsed(0)
+                timerState.resetRepairTimer()
               } else {
                 // Over 20 minutes - need to refresh at port
-                setLastRefresh(0)
+                timerState.clearRepairTimer()
               }
             }
             // shipId < 0: Removing ship (drag out or disband) doesn't reset - do nothing
@@ -240,13 +241,12 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           break
 
         case '/kcsapi/api_req_mission/start': {
-          // Sending fleet to expedition resets Akashi timer
+          // Sending fleet to expedition resets global repair timer
           // Wiki: "not in expedition" is an eligibility condition for Nosaki, not a timer reset trigger
           const body = postBody as APIReqMissionStartRequest
           const expedFleetId = parseInt(body.api_deck_id, 10)
           if (!Number.isNaN(expedFleetId) && expedFleetId === basicInfo.api_id) {
-            setLastRefresh(Date.now())
-            setTimeElapsed(0)
+            timerState.resetRepairTimer()
             // Note: Nosaki timer NOT reset on expedition start per wiki analysis
           }
           break
@@ -256,12 +256,12 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           const body = postBody as APIReqNyukyoStartRequest
           const shipId = parseInt(body.api_ship_id, 10)
           const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
-          // Only instant repair (bucket) resets Akashi timer
+          // Only instant repair (bucket) resets global repair timer
           // api_highspeed is "1" (string) when using bucket
           if (body.api_highspeed === '1' && infleet.length > 0) {
-            setLastRefresh(Date.now())
+            timerState.resetRepairTimer()
             // Note: Wiki doesn't explicitly mention bucket resetting Nosaki timer
-            // Keeping Akashi behavior only for now
+            // Keeping repair timer behavior only for now
           }
           break
         }
@@ -279,25 +279,23 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   }, [handleResponse])
 
   const tick = useCallback((elapsed: number) => {
-    if (elapsed % 5 === 0) {
-      // limit component refresh rate
-      setTimeElapsed(elapsed)
-    }
+    // Timer updates are now handled through global timerState subscription
+    // This callback is kept for CountupTimer but does nothing
   }, [])
 
   const tickMorale = useCallback((elapsed: number) => {
-    if (elapsed % 5 === 0) {
-      // limit component refresh rate
-      setMoraleTimeElapsed(elapsed)
-    }
+    // Timer updates are now handled through global timerState subscription  
+    // This callback is kept for CountupTimer but does nothing
   }, [])
 
   const resetTimeElapsed = useCallback(() => {
-    setTimeElapsed(0)
+    // Timer resets are now handled through global timerState
+    // This callback is kept for CountupTimer compatibility but does nothing
   }, [])
 
   const resetMoraleTimeElapsed = useCallback(() => {
-    setMoraleTimeElapsed(0)
+    // Timer resets are now handled through global timerState
+    // This callback is kept for CountupTimer compatibility but does nothing
   }, [])
 
   // Early return if fleet not found
