@@ -168,37 +168,42 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             // For Nosaki: Start timer when placed in slot 1/2, clear when removed
             // shipIdx is 0-based position, so 0 = flagship, 1 = second position
             if (!Number.isNaN(shipIdx) && (shipIdx === 0 || shipIdx === 1)) {
-              // Check if we're placing or removing a ship
+              // Check current ship in this slot (before the change)
+              const currentShipId = basicInfo.shipId[shipIdx]
+              const currentShip = ships[currentShipId]
+              const wasNosaki = currentShip && NOSAKI_ID_LIST.includes(currentShip.api_ship_id)
+              
               if (shipId >= 0) {
                 // Placing a ship in slot 1 or 2
-                const ship = ships[shipId]
-                if (ship && NOSAKI_ID_LIST.includes(ship.api_ship_id)) {
-                  // Placing Nosaki - start timer immediately
-                  const currentMoraleElapsed = lastMoraleRefresh > 0 
+                const newShip = ships[shipId]
+                const isNosaki = newShip && NOSAKI_ID_LIST.includes(newShip.api_ship_id)
+                
+                if (isNosaki) {
+                  // Placing Nosaki - start/reset timer
+                  const elapsedTime = lastMoraleRefresh > 0 
                     ? (Date.now() - lastMoraleRefresh) / 1000 
                     : moraleTimeElapsed
-                  if (currentMoraleElapsed < NOSAKI_INTERVAL / 1000) {
-                    // Before 15 min, start/reset timer
+                  if (elapsedTime < NOSAKI_INTERVAL / 1000) {
                     timerState.resetNosakiTimer()
                     setMoraleTimeElapsed(0)
                   }
-                  // After 15 min: don't reset (wiki requirement)
-                } else if (status.nosakiPresent) {
-                  // Replacing Nosaki with another ship - clear timer
+                  // After 15 min: don't reset
+                } else if (wasNosaki) {
+                  // Replacing Nosaki with non-Nosaki - clear timer
                   timerState.clearNosakiTimer()
                   setMoraleTimeElapsed(0)
                 }
-              } else if (status.nosakiPresent) {
-                // Removing ship from slot 1 or 2 where Nosaki was - clear timer
+              } else if (wasNosaki) {
+                // Removing Nosaki from slot 1 or 2 - clear timer
                 timerState.clearNosakiTimer()
                 setMoraleTimeElapsed(0)
               }
-            } else if (status.nosakiPresent && shipId >= 0) {
-              // Composition change not in slot 1/2, but Nosaki is present
-              const currentMoraleElapsed = lastMoraleRefresh > 0 
+            } else if (status.nosakiPresent && shipId >= 0 && !Number.isNaN(shipIdx)) {
+              // Composition change in other slots while Nosaki is in slot 1/2
+              const elapsedTime = lastMoraleRefresh > 0 
                 ? (Date.now() - lastMoraleRefresh) / 1000 
                 : moraleTimeElapsed
-              if (currentMoraleElapsed < NOSAKI_INTERVAL / 1000) {
+              if (elapsedTime < NOSAKI_INTERVAL / 1000) {
                 // Before 15 min, composition changes reset timer
                 timerState.resetNosakiTimer()
                 setMoraleTimeElapsed(0)
