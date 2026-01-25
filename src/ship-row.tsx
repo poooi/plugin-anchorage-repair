@@ -14,6 +14,7 @@ import {
   getHPLabelStyle,
   getCountdownLabelStyle,
   NOSAKI_COND_MAX,
+  NOSAKI_INTERVAL,
 } from './functions'
 import { RootState } from '../poi-types'
 
@@ -44,6 +45,7 @@ interface ShipRowProps {
   ship: ShipData
   canRepair: boolean
   canBoostMorale: boolean
+  moraleTimeElapsed: number
 }
 
 const LvLabel = styled.span`
@@ -56,6 +58,7 @@ const ShipRow: React.FC<ShipRowProps> = ({
   lastRefresh,
   canRepair,
   canBoostMorale,
+  moraleTimeElapsed,
   ship,
 }) => {
   const canNotify = useSelector((state: RootState) => state.misc.canNotify)
@@ -75,6 +78,9 @@ const ShipRow: React.FC<ShipRowProps> = ({
     canBoostMorale: shipCanBoostMorale,
     moraleBoostAmount,
   } = ship
+
+  // Only show boost when both eligible AND timer complete
+  const isBoostReady = canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000
 
   const completeTime = lastRefresh + estimate
 
@@ -143,7 +149,7 @@ const ShipRow: React.FC<ShipRowProps> = ({
       )}
       {canBoostMorale && (
         <td>
-          {shipCanBoostMorale && !inRepair ? (
+          {isBoostReady && shipCanBoostMorale && !inRepair ? (
             <Tag intent="primary">
               {t('Cond')}: {api_cond} (+{moraleBoostAmount})
             </Tag>

@@ -451,6 +451,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                   timeElapsed={timeElapsed}
                   canRepair={status.canRepair}
                   canBoostMorale={status.nosakiPresent}
+                  moraleTimeElapsed={moraleTimeElapsed}
                 />
               ))}
             </tbody>
