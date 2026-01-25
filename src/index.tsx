@@ -120,7 +120,6 @@ const PluginAnchorageRepair: React.FC = () => {
       case '/kcsapi/api_req_hensei/change': {
         const body = postBody as APIReqHenseiChangeRequest
         const changedFleetId = parseInt(body.api_id, 10)
-        const shipId = parseInt(body.api_ship_id, 10)
         
         if (!Number.isNaN(changedFleetId)) {
           const changedFleet = fleets.find((f) => f.api_id === changedFleetId)

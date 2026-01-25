@@ -2,7 +2,7 @@ import _ from 'lodash'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID, PAIRED_REPAIR_TIME_MULTIPLIER, MODERATE_PERCENT, BELOW_MINOR_PERCENT } from './functions'
+import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID, PAIRED_REPAIR_TIME_MULTIPLIER, MODERATE_DAMAGE_THRESHOLD, BELOW_MINOR_PERCENT } from './functions'
 
 export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
 export const ASAHI_KAI_ID = 958 // asahi kai ID in $ships
@@ -76,7 +76,7 @@ export const checkRepairActive = (
     return { active: false, repairShip: false, flagship }
   }
 
-  const flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
+  const flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_DAMAGE_THRESHOLD
 
   // Check if Asahi Kai has at least 1 SRF (required for it to repair even itself)
   let asahiKaiHasSRF = true

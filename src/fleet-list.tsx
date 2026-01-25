@@ -247,7 +247,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         default:
       }
     },
-    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh, status, ships],
+    [basicInfo, moraleTimeElapsed, lastMoraleRefresh, status, ships],
   )
 
   useEffect(() => {
