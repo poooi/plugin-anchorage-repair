@@ -24,6 +24,7 @@ import {
 import { akashiEstimate, AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
 import {
   checkRepairActive,
+  checkNosakiPresent,
   REPAIR_SHIP_ID,
   NOSAKI_ID_LIST,
   getFleetStatus,
@@ -132,15 +133,26 @@ const PluginAnchorageRepair: React.FC = () => {
 
         // Global Nosaki timer handling
         // Check if ANY fleet has Nosaki present in position 1 or 2
+        // Use lightweight checkNosakiPresent first, then full getFleetStatus only if needed
         let anyFleetNosakiPresent = false
         let anyFleetCanBoostMorale = false
         for (const fleet of fleets) {
-          const status = getFleetStatus(fleet, ships, $ships, repairId, equips)
-          if (status.nosakiPresent) {
+          // Quick check first - doesn't require $ships
+          if (checkNosakiPresent(fleet, ships)) {
             anyFleetNosakiPresent = true
-            if (status.canBoostMorale) {
-              anyFleetCanBoostMorale = true
-              break
+            // Only call getFleetStatus for full eligibility check when $ships is available
+            if ($ships && Object.keys($ships).length > 0) {
+              const status = getFleetStatus(
+                fleet,
+                ships,
+                $ships,
+                repairId,
+                equips,
+              )
+              if (status.canBoostMorale) {
+                anyFleetCanBoostMorale = true
+                break
+              }
             }
           }
         }
@@ -203,17 +215,11 @@ const PluginAnchorageRepair: React.FC = () => {
             )
 
             // Helper to check if any other fleet has Nosaki in position 1 or 2
+            // Uses lightweight checkNosakiPresent that doesn't require $ships
             const hasNosakiInOtherFleets = (excludeFleetId: number) =>
               fleets.some((fleet) => {
                 if (fleet.api_id === excludeFleetId) return false
-                const status = getFleetStatus(
-                  fleet,
-                  ships,
-                  $ships,
-                  repairId,
-                  equips,
-                )
-                return status.nosakiPresent
+                return checkNosakiPresent(fleet, ships)
               })
 
             // Handle changes to slot 1/2 (position 0 or 1)
@@ -239,7 +245,7 @@ const PluginAnchorageRepair: React.FC = () => {
                   // If timer hasn't started yet, start it;
                   // otherwise, before 15 min, placing Nosaki resets timer.
                   if (lastNosakiRefresh === 0) {
-                    timerState.setLastNosakiRefresh(Date.now())
+                    timerState.setLastNosakiRefresh(currentTime)
                   } else if (nosakiTimeElapsed < NOSAKI_INTERVAL / 1000) {
                     timerState.resetNosakiTimer()
                   }

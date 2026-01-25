@@ -108,6 +108,26 @@ export const checkRepairActive = (
   return { active, repairShip: repairShipFlagship, flagship }
 }
 
+/**
+ * Lightweight helper to check if Nosaki is present in position 1 or 2 of a fleet.
+ * Does NOT require $ships (const ship data), making it safer when const data isn't loaded.
+ * Use this for timer management; use getFleetStatus for full eligibility checks.
+ */
+export const checkNosakiPresent = (
+  fleet: APIDeckPort,
+  ships: Record<number, APIShip>,
+): boolean => {
+  // Check positions 0 and 1 (flagship and second position)
+  for (let position = 0; position <= 1; position++) {
+    const shipId = _.get(fleet, `api_ship.${position}`, -1)
+    const ship = ships[shipId]
+    if (ship && NOSAKI_ID_LIST.includes(ship.api_ship_id)) {
+      return true
+    }
+  }
+  return false
+}
+
 export const getFleetStatus = (
   fleet: APIDeckPort,
   ships: Record<number, APIShip>,
