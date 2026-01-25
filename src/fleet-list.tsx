@@ -128,11 +128,19 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             setLastRefresh(Date.now())
             setTimeElapsed(0)
           }
-          // Refresh Nosaki timer (global) when returning to port if Nosaki is present
-          // Wiki: Timer starts when Nosaki is placed, eligibility checked at port return
-          if (status.nosakiPresent && (moraleTimeElapsed >= NOSAKI_INTERVAL / 1000 || lastMoraleRefresh === 0)) {
-            timerState.setLastNosakiRefresh(Date.now())
-            setMoraleTimeElapsed(0)
+          // Nosaki timer: only reset if eligible AND timer has elapsed (or initial start)
+          // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
+          if (status.nosakiPresent) {
+            if (lastMoraleRefresh === 0) {
+              // Initial start when Nosaki is first placed
+              timerState.setLastNosakiRefresh(Date.now())
+              setMoraleTimeElapsed(0)
+            } else if (status.canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000) {
+              // Eligible and timer elapsed - apply boost and reset timer
+              timerState.setLastNosakiRefresh(Date.now())
+              setMoraleTimeElapsed(0)
+            }
+            // If timer running but not eligible or not elapsed yet, keep timer running
           }
           break
 
@@ -202,10 +210,11 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         case '/kcsapi/api_req_nyukyo/start': {
           const shipId = parseInt(postBody.api_ship_id || '', 10)
           const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
-          // Only instant repair (bucket) resets timer
+          // Only instant repair (bucket) resets Akashi timer
           if (postBody.api_highspeed === 1 && infleet.length > 0) {
             setLastRefresh(Date.now())
-            timerState.resetNosakiTimer()
+            // Note: Wiki doesn't explicitly mention bucket resetting Nosaki timer
+            // Keeping Akashi behavior only for now
           }
           break
         }
@@ -266,7 +275,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
     </div>
   )
 
-  const hasAnyActivity = status.canRepair || status.canBoostMorale
+  const hasAnyActivity = status.canRepair || status.nosakiPresent
 
   return (
     <GridContainer>
@@ -301,13 +310,13 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             </InfoCol>
           </>
         )}
-        {status.canBoostMorale && (
+        {status.nosakiPresent && (
           <>
             <InfoCol $xs={4}>
               <Tooltip content={moraleTooltipContent} placement="bottom">
                 <Tag
                   intent={status.canBoostMorale ? 'success' : 'warning'}
-                  interactive={status.canBoostMorale}
+                  interactive={status.nosakiPresent}
                 >
                   {t('Morale Boost')}
                 </Tag>
@@ -338,7 +347,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             intent="warning"
             $hidden={
               (!status.canRepair || lastRefresh !== 0) &&
-              (!status.canBoostMorale || lastMoraleRefresh !== 0)
+              (!status.nosakiPresent || lastMoraleRefresh !== 0)
             }
           >
             {t('refresh_notice')}

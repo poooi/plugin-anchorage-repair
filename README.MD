@@ -46,6 +46,7 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
 - Both systems can work simultaneously in the same fleet
 - Example: Akashi as flagship (repairs HP, 20min timer) + Nosaki in 2nd position (boosts morale, 15min timer)
 - Each system has its own independent timer
+
 ### Docking repair time
 The formula base on HP loss, level and ship type is already proved, while this value is also given in API's *api_ndock_time*.
 
@@ -53,6 +54,7 @@ The formula base on HP loss, level and ship type is already proved, while this v
 - it takes at least 20 minutes to repair ships by at least 1 HP
 - Above 20 minutes, the amount will be the same as ships in docking, rounded down.
 - In the docking time formula, a 30-second bias is always added; the docking is actually finished, however, 1 minute earlier. And anchorage repair time will be **rounded up** to next minute.
+
 ### Timer reset rules (Both Akashi and Nosaki)
 - The repair timer and morale boost timer share similar reset behavior:
   - returning to the HQ screen after the minimum time (20min for Akashi, 15min for Nosaki) from the time the composition changed,
