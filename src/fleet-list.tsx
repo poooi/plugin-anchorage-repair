@@ -17,21 +17,28 @@ import {
   createFleetRepairCountSelector,
   createFleetRepairDetailSelector,
 } from './fleet-selectors'
+import type { APIReqHenseiChangeRequest } from 'kcsapi/api_req_hensei/change/request'
+import type { APIReqHenseiPresetSelectRequest } from 'kcsapi/api_req_hensei/preset_select/request'
+import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/request'
+import type { APIReqNyukyoStartRequest } from 'kcsapi/api_req_nyukyo/start/request'
+import type { APIReqKaisouRemodelingRequest } from 'kcsapi/api_req_kaisou/remodeling/request'
 
 interface FleetListProps {
   fleetId: number
 }
 
+type GameResponsePostBody =
+  | APIReqHenseiChangeRequest
+  | APIReqHenseiPresetSelectRequest
+  | APIReqMissionStartRequest
+  | APIReqNyukyoStartRequest
+  | APIReqKaisouRemodelingRequest
+  | Record<string, string | number | undefined>
+
 interface GameResponseEvent extends CustomEvent {
   detail: {
     path: string
-    postBody: {
-      api_id?: string
-      api_ship_id?: string
-      api_ship_idx?: string
-      api_highspeed?: number
-      api_deck_id?: string
-    }
+    postBody: GameResponsePostBody
   }
 }
 
@@ -153,9 +160,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           break
 
         case '/kcsapi/api_req_hensei/change': {
-          const changedFleetId = parseInt(postBody.api_id || '', 10)
-          const shipId = parseInt(postBody.api_ship_id || '', 10)
-          const shipIdx = parseInt(postBody.api_ship_idx || '', 10)
+          const body = postBody as APIReqHenseiChangeRequest
+          const changedFleetId = parseInt(body.api_id, 10)
+          const shipId = parseInt(body.api_ship_id, 10)
+          const shipIdx = parseInt(body.api_ship_idx, 10)
           if (
             !Number.isNaN(changedFleetId) &&
             changedFleetId === basicInfo.api_id
@@ -229,7 +237,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         case '/kcsapi/api_req_mission/start': {
           // Sending fleet to expedition resets Akashi timer
           // Wiki: "not in expedition" is an eligibility condition for Nosaki, not a timer reset trigger
-          const expedFleetId = parseInt(postBody.api_deck_id || '', 10)
+          const body = postBody as APIReqMissionStartRequest
+          const expedFleetId = parseInt(body.api_deck_id, 10)
           if (!Number.isNaN(expedFleetId) && expedFleetId === basicInfo.api_id) {
             setLastRefresh(Date.now())
             setTimeElapsed(0)
@@ -239,10 +248,12 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         }
 
         case '/kcsapi/api_req_nyukyo/start': {
-          const shipId = parseInt(postBody.api_ship_id || '', 10)
+          const body = postBody as APIReqNyukyoStartRequest
+          const shipId = parseInt(body.api_ship_id, 10)
           const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
           // Only instant repair (bucket) resets Akashi timer
-          if (postBody.api_highspeed === 1 && infleet.length > 0) {
+          // api_highspeed is "1" (string) when using bucket
+          if (body.api_highspeed === '1' && infleet.length > 0) {
             setLastRefresh(Date.now())
             // Note: Wiki doesn't explicitly mention bucket resetting Nosaki timer
             // Keeping Akashi behavior only for now
