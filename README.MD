@@ -28,7 +28,7 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
 
 ### Nosaki's morale boost (Cond Recovery)
 **Requirements:**
-- Nosaki (or Kai) must be in **position 1 or 2**, fully supplied, with minor damage or less (HP > 50% max HP), cond ≥ 30, not in expedition or docking.
+- Nosaki (or Kai) must be in **position 1 or 2**, fully supplied, undamaged to below minor damage (HP > 75% max HP), cond ≥ 30, not in expedition or docking.
 - Boosts morale (cond value) for all fleet members except Nosaki herself.
 - Nosaki: +2 cond per application, Nosaki Kai: +3 cond per application
 - Maximum cond: 54

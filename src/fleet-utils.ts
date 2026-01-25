@@ -80,7 +80,8 @@ export const getFleetStatus = (
       const isFullySupplied =
         ship.api_fuel === (constShip.api_fuel_max || 0) &&
         ship.api_bull === (constShip.api_bull_max || 0)
-      const isHealthy = ship.api_nowhp > ship.api_maxhp * 0.5
+      // Wiki: "無傷～小破未満" means undamaged to below minor damage (HP > 75%, not > 50%)
+      const isHealthy = ship.api_nowhp > ship.api_maxhp * 0.75
       const hasGoodMorale = ship.api_cond >= 30
       const notInRepair = !_.includes(repairId, ship.api_id)
 

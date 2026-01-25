@@ -157,19 +157,19 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             }
             // shipId < 0: Removing ship (drag out or disband) doesn't reset - do nothing
             
-            // For Nosaki: after 15 min, composition changes don't reset timer (wiki requirement)
-            if (shipId >= 0) {
+            // For Nosaki: only modify global timer if this fleet has Nosaki active or timer was running
+            // Prevent non-Nosaki fleets from mutating the global timer
+            if (shipId >= 0 && (status.canBoostMorale || status.nosakiPosition >= 0 || lastMoraleRefresh > 0)) {
               const currentMoraleElapsed = lastMoraleRefresh > 0 
                 ? (Date.now() - lastMoraleRefresh) / 1000 
                 : moraleTimeElapsed
               if (currentMoraleElapsed < NOSAKI_INTERVAL / 1000) {
+                // Before 15 min activation, composition changes reset the timer
                 timerState.resetNosakiTimer()
                 setMoraleTimeElapsed(0)
-              } else {
-                // Over 15 minutes - composition changes don't reset timer
-                // Just need port refresh
-                timerState.clearNosakiTimer()
               }
+              // After 15 min: composition changes don't reset timer (wiki requirement)
+              // Timer keeps running, just needs port refresh to apply the boost
             }
             // shipId < 0: Removing ship doesn't reset - do nothing
           }
