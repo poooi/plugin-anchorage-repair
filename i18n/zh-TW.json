@@ -1,6 +1,6 @@
 {
   "Anchorage repair": "泊地修理",
-  "Akashi not flagship": "修理艦不是旗艦",
+  "Repair ship not flagship": "修理艦不是旗艦",
   "Not ready": "未就緒",
   "capacity-count": "可修理數量: {{count}}",
   "refresh_notice": "請回到母港畫面以重置計時器。",
@@ -12,7 +12,7 @@
   "fleet in expedition": "艦隊遠征中",
   "elapsed": "計時器：",
   "Repairing": "正在修理",
-  "Akashi loves you!": "修理準備就緒！",
+  "Ready for repair!": "修理準備就緒！",
   "flagship in dock": "旗艦入渠中",
   "anchorage repair completed": "泊地修理完畢",
   "A plugin to help in Akashi's anchorage repair arrangement": "明石HP修理和野埼士氣提升助手",

@@ -1,6 +1,6 @@
 {
   "Anchorage repair": "정박지 수리",
-  "Akashi not flagship": "수리함이 기함이 아닙니다",
+  "Repair ship not flagship": "수리함이 기함이 아닙니다",
   "Not ready": "준비되지 않음",
   "capacity-count": "수리 가능 수: {{count}}",
   "refresh_notice": "타이머를 리셋하려면 모항 화면으로 돌아가세요.",
@@ -12,7 +12,7 @@
   "fleet in expedition": "원정 중인 함대",
   "elapsed": "경과 시간:",
   "Repairing": "수리 중",
-  "Akashi loves you!": "수리 준비 완료!",
+  "Ready for repair!": "수리 준비 완료!",
   "flagship in dock": "기함 입거 중",
   "anchorage repair completed": "정박지 수리 완료",
   "A plugin to help in Akashi's anchorage repair arrangement": "아카시 HP 수리 및 노사키 사기 증진 도우미",
