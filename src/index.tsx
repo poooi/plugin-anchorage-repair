@@ -20,7 +20,7 @@ import {
   createFleetCanRepairSelector,
 } from './fleet-selectors'
 import { akashiEstimate, MODERATE_PERCENT } from './functions'
-import { AKASHI_ID, REPAIR_SHIP_ID, ASAHI_KAI_ID, SRF_ID } from './fleet-utils'
+import { REPAIR_SHIP_ID, ASAHI_KAI_ID, SRF_ID, checkRepairActive } from './fleet-utils'
 
 const AnchorageRepairContainer = styled.div`
   padding: 1em;
@@ -128,7 +128,7 @@ export const switchPluginPath = [
         fleets = [],
         ships = {},
         repairs = [],
-        equips = {},
+        equips,
       }: {
         fleets: APIDeckPort[]
         ships: Record<number, APIShip>
@@ -138,34 +138,8 @@ export const switchPluginPath = [
       const repairId = repairs.map((dock) => dock.api_ship_id)
 
       return fleets.some((fleet) => {
-        const inExpedition = Boolean(_.get(fleet, 'api_mission.0'))
-        const flagShipInRepair = _.includes(
-          repairId,
-          _.get(fleet, 'api_ship.0', -1),
-        )
-        const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
-        
-        if (!flagship) return false
-        
-        const repairShipFlagship = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
-        if (!repairShipFlagship) return false
-        
-        const flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
-        
-        // Check if Asahi Kai has at least 1 SRF
-        let asahiKaiHasSRF = true
-        if (flagship.api_ship_id === ASAHI_KAI_ID && equips) {
-          const flagshipSrfCount = _.filter(
-            flagship.api_slot,
-            (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
-          ).length
-          asahiKaiHasSRF = flagshipSrfCount > 0
-        } else if (flagship.api_ship_id === ASAHI_KAI_ID && !equips) {
-          // Conservative: if Asahi Kai but no equips data, assume can't repair
-          asahiKaiHasSRF = false
-        }
-        
-        const canRepair = !inExpedition && !flagShipInRepair && flagshipHealthy && asahiKaiHasSRF
+        // Use centralized helper to check repair activation
+        const { active: canRepair } = checkRepairActive(fleet, ships, repairId, equips)
 
         if (!canRepair) return false
 

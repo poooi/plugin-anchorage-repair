@@ -81,7 +81,11 @@ export const repairEstimate = (
   availableSRF = false,
 ) => {
   // timeElapsed is in seconds
+  // WIKI: Only ships at minor damage or better (HP > 50%) can be repaired
   if (api_nowhp >= api_maxhp || timePerHP === 0 || !availableSRF) return 0
+  
+  // Check damage threshold: cannot repair moderate damage (中破) or worse
+  if (api_nowhp <= api_maxhp * MINOR_PERCENT) return 0
 
   if (timeElapsed * 1000 < AKASHI_INTERVAL) {
     return 0

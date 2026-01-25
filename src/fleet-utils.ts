@@ -110,11 +110,9 @@ export const getFleetStatus = (
   const flagShipInRepair = _.includes(repairId, _.get(fleet, 'api_ship.0', -1))
 
   let akashiFlagship = false
-  let flagshipHealthy = false
   
   if (flagship != null) {
     akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
-    flagshipHealthy = flagship.api_nowhp > flagship.api_maxhp * MODERATE_PERCENT
   }
 
   const canRepair = canRepairActive
