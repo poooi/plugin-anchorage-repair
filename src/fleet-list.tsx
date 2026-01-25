@@ -5,12 +5,9 @@ import styled from 'styled-components'
 import { HTMLTable, Tag, Callout } from '@blueprintjs/core'
 import { Tooltip } from 'views/components/etc/overlay'
 import _ from 'lodash'
-import { shipsSelector } from 'views/utils/selectors'
 
 import CountupTimer from './countup-timer'
-import { NOSAKI_INTERVAL } from './functions'
 import { timerState } from './timer-state'
-import { NOSAKI_ID_LIST } from './fleet-utils'
 import ShipRow from './ship-row'
 import {
   createFleetBasicInfoSelector,
@@ -18,29 +15,9 @@ import {
   createFleetRepairCountSelector,
   createFleetRepairDetailSelector,
 } from './fleet-selectors'
-import type { APIReqHenseiChangeRequest } from 'kcsapi/api_req_hensei/change/request'
-import type { APIReqHenseiPresetSelectRequest } from 'kcsapi/api_req_hensei/preset_select/request'
-import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/request'
-import type { APIReqNyukyoStartRequest } from 'kcsapi/api_req_nyukyo/start/request'
-import type { APIReqKaisouRemodelingRequest } from 'kcsapi/api_req_kaisou/remodeling/request'
 
 interface FleetListProps {
   fleetId: number
-}
-
-type GameResponsePostBody =
-  | APIReqHenseiChangeRequest
-  | APIReqHenseiPresetSelectRequest
-  | APIReqMissionStartRequest
-  | APIReqNyukyoStartRequest
-  | APIReqKaisouRemodelingRequest
-  | Record<string, string | number | undefined>
-
-interface GameResponseEvent extends CustomEvent {
-  detail: {
-    path: string
-    postBody: GameResponsePostBody
-  }
 }
 
 const GridContainer = styled.div`
@@ -137,136 +114,9 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const status = useSelector(statusSelector)
   const repairCount = useSelector(repairCountSelector)
   const repairDetail = useSelector(repairDetailSelector)
-  const ships = useSelector(shipsSelector) // Need ships for checking Nosaki in slots
 
-  const handleResponse = useCallback(
-    (e: Event) => {
-      if (!basicInfo || !status) return // Null check to prevent crashes
-      const event = e as GameResponseEvent
-      const { path, postBody } = event.detail
-
-      switch (path) {
-        case '/kcsapi/api_port/port':
-          // Nosaki timer: only reset if eligible AND timer has elapsed
-          // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
-          // Also initialize timer if Nosaki present but timer not started yet
-          // Note: Global repair timer is now handled in index.tsx
-          if (status.nosakiPresent) {
-            if (lastMoraleRefresh === 0) {
-              // Timer not started yet - start it now
-              timerState.setLastNosakiRefresh(Date.now())
-              setMoraleTimeElapsed(0)
-            } else if (
-              status.canBoostMorale &&
-              moraleTimeElapsed >= NOSAKI_INTERVAL / 1000
-            ) {
-              // Eligible and timer elapsed - apply boost and reset timer
-              timerState.setLastNosakiRefresh(Date.now())
-              setMoraleTimeElapsed(0)
-            }
-          }
-          // If timer not started yet or not eligible or not elapsed, keep timer as is
-          break
-
-        case '/kcsapi/api_req_hensei/preset_select':
-          // Fleet preset loading doesn't reset timer (wiki requirement)
-          // Do nothing - this is intentional
-          break
-
-        case '/kcsapi/api_req_hensei/change': {
-          const body = postBody as APIReqHenseiChangeRequest
-          const changedFleetId = parseInt(body.api_id, 10)
-          const shipId = parseInt(body.api_ship_id, 10)
-          const shipIdx = parseInt(body.api_ship_idx, 10)
-          if (
-            !Number.isNaN(changedFleetId) &&
-            changedFleetId === basicInfo.api_id
-          ) {
-            // Note: Global repair timer reset is now handled in index.tsx
-
-            // For Nosaki: Start timer when placed in slot 1/2, clear when removed
-            // shipIdx is 0-based position, so 0 = flagship, 1 = second position
-            if (!Number.isNaN(shipIdx) && (shipIdx === 0 || shipIdx === 1)) {
-              // Check current ship in this slot (before the change)
-              const currentShipId = basicInfo.shipId?.[shipIdx]
-              const currentShip = currentShipId ? ships[currentShipId] : null
-              const wasNosaki =
-                currentShip && NOSAKI_ID_LIST.includes(currentShip.api_ship_id)
-
-              if (shipId >= 0) {
-                // Placing a ship in slot 1 or 2
-                const newShip = ships[shipId]
-                const isNosaki =
-                  newShip && NOSAKI_ID_LIST.includes(newShip.api_ship_id)
-
-                if (isNosaki) {
-                  // Placing Nosaki - start/reset timer
-                  // Compute elapsed time directly from lastMoraleRefresh (not stale state)
-                  const elapsedTime =
-                    lastMoraleRefresh > 0
-                      ? (Date.now() - lastMoraleRefresh) / 1000
-                      : 0
-                  if (elapsedTime < NOSAKI_INTERVAL / 1000) {
-                    timerState.resetNosakiTimer()
-                    setMoraleTimeElapsed(0)
-                  }
-                  // After 15 min: don't reset
-                } else if (wasNosaki) {
-                  // Replacing Nosaki with non-Nosaki - clear timer
-                  timerState.clearNosakiTimer()
-                  setMoraleTimeElapsed(0)
-                }
-              } else if (wasNosaki) {
-                // Removing Nosaki from slot 1 or 2 - clear timer
-                timerState.clearNosakiTimer()
-                setMoraleTimeElapsed(0)
-              }
-            } else if (status.nosakiPresent && !Number.isNaN(shipIdx)) {
-              // Composition change in other slots while Nosaki is in slot 1/2
-              // Wiki: before 15min, ANY composition changes reset timer (not just additions)
-              // Compute elapsed time directly from lastMoraleRefresh (not stale state)
-              const elapsedTime =
-                lastMoraleRefresh > 0
-                  ? (Date.now() - lastMoraleRefresh) / 1000
-                  : 0
-              if (elapsedTime < NOSAKI_INTERVAL / 1000) {
-                // Before 15 min, composition changes reset timer (including removals)
-                timerState.resetNosakiTimer()
-                setMoraleTimeElapsed(0)
-              }
-              // After 15 min: composition changes don't reset
-            }
-          }
-          break
-        }
-
-        case '/kcsapi/api_req_kaisou/remodeling':
-          // Ship remodeling (including Nosaki -> Nosaki Kai) doesn't reset timer after activation
-          // Do nothing - this is intentional per wiki
-          break
-
-        case '/kcsapi/api_req_mission/start': {
-          // Note: Global repair timer reset is now handled in index.tsx
-          // Nosaki timer NOT reset on expedition start per wiki analysis
-          break
-        }
-
-        case '/kcsapi/api_req_nyukyo/start': {
-          // Note: Global repair timer reset is now handled in index.tsx
-          break
-        }
-        default:
-      }
-    },
-    [basicInfo, moraleTimeElapsed, lastMoraleRefresh, status, ships],
-  )
-
-  useEffect(() => {
-    window.addEventListener('game.response', handleResponse)
-    return () => {
-      window.removeEventListener('game.response', handleResponse)
-    }
-  }, [handleResponse])
+  // Timer management is now handled globally in index.tsx
+  // This component only displays the timer state
 
   const tick = useCallback((elapsed: number) => {
     if (elapsed % 5 === 0) {

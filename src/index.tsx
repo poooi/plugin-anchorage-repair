@@ -14,14 +14,20 @@ declare global {
 import FleetList from './fleet-list'
 import { RepairQueue } from './candidates'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
+import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
 import {
   fleetIdsSelector,
   createFleetCanRepairSelector,
 } from './fleet-selectors'
-import { akashiEstimate, AKASHI_INTERVAL } from './functions'
-import { checkRepairActive, REPAIR_SHIP_ID } from './fleet-utils'
+import { akashiEstimate, AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
+import {
+  checkRepairActive,
+  REPAIR_SHIP_ID,
+  NOSAKI_ID_LIST,
+  getFleetStatus,
+} from './fleet-utils'
 import { timerState } from './timer-state'
 import type { APIReqHenseiChangeRequest } from 'kcsapi/api_req_hensei/change/request'
 import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/request'
@@ -80,8 +86,9 @@ const PluginAnchorageRepair: React.FC = () => {
 
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
-  // Global repair timer event handler - always active regardless of which tab is shown
-  const handleGlobalRepairTimerEvents = useCallback((e: Event) => {
+  // Global timer event handler - handles both repair and Nosaki timers
+  // Always active regardless of which tab is shown
+  const handleGlobalTimerEvents = useCallback((e: Event) => {
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
 
@@ -90,17 +97,22 @@ const PluginAnchorageRepair: React.FC = () => {
       ships = {},
       repairs = [],
       equips,
+      $ships = {},
     }: {
       fleets: APIDeckPort[]
       ships: Record<number, APIShip>
       repairs: APIGetMemberNdockResponse[]
       equips?: Record<number, APIGetMemberSlotItemResponse>
+      $ships?: Record<number, APIMstShip>
     } = window.getStore('info') || {}
     const repairId = repairs.map((dock) => dock.api_ship_id)
 
     const currentTime = Date.now()
     const lastRefresh = timerState.getLastRepairRefresh()
     const timeElapsed = lastRefresh > 0 ? (currentTime - lastRefresh) / 1000 : 0
+    const lastNosakiRefresh = timerState.getLastNosakiRefresh()
+    const nosakiTimeElapsed =
+      lastNosakiRefresh > 0 ? (currentTime - lastNosakiRefresh) / 1000 : 0
 
     switch (path) {
       case '/kcsapi/api_port/port': {
@@ -117,12 +129,47 @@ const PluginAnchorageRepair: React.FC = () => {
         ) {
           timerState.setLastRepairRefresh(currentTime)
         }
+
+        // Global Nosaki timer handling
+        // Check if ANY fleet has Nosaki present in position 1 or 2
+        let anyFleetNosakiPresent = false
+        let anyFleetCanBoostMorale = false
+        for (const fleet of fleets) {
+          const status = getFleetStatus(fleet, ships, $ships, repairId, equips)
+          if (status.nosakiPresent) {
+            anyFleetNosakiPresent = true
+            if (status.canBoostMorale) {
+              anyFleetCanBoostMorale = true
+            }
+          }
+        }
+
+        if (anyFleetNosakiPresent) {
+          if (lastNosakiRefresh === 0) {
+            // Timer not started yet - start it now
+            timerState.setLastNosakiRefresh(currentTime)
+          } else if (
+            anyFleetCanBoostMorale &&
+            nosakiTimeElapsed >= NOSAKI_INTERVAL / 1000
+          ) {
+            // Eligible and timer elapsed - apply boost and reset timer
+            timerState.setLastNosakiRefresh(currentTime)
+          }
+          // If timer not started yet or not eligible or not elapsed, keep timer as is
+        }
         break
       }
+
+      case '/kcsapi/api_req_hensei/preset_select':
+        // Fleet preset loading doesn't reset either timer (wiki requirement)
+        // Do nothing - this is intentional
+        break
 
       case '/kcsapi/api_req_hensei/change': {
         const body = postBody as APIReqHenseiChangeRequest
         const changedFleetId = parseInt(body.api_id, 10)
+        const shipId = parseInt(body.api_ship_id, 10)
+        const shipIdx = parseInt(body.api_ship_idx, 10)
 
         if (!Number.isNaN(changedFleetId)) {
           const changedFleet = fleets.find((f) => f.api_id === changedFleetId)
@@ -141,10 +188,96 @@ const PluginAnchorageRepair: React.FC = () => {
                 timerState.clearRepairTimer()
               }
             }
+
+            // Global Nosaki timer handling for composition changes
+            // Check current fleet status for Nosaki presence
+            const currentStatus = getFleetStatus(
+              changedFleet,
+              ships,
+              $ships,
+              repairId,
+              equips,
+            )
+
+            // Handle changes to slot 1/2 (position 0 or 1)
+            if (!Number.isNaN(shipIdx) && (shipIdx === 0 || shipIdx === 1)) {
+              // Check current ship in this slot (before the change)
+              const currentShipId = _.get(
+                changedFleet,
+                `api_ship.${shipIdx}`,
+                -1,
+              )
+              const currentShip =
+                currentShipId > 0 ? ships[currentShipId] : null
+              const wasNosaki =
+                currentShip && NOSAKI_ID_LIST.includes(currentShip.api_ship_id)
+
+              if (shipId >= 0) {
+                // Placing a ship in slot 1 or 2
+                const newShip = ships[shipId]
+                const isNosaki =
+                  newShip && NOSAKI_ID_LIST.includes(newShip.api_ship_id)
+
+                if (isNosaki) {
+                  // Placing Nosaki - start/reset timer
+                  // WIKI: Before 15 min, placing Nosaki resets timer
+                  if (nosakiTimeElapsed < NOSAKI_INTERVAL / 1000) {
+                    timerState.resetNosakiTimer()
+                  }
+                  // After 15 min: don't reset
+                } else if (wasNosaki) {
+                  // Replacing Nosaki with non-Nosaki
+                  // Check if any other fleet still has Nosaki
+                  const otherFleetHasNosaki = fleets.some((fleet) => {
+                    if (fleet.api_id === changedFleetId) return false
+                    const status = getFleetStatus(
+                      fleet,
+                      ships,
+                      $ships,
+                      repairId,
+                      equips,
+                    )
+                    return status.nosakiPresent
+                  })
+                  if (!otherFleetHasNosaki) {
+                    timerState.clearNosakiTimer()
+                  }
+                }
+              } else if (wasNosaki) {
+                // Removing Nosaki from slot 1 or 2 (shipId < 0 means removal)
+                // Check if any other fleet still has Nosaki
+                const otherFleetHasNosaki = fleets.some((fleet) => {
+                  if (fleet.api_id === changedFleetId) return false
+                  const status = getFleetStatus(
+                    fleet,
+                    ships,
+                    $ships,
+                    repairId,
+                    equips,
+                  )
+                  return status.nosakiPresent
+                })
+                if (!otherFleetHasNosaki) {
+                  timerState.clearNosakiTimer()
+                }
+              }
+            } else if (currentStatus.nosakiPresent && !Number.isNaN(shipIdx)) {
+              // Composition change in other slots while Nosaki is in slot 1/2 of this fleet
+              // WIKI: Before 15 min, ANY composition changes reset timer (global, affects all fleets)
+              if (nosakiTimeElapsed < NOSAKI_INTERVAL / 1000) {
+                timerState.resetNosakiTimer()
+              }
+              // After 15 min: composition changes don't reset
+            }
           }
         }
         break
       }
+
+      case '/kcsapi/api_req_kaisou/remodeling':
+        // Ship remodeling (including Nosaki -> Nosaki Kai) doesn't reset timer after activation
+        // Do nothing - this is intentional per wiki
+        break
 
       case '/kcsapi/api_req_mission/start': {
         const body = postBody as APIReqMissionStartRequest
@@ -165,6 +298,7 @@ const PluginAnchorageRepair: React.FC = () => {
             if (hasRepairShip) {
               timerState.resetRepairTimer()
             }
+            // Nosaki timer NOT reset on expedition start per wiki analysis
           }
         }
         break
@@ -199,11 +333,11 @@ const PluginAnchorageRepair: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    window.addEventListener('game.response', handleGlobalRepairTimerEvents)
+    window.addEventListener('game.response', handleGlobalTimerEvents)
     return () => {
-      window.removeEventListener('game.response', handleGlobalRepairTimerEvents)
+      window.removeEventListener('game.response', handleGlobalTimerEvents)
     }
-  }, [handleGlobalRepairTimerEvents])
+  }, [handleGlobalTimerEvents])
 
   return (
     <AnchorageRepairContainer id="anchorage-repair">
