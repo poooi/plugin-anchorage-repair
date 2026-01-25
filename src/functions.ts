@@ -2,6 +2,7 @@ import FACTOR from './factor'
 
 export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
 export const NOSAKI_INTERVAL = 15 * 60 * 1000 // nosaki morale boost interval, in ms
+export const PAIRED_REPAIR_TIME_MULTIPLIER = 0.85 // 15% faster repair when paired (85% of normal time)
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 const MINOR_PERCENT = 0.5 // minor damage determination
 export const NOSAKI_COND_MAX = 54 // maximum cond value for morale boost

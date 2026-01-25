@@ -2,7 +2,7 @@ import _ from 'lodash'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID } from './functions'
+import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID, PAIRED_REPAIR_TIME_MULTIPLIER } from './functions'
 
 export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
 export const ASAHI_KAI_ID = 958 // asahi kai ID in $ships
@@ -159,22 +159,18 @@ export const getFleetRepairCount = (
   const flagship = ships[_.get(fleet, 'api_ship.0', -1)]
   if (!flagship) return 0
 
-  const akashiFlagship = _.includes(AKASHI_ID, flagship.api_ship_id)
-  const asahiKaiFlagship = flagship.api_ship_id === ASAHI_KAI_ID
+  // Check if flagship is a repair ship and determine base count
+  const isRepairShip = _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+  if (!isRepairShip) return 0
+  
+  // Base repair count: Akashi/Akashi Kai = 2, Asahi Kai = 0
+  const baseCount = _.includes(AKASHI_ID, flagship.api_ship_id) ? 2 : 0
   
   // Count SRF on flagship
   const flagshipSrfCount = _.filter(
     flagship.api_slot,
     (item) => _.get(equips, `${item}.api_slotitem_id`, -1) === SRF_ID,
   ).length
-
-  // Base repair count: Akashi = 2, Asahi Kai = 0
-  let baseCount = 0
-  if (akashiFlagship) {
-    baseCount = 2
-  } else if (asahiKaiFlagship) {
-    baseCount = 0
-  }
   
   let totalSrfCount = flagshipSrfCount
   
@@ -234,9 +230,9 @@ export const getFleetRepairDetail = (
       // Calculate base timePerHP
       let timePerHP = getTimePerHP(ship.api_lv, constShip.api_stype)
       
-      // Apply paired repair bonus: 85% of normal time (15% faster)
+      // Apply paired repair bonus (15% faster repair speed)
       if (pairedRepairBonus && timePerHP > 0) {
-        timePerHP = timePerHP * 0.85
+        timePerHP = timePerHP * PAIRED_REPAIR_TIME_MULTIPLIER
       }
 
       return {
