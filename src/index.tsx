@@ -288,17 +288,10 @@ const PluginAnchorageRepair: React.FC = () => {
         if (!Number.isNaN(changedFleetId)) {
           const changedFleet = fleets.find((f) => f.api_id === changedFleetId)
           if (changedFleet) {
-            // Check current fleet status for Nosaki presence
-            const currentStatus = getFleetStatus(
-              changedFleet,
-              ships,
-              $ships,
-              repairId,
-              equips,
-            )
+            // Use lightweight checkNosakiPresent that doesn't require $ships
+            const fleetHasNosaki = checkNosakiPresent(changedFleet, ships)
 
             // Helper to check if any other fleet has Nosaki in position 1 or 2
-            // Uses lightweight checkNosakiPresent that doesn't require $ships
             const hasNosakiInOtherFleets = (excludeFleetId: number) =>
               fleets.some((fleet) => {
                 if (fleet.api_id === excludeFleetId) return false
@@ -345,7 +338,7 @@ const PluginAnchorageRepair: React.FC = () => {
                   timerState.clearNosakiTimer()
                 }
               }
-            } else if (currentStatus.nosakiPresent && !Number.isNaN(shipIdx)) {
+            } else if (fleetHasNosaki && !Number.isNaN(shipIdx)) {
               // Composition change in other slots while Nosaki is in slot 1/2 of this fleet
               // WIKI: Before 15 min, ANY composition changes reset timer (global, affects all fleets)
               if (nosakiTimeElapsed < NOSAKI_INTERVAL / 1000) {
