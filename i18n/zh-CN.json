@@ -15,10 +15,16 @@
   "Akashi loves you!": "修理准备就绪！",
   "flagship in dock": "旗舰入渠中",
   "anchorage repair completed": "泊地修理完毕",
-  "A plugin to help in Akashi's anchorage repair arrangement": "明石/野埼泊地修理助手",
+  "A plugin to help in Akashi's anchorage repair arrangement": "明石HP修理和野埼士气提升助手",
   "Docking": "入渠中",
   "Total time required": "泊地修理总耗时",
   "Time required for 1 HP recovery": "每回复一点耐久所用泊地修理时间",
   "Estimated HP recovery since last refresh": "从上次刷新之后的预计耐久回复量",
-  "Repair Queue": "整备序列"
+  "Repair Queue": "整备序列",
+  "HP Repair": "HP修理",
+  "Morale Boost": "士气提升",
+  "Nosaki ready!": "士气提升准备就绪！",
+  "Nosaki not in position": "野埼不在1号位或2号位",
+  "Morale boost per application": "单次士气提升量",
+  "Cond": "士气"
 }

@@ -15,10 +15,16 @@
   "Akashi loves you!": "수리 준비 완료!",
   "flagship in dock": "기함 입거 중",
   "anchorage repair completed": "정박지 수리 완료",
-  "A plugin to help in Akashi's anchorage repair arrangement": "아카시/노자키 정박지 수리 도우미",
+  "A plugin to help in Akashi's anchorage repair arrangement": "아카시 HP 수리 및 노사키 사기 증진 도우미",
   "Docking": "입거 중",
   "Total time required": "완전 회복까지 소요 시간",
   "Time required for 1 HP recovery": "내구력 1 포인트 회복에 필요한 시간",
   "Estimated HP recovery since last refresh": "마지막 새로고침 이후 예상 내구력 회복량",
-  "Repair Queue": "정비 목록"
+  "Repair Queue": "정비 목록",
+  "HP Repair": "HP 수리",
+  "Morale Boost": "사기 증진",
+  "Nosaki ready!": "사기 증진 준비 완료!",
+  "Nosaki not in position": "노사키가 1번 또는 2번 위치에 없습니다",
+  "Morale boost per application": "회당 사기 증진량",
+  "Cond": "사기"
 }

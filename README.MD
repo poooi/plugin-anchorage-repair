@@ -5,37 +5,59 @@
 [简体中文说明](README-CN.MD)
 
 ## Description
-A plugin to help in Akashi's and Nosaki's anchorage repair arrangement, features:
+A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring similar timer mechanics for both:
 
-- [x] estimate anchorage repair time
+- [x] estimate anchorage repair time (Akashi)
+- [x] estimate morale boost timing (Nosaki)
 - [x] notify upon ship repair completes
+- [x] support combined operations (Akashi + Nosaki)
 
 ## Limitations
 - When you change the fleet composition, Kancolle API will not renew ships' HP, which may lead to inaccurate repair time estimation. You have to return to HQ screen to refresh ship data.
 
 ## Basic mechanism
+
+### Akashi's anchorage repair (HP Recovery)
+**Requirements:**
+- Akashi (or Kai) must be fleet **flagship** (position 1), with minor damage or less, and is not in docking.
+- Akashi can repair herself and ship in 2nd slot, and plus one ship slot per Ship Repair Facility.
+- Ships get repaired at minor damage (HP > 50% max HP) or less.
+- Ship is not in docking.
+
+**Timer:** 20 minutes minimum for HP repair
+
+### Nosaki's morale boost (Cond Recovery)
+**Requirements:**
+- Nosaki (or Kai) must be in **position 1 or 2**, fully supplied, with minor damage or less (HP > 50% max HP), cond ≥ 30, not in expedition or docking.
+- Boosts morale (cond value) for all fleet members except Nosaki herself.
+- Nosaki: +2 cond per application, Nosaki Kai: +3 cond per application
+- Maximum cond: 54
+- Target ships: not in docking (damage state doesn't matter)
+- Consumes 1 fuel per ship boosted
+
+**Timer:** 15 minutes minimum for morale boost
+
+### Combined Operation
+- Both systems can work simultaneously in the same fleet
+- Example: Akashi as flagship (repairs HP, 20min timer) + Nosaki in 2nd position (boosts morale, 15min timer)
+- Each system has its own independent timer
 ### Docking repair time
 The formula base on HP loss, level and ship type is already proved, while this value is also given in API's *api_ndock_time*.
 
-### Akashi's and Nosaki's anchorage repair requirement
-- Akashi (or Kai) or Nosaki (or Kai) must be fleet flagship, with minor damage or less, and is not in docking.
-- Akashi/Nosaki can repair herself and ship in 2nd slot, and plus one ship slot per Ship Repair Facility.
-- Ships get repaired at minor damage (HP > 50% max HP) or less.
-- ship is not in docking.
-
-### Repair time
+### Repair time (Akashi)
 - it takes at least 20 minutes to repair ships by at least 1 HP
 - Above 20 minutes, the the amount will be the same as ships in docking, rounded down.
 - In the docking time formula, a 30-second bias is always added; the docking is actually finished, however, 1 minute earlier. And anchorage repair time will be **rounded up** to next minute.
-- The repair timer will reset by:
-  - returning to the HQ screen after 20 minutes from the time the composition changed, that is, ships' hp changed,
+### Timer reset rules (Both Akashi and Nosaki)
+- The repair timer and morale boost timer share similar reset behavior:
+  - returning to the HQ screen after the minimum time (20min for Akashi, 15min for Nosaki) from the time the composition changed,
   - changing fleet composition while dragging a ship out of fleet or disbanding the whole fleet won't,
   - docking fleet member with Bucket, normal docking won't reset,
   - sending the fleet to expedition.
 
 ### Corner cases
 Following corner cases are not taken into consideration, thus the result may not behave as it could be.
-- changing Akashi's or Nosaki's slot items, more precisely, changing the numbers of Ship Repair Facilities,
+- changing Akashi's or Nosaki's slot items, more precisely, changing the numbers of Ship Repair Facilities (for Akashi),
 - sending fleet to sortie.
 
 ### Experimental
