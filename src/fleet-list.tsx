@@ -7,7 +7,7 @@ import { Tooltip } from 'views/components/etc/overlay'
 import _ from 'lodash'
 
 import CountupTimer from './countup-timer'
-import { AKASHI_INTERVAL } from './functions'
+import { AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
 import ShipRow from './ship-row'
 import {
   createFleetBasicInfoSelector,
@@ -74,7 +74,9 @@ const ColContainer = styled.div<{ $xs?: number }>`
 
 const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const [lastRefresh, setLastRefresh] = useState(0)
+  const [lastMoraleRefresh, setLastMoraleRefresh] = useState(0)
   const [timeElapsed, setTimeElapsed] = useState(0)
+  const [moraleTimeElapsed, setMoraleTimeElapsed] = useState(0)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
   // Create selectors for this specific fleet
@@ -112,6 +114,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             setLastRefresh(Date.now())
             setTimeElapsed(0)
           }
+          if (moraleTimeElapsed >= NOSAKI_INTERVAL / 1000 || lastMoraleRefresh === 0) {
+            setLastMoraleRefresh(Date.now())
+            setMoraleTimeElapsed(0)
+          }
           break
 
         case '/kcsapi/api_req_hensei/change': {
@@ -131,6 +137,14 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
               // since it has passed more than 20 minutes, need to refresh the hp
               setLastRefresh(0)
             }
+            if (moraleTimeElapsed < NOSAKI_INTERVAL / 1000) {
+              setLastMoraleRefresh(Date.now())
+              setMoraleTimeElapsed(0)
+            } else if (shipId < 0) {
+              // do nothing
+            } else {
+              setLastMoraleRefresh(0)
+            }
           }
           break
         }
@@ -139,13 +153,14 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
           if (postBody.api_highspeed === 1 && infleet.length > 0) {
             setLastRefresh(Date.now())
+            setLastMoraleRefresh(Date.now())
           }
           break
         }
         default:
       }
     },
-    [basicInfo, timeElapsed, lastRefresh],
+    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh],
   )
 
   useEffect(() => {
@@ -162,8 +177,19 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
     }
   }, [])
 
+  const tickMorale = useCallback((elapsed: number) => {
+    if (elapsed % 5 === 0) {
+      // limit component refresh rate
+      setMoraleTimeElapsed(elapsed)
+    }
+  }, [])
+
   const resetTimeElapsed = useCallback(() => {
     setTimeElapsed(0)
+  }, [])
+
+  const resetMoraleTimeElapsed = useCallback(() => {
+    setMoraleTimeElapsed(0)
   }, [])
 
   // Early return if fleet not found
@@ -180,39 +206,83 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
     </div>
   )
 
+  const moraleTooltipContent = (
+    <div>
+      <p>{status.canBoostMorale ? t('Nosaki ready!') : ''}</p>
+      <p>{status.nosakiPosition >= 0 ? '' : t('Nosaki not in position')}</p>
+      <p>{status.inExpedition ? t('fleet in expedition') : ''}</p>
+    </div>
+  )
+
+  const hasAnyActivity = status.canRepair || status.canBoostMorale
+
   return (
     <GridContainer>
       <InfoRow>
-        <InfoCol $xs={4}>
-          <Tooltip content={tooltipContent} placement="bottom">
-            <Tag
-              intent={status.canRepair ? 'success' : 'warning'}
-              interactive={status.canRepair}
-            >
-              {status.canRepair ? t('Repairing') : t('Not ready')}
-            </Tag>
-          </Tooltip>
-        </InfoCol>
-        <InfoCol $xs={4}>
-          <Tag intent={status.canRepair ? 'success' : 'warning'}>
-            <span>{t('elapsed')} </span>
-            <CountupTimer
-              countdownId={`akashi-${basicInfo.api_id}`}
-              startTime={lastRefresh}
-              tickCallback={tick}
-              startCallback={resetTimeElapsed}
-            />
-          </Tag>
-        </InfoCol>
-        <InfoCol $xs={4}>
-          <Tag intent={repairCount ? 'success' : 'warning'}>
-            {t('capacity-count', { count: repairCount })}
-          </Tag>
-        </InfoCol>
+        {status.canRepair && (
+          <>
+            <InfoCol $xs={4}>
+              <Tooltip content={tooltipContent} placement="bottom">
+                <Tag
+                  intent={status.canRepair ? 'success' : 'warning'}
+                  interactive={status.canRepair}
+                >
+                  {t('HP Repair')}
+                </Tag>
+              </Tooltip>
+            </InfoCol>
+            <InfoCol $xs={4}>
+              <Tag intent={status.canRepair ? 'success' : 'warning'}>
+                <span>{t('elapsed')} </span>
+                <CountupTimer
+                  countdownId={`akashi-${basicInfo.api_id}`}
+                  startTime={lastRefresh}
+                  tickCallback={tick}
+                  startCallback={resetTimeElapsed}
+                />
+              </Tag>
+            </InfoCol>
+            <InfoCol $xs={4}>
+              <Tag intent={repairCount ? 'success' : 'warning'}>
+                {t('capacity-count', { count: repairCount })}
+              </Tag>
+            </InfoCol>
+          </>
+        )}
+        {status.canBoostMorale && (
+          <>
+            <InfoCol $xs={4}>
+              <Tooltip content={moraleTooltipContent} placement="bottom">
+                <Tag
+                  intent={status.canBoostMorale ? 'success' : 'warning'}
+                  interactive={status.canBoostMorale}
+                >
+                  {t('Morale Boost')}
+                </Tag>
+              </Tooltip>
+            </InfoCol>
+            <InfoCol $xs={4}>
+              <Tag intent={status.canBoostMorale ? 'success' : 'warning'}>
+                <span>{t('elapsed')} </span>
+                <CountupTimer
+                  countdownId={`nosaki-${basicInfo.api_id}`}
+                  startTime={lastMoraleRefresh}
+                  tickCallback={tickMorale}
+                  startCallback={resetMoraleTimeElapsed}
+                />
+              </Tag>
+            </InfoCol>
+          </>
+        )}
+        {!hasAnyActivity && (
+          <InfoCol $xs={4}>
+            <Tag intent="warning">{t('Not ready')}</Tag>
+          </InfoCol>
+        )}
       </InfoRow>
       <RowContainer>
         <ColContainer $xs={12}>
-          <HiddenCallout intent="warning" $hidden={lastRefresh !== 0}>
+          <HiddenCallout intent="warning" $hidden={lastRefresh !== 0 && lastMoraleRefresh !== 0}>
             {t('refresh_notice')}
           </HiddenCallout>
         </ColContainer>
@@ -224,27 +294,38 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
               <tr>
                 <th>{t('Ship')}</th>
                 <th>{t('HP')}</th>
-                <th>
-                  <Tooltip content={t('Total time required')} placement="top">
-                    <span>{t('Akashi Time')}</span>
-                  </Tooltip>
-                </th>
-                <th>
-                  <Tooltip
-                    content={t('Time required for 1 HP recovery')}
-                    placement="top"
-                  >
-                    <span>{t('Per HP')}</span>
-                  </Tooltip>
-                </th>
-                <th>
-                  <Tooltip
-                    content={t('Estimated HP recovery since last refresh')}
-                    placement="top"
-                  >
-                    <span>{t('Estimated repaired')}</span>
-                  </Tooltip>
-                </th>
+                {status.canRepair && (
+                  <>
+                    <th>
+                      <Tooltip content={t('Total time required')} placement="top">
+                        <span>{t('Akashi Time')}</span>
+                      </Tooltip>
+                    </th>
+                    <th>
+                      <Tooltip
+                        content={t('Time required for 1 HP recovery')}
+                        placement="top"
+                      >
+                        <span>{t('Per HP')}</span>
+                      </Tooltip>
+                    </th>
+                    <th>
+                      <Tooltip
+                        content={t('Estimated HP recovery since last refresh')}
+                        placement="top"
+                      >
+                        <span>{t('Estimated repaired')}</span>
+                      </Tooltip>
+                    </th>
+                  </>
+                )}
+                {status.canBoostMorale && (
+                  <th>
+                    <Tooltip content={t('Morale boost per application')} placement="top">
+                      <span>{t('Morale Boost')}</span>
+                    </Tooltip>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -255,6 +336,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                   lastRefresh={lastRefresh}
                   timeElapsed={timeElapsed}
                   canRepair={status.canRepair}
+                  canBoostMorale={status.canBoostMorale}
+                  moraleTimeElapsed={moraleTimeElapsed}
                 />
               ))}
             </tbody>

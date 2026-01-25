@@ -1,8 +1,10 @@
 import FACTOR from './factor'
 
 export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
+export const NOSAKI_INTERVAL = 15 * 60 * 1000 // nosaki morale boost interval, in ms
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 const MINOR_PERCENT = 0.5 // minor damage determination
+const NOSAKI_COND_MAX = 54 // maximum cond value for morale boost
 
 const minuteCeil = (time: number) => {
   const minute = 60 * 1000
@@ -121,5 +123,39 @@ export const getCountdownLabelStyle = (
       return 'success'
     default:
       return 'default'
+  }
+}
+
+// estimate morale boost details for Nosaki
+export const nosakiMoraleEstimate = ({
+  api_cond,
+  api_nowhp,
+  api_maxhp,
+  api_fuel,
+  api_fuel_max,
+  api_bull,
+  api_bull_max,
+  nosakiShipId,
+}: {
+  api_cond: number
+  api_nowhp: number
+  api_maxhp: number
+  api_fuel: number
+  api_fuel_max: number
+  api_bull: number
+  api_bull_max: number
+  nosakiShipId: number
+}): { canBoost: boolean; boostAmount: number } => {
+  // Check if ship can receive morale boost
+  if (api_cond >= NOSAKI_COND_MAX) {
+    return { canBoost: false, boostAmount: 0 }
+  }
+
+  // Boost amount depends on Nosaki or Nosaki Kai
+  const boostAmount = nosakiShipId === 1002 ? 3 : 2 // 1002 = Nosaki Kai, 996 = Nosaki
+
+  return {
+    canBoost: true,
+    boostAmount: Math.min(boostAmount, NOSAKI_COND_MAX - api_cond),
   }
 }

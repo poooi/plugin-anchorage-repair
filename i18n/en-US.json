@@ -20,5 +20,11 @@
   "Total time required": "Total time required",
   "Time required for 1 HP recovery": "Time required for 1 HP recovery",
   "Estimated HP recovery since last refresh": "Estimated HP recovery since last refresh",
-  "Repair Queue": "Repair Queue"
+  "Repair Queue": "Repair Queue",
+  "HP Repair": "HP Repair",
+  "Morale Boost": "Morale Boost",
+  "Nosaki ready!": "Ready for morale boost!",
+  "Nosaki not in position": "Nosaki not in position 1 or 2",
+  "Morale boost per application": "Morale boost per application",
+  "Cond": "Cond"
 }
