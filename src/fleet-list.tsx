@@ -8,6 +8,7 @@ import _ from 'lodash'
 
 import CountupTimer from './countup-timer'
 import { AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
+import { timerState } from './timer-state'
 import ShipRow from './ship-row'
 import {
   createFleetBasicInfoSelector,
@@ -73,11 +74,21 @@ const ColContainer = styled.div<{ $xs?: number }>`
 `
 
 const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
-  const [lastRefresh, setLastRefresh] = useState(0)
-  const [lastMoraleRefresh, setLastMoraleRefresh] = useState(0)
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [moraleTimeElapsed, setMoraleTimeElapsed] = useState(0)
+  const [, forceUpdate] = useState({}) // For forcing re-renders when global timer changes
   const { t } = useTranslation('poi-plugin-anchorage-repair')
+
+  // Subscribe to global timer state changes
+  useEffect(() => {
+    const unsubscribe = timerState.subscribe(() => {
+      forceUpdate({})
+    })
+    return unsubscribe
+  }, [])
+
+  const lastRefresh = timerState.getLastAkashiRefresh()
+  const lastMoraleRefresh = timerState.getLastNosakiRefresh()
 
   // Create selectors for this specific fleet
   const basicInfoSelector = useMemo(
@@ -110,14 +121,20 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
       switch (path) {
         case '/kcsapi/api_port/port':
+          // Refresh timers when returning to port
           if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
-            setLastRefresh(Date.now())
+            timerState.setLastAkashiRefresh(Date.now())
             setTimeElapsed(0)
           }
           if (moraleTimeElapsed >= NOSAKI_INTERVAL / 1000 || lastMoraleRefresh === 0) {
-            setLastMoraleRefresh(Date.now())
+            timerState.setLastNosakiRefresh(Date.now())
             setMoraleTimeElapsed(0)
           }
+          break
+
+        case '/kcsapi/api_req_hensei/preset_select':
+          // Fleet preset loading doesn't reset timer (wiki requirement)
+          // Do nothing - this is intentional
           break
 
         case '/kcsapi/api_req_hensei/change': {
@@ -128,32 +145,44 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             changedFleetId === basicInfo.api_id &&
             shipId >= 0
           ) {
+            // For Akashi: reset timer if under 20 minutes, otherwise require port refresh
             if (timeElapsed < AKASHI_INTERVAL / 1000) {
-              setLastRefresh(Date.now())
+              timerState.resetAkashiTimer()
               setTimeElapsed(0)
             } else if (shipId < 0) {
-              // do nothing
+              // Removing ship (drag out or disband) doesn't reset - do nothing
             } else {
-              // since it has passed more than 20 minutes, need to refresh the hp
-              setLastRefresh(0)
+              // Over 20 minutes - need to refresh at port
+              timerState.clearAkashiTimer()
             }
+            
+            // For Nosaki: after 15 min, composition changes don't reset timer (wiki requirement)
             if (moraleTimeElapsed < NOSAKI_INTERVAL / 1000) {
-              setLastMoraleRefresh(Date.now())
+              timerState.resetNosakiTimer()
               setMoraleTimeElapsed(0)
             } else if (shipId < 0) {
-              // do nothing
+              // Removing ship doesn't reset - do nothing
             } else {
-              setLastMoraleRefresh(0)
+              // Over 15 minutes - composition changes don't reset timer
+              // Just need port refresh
+              timerState.clearNosakiTimer()
             }
           }
           break
         }
+
+        case '/kcsapi/api_req_kaisou/remodeling':
+          // Ship remodeling (including Nosaki -> Nosaki Kai) doesn't reset timer after activation
+          // Do nothing - this is intentional per wiki
+          break
+
         case '/kcsapi/api_req_nyukyo/start': {
           const shipId = parseInt(postBody.api_ship_id || '', 10)
           const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
+          // Only instant repair (bucket) resets timer
           if (postBody.api_highspeed === 1 && infleet.length > 0) {
-            setLastRefresh(Date.now())
-            setLastMoraleRefresh(Date.now())
+            timerState.resetAkashiTimer()
+            timerState.resetNosakiTimer()
           }
           break
         }

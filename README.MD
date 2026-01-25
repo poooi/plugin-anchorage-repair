@@ -55,13 +55,23 @@ The formula base on HP loss, level and ship type is already proved, while this v
   - docking fleet member with Bucket, normal docking won't reset,
   - sending the fleet to expedition.
 
+### Nosaki-specific Timer Behavior (Important!)
+- **Global timer**: Nosaki timer is shared across ALL fleets, not per-fleet
+- **After 15 minutes activation**: Composition changes no longer reset the timer
+- **Fleet presets**: Loading composition presets does NOT reset the timer
+- **Ship remodeling**: Upgrading Nosaki to Nosaki Kai does NOT reset the timer
+- **Works everywhere**: Nosaki works in all fleets (1-4) and strike force (7 ships)
+
 ### Corner cases
 Following corner cases are not taken into consideration, thus the result may not behave as it could be.
-- changing Akashi's or Nosaki's slot items, more precisely, changing the numbers of Ship Repair Facilities (for Akashi),
+- changing Akashi's slot items, more precisely, changing the numbers of Ship Repair Facilities (for Akashi),
 - sending fleet to sortie.
 
-### Experimental
-Loading composition presets won't reset the timer, which is sometimes regarded as a bug.
+### Implemented Features
+✓ Fleet preset loading doesn't reset timers
+✓ Nosaki timer is global across all fleets
+✓ After timer activation (15min for Nosaki, 20min for Akashi), composition changes don't reset
+✓ Ship remodeling (including Nosaki → Nosaki Kai) doesn't reset timer
 
 # Changelog
 ## v0.1
