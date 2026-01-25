@@ -76,13 +76,13 @@ const ColContainer = styled.div<{ $xs?: number }>`
 const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [moraleTimeElapsed, setMoraleTimeElapsed] = useState(0)
-  const [, forceUpdate] = useState({}) // For forcing re-renders when global timer changes
+  const [timerTick, setTimerTick] = useState(0) // For triggering re-renders when global timer changes
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
   // Subscribe to global timer state changes
   useEffect(() => {
     const unsubscribe = timerState.subscribe(() => {
-      forceUpdate({})
+      setTimerTick((prev) => prev + 1)
     })
     return unsubscribe
   }, [])
@@ -189,7 +189,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
         default:
       }
     },
-    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh],
+    [basicInfo, timeElapsed, moraleTimeElapsed, timerTick],
   )
 
   useEffect(() => {
