@@ -2,8 +2,13 @@ import FACTOR from './factor'
 
 export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
 export const NOSAKI_INTERVAL = 15 * 60 * 1000 // nosaki morale boost interval, in ms
+export const PAIRED_REPAIR_TIME_MULTIPLIER = 0.85 // 15% faster repair when paired (85% of normal time)
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
-const MINOR_PERCENT = 0.5 // minor damage determination
+// Damage thresholds per WIKI:
+// - HP > 50%: 小破 (minor damage) or better - can be repaired
+// - HP ≤ 50%: 中破 (moderate damage) or worse - cannot be repaired
+export const MODERATE_DAMAGE_THRESHOLD = 0.5 // HP > 50% required (not 中破 or worse)
+export const BELOW_MINOR_PERCENT = 0.75 // below minor damage: HP > 75% (小破未満)
 export const NOSAKI_COND_MAX = 54 // maximum cond value for morale boost
 export const NOSAKI_ID = 996 // Nosaki ship ID
 export const NOSAKI_KAI_ID = 1002 // Nosaki Kai ship ID
@@ -26,7 +31,7 @@ export const akashiEstimate = ({
 }) => {
   if (api_ndock_time === 0 || api_nowhp >= api_maxhp) return 0
 
-  if (api_nowhp <= api_maxhp * MINOR_PERCENT) return 0 // damage check
+  if (api_nowhp <= api_maxhp * MODERATE_DAMAGE_THRESHOLD) return 0 // damage check
 
   if (api_maxhp - api_nowhp === 1) return AKASHI_INTERVAL // if only 1 hp to repair
 
@@ -42,7 +47,7 @@ export const timePerHPCalc = ({
   api_maxhp: number
   api_ndock_time: number
 }) =>
-  api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MINOR_PERCENT
+  api_nowhp < api_maxhp && api_nowhp >= api_maxhp * MODERATE_DAMAGE_THRESHOLD
     ? (api_ndock_time - DOCKING_OFFSET) / (api_maxhp - api_nowhp)
     : 0
 
@@ -78,7 +83,11 @@ export const repairEstimate = (
   availableSRF = false,
 ) => {
   // timeElapsed is in seconds
+  // WIKI: Only ships at minor damage or better (HP > 50%) can be repaired
   if (api_nowhp >= api_maxhp || timePerHP === 0 || !availableSRF) return 0
+  
+  // Check damage threshold: cannot repair moderate damage (中破) or worse
+  if (api_nowhp <= api_maxhp * MODERATE_DAMAGE_THRESHOLD) return 0
 
   if (timeElapsed * 1000 < AKASHI_INTERVAL) {
     return 0
@@ -103,9 +112,9 @@ export const getHPLabelStyle = (
   switch (true) {
     case percentage >= 1 || inRepair:
       return 'success'
-    case percentage >= MINOR_PERCENT:
+    case percentage >= MODERATE_DAMAGE_THRESHOLD:
       return 'primary'
-    case percentage < MINOR_PERCENT:
+    case percentage < MODERATE_DAMAGE_THRESHOLD:
       return 'warning'
     default:
       return 'warning'

@@ -85,22 +85,31 @@ const ColContainer = styled.div<{ $xs?: number }>`
 `
 
 const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
-  const [lastRefresh, setLastRefresh] = useState(0) // Per-fleet Akashi timer
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [moraleTimeElapsed, setMoraleTimeElapsed] = useState(0)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
-  // Subscribe to global Nosaki timer state changes
+  // Subscribe to global timer state changes (both Nosaki and repair timers)
+  // When global timestamps change, recalculate elapsed times
   useEffect(() => {
-    const unsubscribe = timerState.subscribe(() => {
-      // Force component to re-render when global Nosaki timer changes
-      const lastRefresh = timerState.getLastNosakiRefresh()
-      setMoraleTimeElapsed(lastRefresh > 0 ? (Date.now() - lastRefresh) / 1000 : 0)
-    })
+    const updateElapsedTimes = () => {
+      const lastNosakiRefresh = timerState.getLastNosakiRefresh()
+      setMoraleTimeElapsed(lastNosakiRefresh > 0 ? (Date.now() - lastNosakiRefresh) / 1000 : 0)
+      
+      const lastRepairRefresh = timerState.getLastRepairRefresh()
+      setTimeElapsed(lastRepairRefresh > 0 ? (Date.now() - lastRepairRefresh) / 1000 : 0)
+    }
+    
+    const unsubscribe = timerState.subscribe(updateElapsedTimes)
+    
+    // Initial calculation
+    updateElapsedTimes()
+    
     return unsubscribe
   }, [])
 
   const lastMoraleRefresh = timerState.getLastNosakiRefresh() // Global Nosaki timer
+  const lastRefresh = timerState.getLastRepairRefresh() // Global repair timer
 
   // Create selectors for this specific fleet
   const basicInfoSelector = useMemo(
@@ -134,14 +143,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
       switch (path) {
         case '/kcsapi/api_port/port':
-          // Refresh Akashi timer (per-fleet) when returning to port
-          if (timeElapsed >= AKASHI_INTERVAL / 1000 || lastRefresh === 0) {
-            setLastRefresh(Date.now())
-            setTimeElapsed(0)
-          }
           // Nosaki timer: only reset if eligible AND timer has elapsed
           // Wiki: if not eligible after 15min, timer keeps running until next eligible port entry
           // Also initialize timer if Nosaki present but timer not started yet
+          // Note: Global repair timer is now handled in index.tsx
           if (status.nosakiPresent) {
             if (lastMoraleRefresh === 0) {
               // Timer not started yet - start it now
@@ -170,17 +175,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
             !Number.isNaN(changedFleetId) &&
             changedFleetId === basicInfo.api_id
           ) {
-            // For Akashi: reset timer if under 20 minutes, otherwise require port refresh
-            if (shipId >= 0) {
-              if (timeElapsed < AKASHI_INTERVAL / 1000) {
-                setLastRefresh(Date.now())
-                setTimeElapsed(0)
-              } else {
-                // Over 20 minutes - need to refresh at port
-                setLastRefresh(0)
-              }
-            }
-            // shipId < 0: Removing ship (drag out or disband) doesn't reset - do nothing
+            // Note: Global repair timer reset is now handled in index.tsx
             
             // For Nosaki: Start timer when placed in slot 1/2, clear when removed
             // shipIdx is 0-based position, so 0 = flagship, 1 = second position
@@ -240,35 +235,19 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
           break
 
         case '/kcsapi/api_req_mission/start': {
-          // Sending fleet to expedition resets Akashi timer
-          // Wiki: "not in expedition" is an eligibility condition for Nosaki, not a timer reset trigger
-          const body = postBody as APIReqMissionStartRequest
-          const expedFleetId = parseInt(body.api_deck_id, 10)
-          if (!Number.isNaN(expedFleetId) && expedFleetId === basicInfo.api_id) {
-            setLastRefresh(Date.now())
-            setTimeElapsed(0)
-            // Note: Nosaki timer NOT reset on expedition start per wiki analysis
-          }
+          // Note: Global repair timer reset is now handled in index.tsx
+          // Nosaki timer NOT reset on expedition start per wiki analysis
           break
         }
 
         case '/kcsapi/api_req_nyukyo/start': {
-          const body = postBody as APIReqNyukyoStartRequest
-          const shipId = parseInt(body.api_ship_id, 10)
-          const infleet = _.filter(basicInfo.shipId, (id) => shipId === id)
-          // Only instant repair (bucket) resets Akashi timer
-          // api_highspeed is "1" (string) when using bucket
-          if (body.api_highspeed === '1' && infleet.length > 0) {
-            setLastRefresh(Date.now())
-            // Note: Wiki doesn't explicitly mention bucket resetting Nosaki timer
-            // Keeping Akashi behavior only for now
-          }
+          // Note: Global repair timer reset is now handled in index.tsx
           break
         }
         default:
       }
     },
-    [basicInfo, timeElapsed, lastRefresh, moraleTimeElapsed, lastMoraleRefresh, status, ships],
+    [basicInfo, moraleTimeElapsed, lastMoraleRefresh, status, ships],
   )
 
   useEffect(() => {
@@ -280,14 +259,14 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
   const tick = useCallback((elapsed: number) => {
     if (elapsed % 5 === 0) {
-      // limit component refresh rate
+      // Limit component refresh rate
       setTimeElapsed(elapsed)
     }
   }, [])
 
   const tickMorale = useCallback((elapsed: number) => {
     if (elapsed % 5 === 0) {
-      // limit component refresh rate
+      // Limit component refresh rate
       setMoraleTimeElapsed(elapsed)
     }
   }, [])
@@ -307,8 +286,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
   const tooltipContent = (
     <div>
-      <p>{status.canRepair ? t('Akashi loves you!') : ''}</p>
-      <p>{status.akashiFlagship ? '' : t('Akashi not flagship')}</p>
+      <p>{status.canRepair ? t('Ready for repair!') : ''}</p>
+      <p>{status.repairShipFlagship ? '' : t('Repair ship not flagship')}</p>
       <p>{status.inExpedition ? t('fleet in expedition') : ''}</p>
       <p>{status.flagShipInRepair ? t('flagship in dock') : ''}</p>
     </div>

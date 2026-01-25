@@ -33,19 +33,19 @@ export const createFleetBasicInfoSelector = (fleetId: number) =>
 
 export const createFleetStatusSelector = (fleetId: number) =>
   createSelector(
-    [fleetsSelector, shipsSelector, constShipsSelector, repairIdSelector],
-    (fleets, ships, $ships, repairId) => {
+    [fleetsSelector, shipsSelector, constShipsSelector, repairIdSelector, equipsSelector],
+    (fleets, ships, $ships, repairId, equips) => {
       const fleet = getFleetById(fleets, fleetId)
-      return fleet ? getFleetStatus(fleet, ships, $ships, repairId) : null
+      return fleet ? getFleetStatus(fleet, ships, $ships, repairId, equips) : null
     },
   )
 
 export const createFleetRepairCountSelector = (fleetId: number) =>
   createSelector(
-    [fleetsSelector, shipsSelector, equipsSelector],
-    (fleets, ships, equips) => {
+    [fleetsSelector, shipsSelector, equipsSelector, repairIdSelector],
+    (fleets, ships, equips, repairId) => {
       const fleet = getFleetById(fleets, fleetId)
-      return fleet ? getFleetRepairCount(fleet, ships, equips) : 0
+      return fleet ? getFleetRepairCount(fleet, ships, equips, repairId) : 0
     },
   )
 
@@ -63,17 +63,18 @@ export const createFleetRepairDetailSelector = (fleetId: number) =>
       const fleet = getFleetById(fleets, fleetId)
       if (!fleet) return []
       const nosakiShipId = status?.nosakiShipId || -1
-      return getFleetRepairDetail(fleet, $ships, ships, repairId, repairCount, nosakiShipId)
+      const pairedRepairBonus = status?.pairedRepairBonus || false
+      return getFleetRepairDetail(fleet, $ships, ships, repairId, repairCount, nosakiShipId, pairedRepairBonus)
     },
   )
 
 export const createFleetCanRepairSelector = (fleetId: number) =>
   createSelector(
-    [fleetsSelector, shipsSelector, constShipsSelector, repairIdSelector],
-    (fleets, ships, $ships, repairId) => {
+    [fleetsSelector, shipsSelector, constShipsSelector, repairIdSelector, equipsSelector],
+    (fleets, ships, $ships, repairId, equips) => {
       const fleet = getFleetById(fleets, fleetId)
       if (!fleet) return false
-      return canFleetRepair(fleet, ships, $ships, repairId)
+      return canFleetRepair(fleet, ships, $ships, repairId, equips)
     },
   )
 
