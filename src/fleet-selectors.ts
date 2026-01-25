@@ -33,10 +33,18 @@ export const createFleetBasicInfoSelector = (fleetId: number) =>
 
 export const createFleetStatusSelector = (fleetId: number) =>
   createSelector(
-    [fleetsSelector, shipsSelector, constShipsSelector, repairIdSelector, equipsSelector],
+    [
+      fleetsSelector,
+      shipsSelector,
+      constShipsSelector,
+      repairIdSelector,
+      equipsSelector,
+    ],
     (fleets, ships, $ships, repairId, equips) => {
       const fleet = getFleetById(fleets, fleetId)
-      return fleet ? getFleetStatus(fleet, ships, $ships, repairId, equips) : null
+      return fleet
+        ? getFleetStatus(fleet, ships, $ships, repairId, equips)
+        : null
     },
   )
 
@@ -64,13 +72,27 @@ export const createFleetRepairDetailSelector = (fleetId: number) =>
       if (!fleet) return []
       const nosakiShipId = status?.nosakiShipId || -1
       const pairedRepairBonus = status?.pairedRepairBonus || false
-      return getFleetRepairDetail(fleet, $ships, ships, repairId, repairCount, nosakiShipId, pairedRepairBonus)
+      return getFleetRepairDetail(
+        fleet,
+        $ships,
+        ships,
+        repairId,
+        repairCount,
+        nosakiShipId,
+        pairedRepairBonus,
+      )
     },
   )
 
 export const createFleetCanRepairSelector = (fleetId: number) =>
   createSelector(
-    [fleetsSelector, shipsSelector, constShipsSelector, repairIdSelector, equipsSelector],
+    [
+      fleetsSelector,
+      shipsSelector,
+      constShipsSelector,
+      repairIdSelector,
+      equipsSelector,
+    ],
     (fleets, ships, $ships, repairId, equips) => {
       const fleet = getFleetById(fleets, fleetId)
       if (!fleet) return false

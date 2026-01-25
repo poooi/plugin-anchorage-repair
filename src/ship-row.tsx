@@ -80,7 +80,8 @@ const ShipRow: React.FC<ShipRowProps> = ({
   } = ship
 
   // Only show boost when both eligible AND timer complete
-  const isBoostReady = canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000
+  const isBoostReady =
+    canBoostMorale && moraleTimeElapsed >= NOSAKI_INTERVAL / 1000
 
   const completeTime = lastRefresh + estimate
 
@@ -154,9 +155,13 @@ const ShipRow: React.FC<ShipRowProps> = ({
               {t('Cond')}: {api_cond} (+{moraleBoostAmount})
             </Tag>
           ) : api_cond >= NOSAKI_COND_MAX ? (
-            <Tag intent="success">{t('Cond')}: {api_cond} (MAX)</Tag>
+            <Tag intent="success">
+              {t('Cond')}: {api_cond} (MAX)
+            </Tag>
           ) : (
-            <Tag intent="none">{t('Cond')}: {api_cond}</Tag>
+            <Tag intent="none">
+              {t('Cond')}: {api_cond}
+            </Tag>
           )}
         </td>
       )}
