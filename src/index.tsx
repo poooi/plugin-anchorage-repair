@@ -140,6 +140,7 @@ const PluginAnchorageRepair: React.FC = () => {
             anyFleetNosakiPresent = true
             if (status.canBoostMorale) {
               anyFleetCanBoostMorale = true
+              break
             }
           }
         }
@@ -155,7 +156,9 @@ const PluginAnchorageRepair: React.FC = () => {
             // Eligible and timer elapsed - apply boost and reset timer
             timerState.setLastNosakiRefresh(currentTime)
           }
-          // If timer not started yet or not eligible or not elapsed, keep timer as is
+          // If not eligible or timer hasn't elapsed yet, keep timer running without resetting it
+        } else {
+          timerState.clearNosakiTimer()
         }
         break
       }
@@ -219,9 +222,11 @@ const PluginAnchorageRepair: React.FC = () => {
                   newShip && NOSAKI_ID_LIST.includes(newShip.api_ship_id)
 
                 if (isNosaki) {
-                  // Placing Nosaki - start/reset timer
-                  // WIKI: Before 15 min, placing Nosaki resets timer
-                  if (nosakiTimeElapsed < NOSAKI_INTERVAL / 1000) {
+                  // If timer hasn't started yet, start it;
+                  // otherwise, before 15 min, placing Nosaki resets timer.
+                  if (lastNosakiRefresh === 0) {
+                    timerState.setLastNosakiRefresh(Date.now())
+                  } else if (nosakiTimeElapsed < NOSAKI_INTERVAL / 1000) {
                     timerState.resetNosakiTimer()
                   }
                   // After 15 min: don't reset
