@@ -59,7 +59,7 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
   - Akashi as flagship (repairs HP, 20min timer) + Nosaki in 2nd position (boosts morale, 15min timer)
   - Akashi/Akashi Kai as flagship + Asahi Kai in 2nd position = paired repair bonus (faster repair speed, extended range)
 - Each system has its own independent timer
-- **Paired Repair**: When repair ships occupy positions 1-2, combine their Ship Repair Facilities for extended range and faster repairs
+- **Paired Repair**: When Akashi series (Akashi/Akashi Kai) and Asahi Kai occupy positions 1 and 2 (as described above), their Ship Repair Facilities are combined for extended range and faster repairs
 
 ### Docking repair time
 The formula base on HP loss, level and ship type is already proved, while this value is also given in API's *api_ndock_time*.
