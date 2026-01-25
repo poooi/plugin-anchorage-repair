@@ -2,11 +2,11 @@ import _ from 'lodash'
 import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import { APIMstShip } from 'kcsapi/api_start2/getData/response'
 import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate } from './functions'
+import { akashiEstimate, getTimePerHP, nosakiMoraleEstimate, NOSAKI_ID, NOSAKI_KAI_ID } from './functions'
 
 export const AKASHI_ID = [182, 187] // akashi, akashi kai ID in $ships
-export const NOSAKI_ID = [996, 1002] // nosaki, nosaki kai ID in $ships
-export const REPAIR_SHIP_ID = [...AKASHI_ID, ...NOSAKI_ID] // all repair ships
+export const NOSAKI_ID_LIST = [NOSAKI_ID, NOSAKI_KAI_ID] // nosaki, nosaki kai ID in $ships
+export const REPAIR_SHIP_ID = [...AKASHI_ID, ...NOSAKI_ID_LIST] // all repair ships
 export const SRF_ID = 86 // Ship Repair Facility ID in $slotitems
 
 export type FleetBasicInfo = {
@@ -73,7 +73,7 @@ export const getFleetStatus = (
 
   const checkNosakiAtPosition = (position: number) => {
     const ship = ships[_.get(fleet, `api_ship.${position}`, -1)]
-    if (ship && _.includes(NOSAKI_ID, ship.api_ship_id)) {
+    if (ship && _.includes(NOSAKI_ID_LIST, ship.api_ship_id)) {
       const constShip = $ships[ship.api_ship_id]
       const isFullySupplied =
         ship.api_fuel === (constShip?.api_fuel_max || 0) &&

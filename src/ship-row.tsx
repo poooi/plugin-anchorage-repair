@@ -13,6 +13,7 @@ import {
   repairEstimate,
   getHPLabelStyle,
   getCountdownLabelStyle,
+  NOSAKI_COND_MAX,
 } from './functions'
 import { RootState } from '../poi-types'
 
@@ -156,7 +157,7 @@ const ShipRow: React.FC<ShipRowProps> = ({
             <Tag intent="success">
               <FontAwesome name="wrench" /> {t('Docking')}
             </Tag>
-          ) : api_cond >= 54 ? (
+          ) : api_cond >= NOSAKI_COND_MAX ? (
             <Tag intent="success">{t('Cond')}: {api_cond} (MAX)</Tag>
           ) : (
             <Tag intent="none">{t('Cond')}: {api_cond}</Tag>
