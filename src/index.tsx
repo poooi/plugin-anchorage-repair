@@ -149,10 +149,14 @@ const PluginAnchorageRepair: React.FC = () => {
         if (!Number.isNaN(expedFleetId)) {
           const expedFleet = fleets.find((f) => f.api_id === expedFleetId)
           if (expedFleet) {
-            const flagship = ships[_.get(expedFleet, 'api_ship.0', -1)]
-            const repairShipFlagship = flagship && _.includes(REPAIR_SHIP_ID, flagship.api_ship_id)
+            // WIKI: "工作艦を含む艦隊が遠征...カウントはリセット" (fleet containing repair ship goes on expedition)
+            // Check if any ship in the expedition fleet is a repair ship
+            const hasRepairShip = _.get(expedFleet, 'api_ship', []).some((shipId: number) => {
+              const ship = ships[shipId]
+              return ship && _.includes(REPAIR_SHIP_ID, ship.api_ship_id)
+            })
             
-            if (repairShipFlagship) {
+            if (hasRepairShip) {
               timerState.resetRepairTimer()
             }
           }
