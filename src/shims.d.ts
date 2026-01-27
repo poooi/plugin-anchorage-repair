@@ -1,11 +1,11 @@
 declare module 'views/utils/selectors' {
-  import { Selector, createSelector } from 'reselect'
-  import { APIShip } from 'kcsapi/api_port/port/response'
-  import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-  import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
-  import { APIDeckPort } from 'kcsapi/api_port/port/response'
+  import type { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
+  import type { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
+  import type { APIShip } from 'kcsapi/api_port/port/response'
+  import type { APIDeckPort } from 'kcsapi/api_port/port/response'
+  import type { Selector, createSelector } from 'reselect'
 
-  type RootState = import('../poi-types').RootState
+  import type { RootState } from '../poi-types'
 
   export const fleetsSelector: Selector<RootState, APIDeckPort[]>
   export const shipsSelector: Selector<RootState, Record<number, APIShip>>
@@ -22,7 +22,7 @@ declare module 'views/utils/selectors' {
 }
 
 declare module 'views/components/main/parts/countdown-timer' {
-  import { ComponentType } from 'react'
+  import type { ComponentType } from 'react'
   export const CountdownTimerInner: ComponentType<{
     countdownId: string
     startTime?: number

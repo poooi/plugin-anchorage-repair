@@ -1,7 +1,6 @@
 // similar to CountdownTimer in 'views/components/main/parts/countdown-timer.es', but it counts up
 
 import React, { useState, useEffect, useRef } from 'react'
-
 import { resolveTime } from 'views/utils/tools'
 
 interface Ticker {

@@ -1,13 +1,16 @@
-import { createSelector } from 'reselect'
+import type { APIDeckPort } from 'kcsapi/api_port/port/response'
+
 import _ from 'lodash'
+import { createSelector } from 'reselect'
 import {
   fleetsSelector,
   shipsSelector,
   equipsSelector,
   repairsSelector,
 } from 'views/utils/selectors'
-import { RootState } from '../poi-types'
-import { APIDeckPort } from 'kcsapi/api_port/port/response'
+
+import type { RootState } from '../poi-types'
+
 import {
   getFleetBasicInfo,
   getFleetStatus,

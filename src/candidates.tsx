@@ -1,32 +1,32 @@
-import React, { useMemo, useState, useRef } from 'react'
-import { createSelector } from 'reselect'
-import { useSelector } from 'react-redux'
-import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
+import type { ColumnDef, SortingState } from '@tanstack/react-table'
+import type { APIShip } from 'kcsapi/api_port/port/response'
+import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
+
 import { HTMLTable } from '@blueprintjs/core'
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   flexRender,
-  ColumnDef,
-  SortingState,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import fp from 'lodash/fp'
-import { mapValues, findIndex, includes, map } from 'lodash'
 import chroma from 'chroma-js'
-
+import { mapValues, findIndex, includes, map } from 'lodash'
+import fp from 'lodash/fp'
+import React, { useMemo, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
+import { createSelector } from 'reselect'
+import styled from 'styled-components'
 import {
   repairsSelector,
   fleetShipsIdSelectorFactory,
 } from 'views/utils/selectors'
 import { resolveTime } from 'views/utils/tools'
 
+import type { RootState } from '../poi-types'
+
 import { akashiEstimate, timePerHPCalc } from './functions'
-import { APIShip } from 'kcsapi/api_port/port/response'
-import { APIMstShip } from 'kcsapi/api_start2/getData/response'
-import { RootState } from '../poi-types'
 
 interface EnhancedShip extends APIShip {
   akashi: number

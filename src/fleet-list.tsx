@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { useSelector } from 'react-redux'
-import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
 import { HTMLTable, Tag, Callout } from '@blueprintjs/core'
-import { Tooltip } from 'views/components/etc/overlay'
 import _ from 'lodash'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
+import styled from 'styled-components'
+import { Tooltip } from 'views/components/etc/overlay'
 
 import CountupTimer from './countup-timer'
-import { timerState } from './timer-state'
-import ShipRow from './ship-row'
 import {
   createFleetBasicInfoSelector,
   createFleetStatusSelector,
   createFleetRepairCountSelector,
   createFleetRepairDetailSelector,
 } from './fleet-selectors'
+import ShipRow from './ship-row'
+import { timerState } from './timer-state'
 
 interface FleetListProps {
   fleetId: number

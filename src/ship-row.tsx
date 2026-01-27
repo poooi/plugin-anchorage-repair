@@ -1,13 +1,14 @@
-import React from 'react'
-import { useSelector } from 'react-redux'
-import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
-import { join } from 'path'
 import { Tag } from '@blueprintjs/core'
+import { join } from 'path'
+import React from 'react'
 import FontAwesome from 'react-fontawesome'
-
-import { resolveTime } from 'views/utils/tools'
+import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
+import styled from 'styled-components'
 import { CountdownNotifierLabel } from 'views/components/main/parts/countdown-timer'
+import { resolveTime } from 'views/utils/tools'
+
+import type { RootState } from '../poi-types'
 
 import {
   repairEstimate,
@@ -16,7 +17,6 @@ import {
   NOSAKI_COND_MAX,
   NOSAKI_INTERVAL,
 } from './functions'
-import { RootState } from '../poi-types'
 
 declare global {
   interface Window {

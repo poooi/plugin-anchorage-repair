@@ -1,7 +1,9 @@
+import type { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
+import type { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
+import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
+
 import _ from 'lodash'
-import { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
-import { APIMstShip } from 'kcsapi/api_start2/getData/response'
-import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
+
 import {
   akashiEstimate,
   getTimePerHP,

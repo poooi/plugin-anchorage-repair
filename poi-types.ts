@@ -1,8 +1,8 @@
-import { APIShip } from 'kcsapi/api_port/port/response'
-import { APIMstShip } from 'kcsapi/api_start2/getData/response'
-import { APIDeckPort } from 'kcsapi/api_port/port/response'
-import { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
-import { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
+import type { APIGetMemberNdockResponse } from 'kcsapi/api_get_member/ndock/response'
+import type { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_item/response'
+import type { APIShip } from 'kcsapi/api_port/port/response'
+import type { APIDeckPort } from 'kcsapi/api_port/port/response'
+import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
 
 export type RootState = {
   const: {
