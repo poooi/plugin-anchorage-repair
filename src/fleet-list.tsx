@@ -167,7 +167,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
   return (
     <GridContainer>
       <InfoRow>
-        {status.canRepair && (
+        {
           <>
             <InfoCol $xs={4}>
               <Tooltip content={tooltipContent} placement="bottom">
@@ -196,8 +196,10 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
               </Tag>
             </InfoCol>
           </>
-        )}
-        {status.nosakiPresent && (
+        }
+      </InfoRow>
+      <InfoRow>
+        {
           <>
             <InfoCol $xs={4}>
               <Tooltip content={moraleTooltipContent} placement="bottom">
@@ -221,7 +223,7 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
               </Tag>
             </InfoCol>
           </>
-        )}
+        }
         {!hasAnyActivity && (
           <InfoCol $xs={4}>
             <Tag intent="warning">{t('Not ready')}</Tag>
