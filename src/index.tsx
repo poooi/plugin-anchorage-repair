@@ -122,7 +122,6 @@ const PluginAnchorageRepair: React.FC = () => {
 
   // Handler for anchorage repair timer (Akashi/Asahi)
   const handleRepairTimerEvents = useCallback((e: Event) => {
-    console.log(e)
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
     const { fleets, ships } =
