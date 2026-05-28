@@ -124,8 +124,8 @@ const PluginAnchorageRepair: React.FC = () => {
   const handleRepairTimerEvents = useCallback((e: Event) => {
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
-    const { fleets, ships } =
-      previousRepairGameStateRef.current ?? getGameState()
+    const { fleets, ships } = getGameState()
+    const previousFleets = previousRepairGameStateRef.current?.fleets ?? fleets
 
     const currentTime = Date.now()
     const lastRepairRefresh = timerState.getLastRepairRefresh()
@@ -158,7 +158,7 @@ const PluginAnchorageRepair: React.FC = () => {
         if (changedShipId == -2) break
 
         // 在两个舰队交换舰娘的情况下，另一个舰队也需要检查是否有明石/朝日在位
-        const changedFleetId2 = fleets.find((fleet) =>
+        const changedFleetId2 = previousFleets.find((fleet) =>
           fleet.api_ship.some((id) => id === changedShipId),
         )?.api_id
 
@@ -204,8 +204,8 @@ const PluginAnchorageRepair: React.FC = () => {
   const handleNosakiTimerEvents = useCallback((e: Event) => {
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
-    const { fleets, ships } =
-      previousRepairGameStateRef.current ?? getGameState()
+    const { fleets, ships } = getGameState()
+    const previousFleets = previousRepairGameStateRef.current?.fleets ?? fleets
 
     const currentTime = Date.now()
     const lastNosakiRefresh = timerState.getLastNosakiRefresh()
@@ -239,7 +239,7 @@ const PluginAnchorageRepair: React.FC = () => {
         if (changedShipId == -2) break
 
         // 在两个舰队交换舰娘的情况下，另一个舰队也需要检查是否有野崎在位
-        const changedFleetId2 = fleets.find((fleet) =>
+        const changedFleetId2 = previousFleets.find((fleet) =>
           fleet.api_ship.some((id) => id === changedShipId),
         )?.api_id
 
@@ -285,7 +285,7 @@ const PluginAnchorageRepair: React.FC = () => {
     (e: Event) => {
       handleRepairTimerEvents(e)
       handleNosakiTimerEvents(e)
-      // getGameState() 获取数据时变更已经发生，保存事件发生前的游戏状态以供计时器处理函数使用
+      // 缓存舰队状态，用于在舰队间交换舰娘时判断另一个舰队的编号
       previousRepairGameStateRef.current = getGameState()
     },
     [handleRepairTimerEvents, handleNosakiTimerEvents],
