@@ -83,9 +83,21 @@ interface GameResponseEvent extends CustomEvent {
   }
 }
 
+type GameStateSnapshot = {
+  fleets: APIDeckPort[]
+  ships: Record<number, APIShip>
+  repairs: APIGetMemberNdockResponse[]
+  equips?: Record<number, APIGetMemberSlotItemResponse>
+  $ships?: Record<number, APIMstShip>
+  repairId: number[]
+}
+
 const PluginAnchorageRepair: React.FC = () => {
   const fleetIds = useSelector(fleetIdsSelector)
   const [activeTab, setActiveTab] = useState<string | number>(1)
+  const previousRepairGameStateRef = React.useRef<GameStateSnapshot | null>(
+    null,
+  )
 
   const { t } = useTranslation('poi-plugin-anchorage-repair')
 
@@ -113,7 +125,8 @@ const PluginAnchorageRepair: React.FC = () => {
     console.log(e)
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
-    const { fleets, ships } = getGameState()
+    const { fleets, ships } =
+      previousRepairGameStateRef.current ?? getGameState()
 
     const currentTime = Date.now()
     const lastRepairRefresh = timerState.getLastRepairRefresh()
@@ -192,7 +205,8 @@ const PluginAnchorageRepair: React.FC = () => {
   const handleNosakiTimerEvents = useCallback((e: Event) => {
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
-    const { fleets, ships } = getGameState()
+    const { fleets, ships } =
+      previousRepairGameStateRef.current ?? getGameState()
 
     const currentTime = Date.now()
     const lastNosakiRefresh = timerState.getLastNosakiRefresh()
@@ -268,14 +282,22 @@ const PluginAnchorageRepair: React.FC = () => {
     }
   }, [])
 
+  const handleGameResponseEvents = useCallback(
+    (e: Event) => {
+      handleRepairTimerEvents(e)
+      handleNosakiTimerEvents(e)
+      // getGameState() 获取数据时变更已经发生，保存事件发生前的游戏状态以供计时器处理函数使用
+      previousRepairGameStateRef.current = getGameState()
+    },
+    [handleRepairTimerEvents, handleNosakiTimerEvents],
+  )
+
   useEffect(() => {
-    window.addEventListener('game.response', handleRepairTimerEvents)
-    window.addEventListener('game.response', handleNosakiTimerEvents)
+    window.addEventListener('game.response', handleGameResponseEvents)
     return () => {
-      window.removeEventListener('game.response', handleRepairTimerEvents)
-      window.removeEventListener('game.response', handleNosakiTimerEvents)
+      window.removeEventListener('game.response', handleGameResponseEvents)
     }
-  }, [handleRepairTimerEvents, handleNosakiTimerEvents])
+  }, [handleGameResponseEvents])
 
   return (
     <AnchorageRepairContainer id="anchorage-repair">
