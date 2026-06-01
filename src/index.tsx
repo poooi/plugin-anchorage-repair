@@ -16,7 +16,6 @@ import type { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_it
 import type { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import type { APIReqHenseiChangeRequest } from 'kcsapi/api_req_hensei/change/request'
 import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/request'
-import type { APIReqMissionResultRequest } from 'kcsapi/api_req_mission/result/request'
 import type { APIReqNyukyoStartRequest } from 'kcsapi/api_req_nyukyo/start/request'
 import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
 
@@ -134,7 +133,7 @@ const PluginAnchorageRepair: React.FC = () => {
 
     switch (path) {
       case '/kcsapi/api_port/port': {
-        // On port event: always start/reset timer (if 15min elapsed)
+        // On port event: always start/reset timer (if 20min elapsed)
         if (lastRepairRefresh === 0) {
           // Timer not started yet - start it now
           timerState.setLastRepairRefresh(currentTime)
