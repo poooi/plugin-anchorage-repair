@@ -27,7 +27,7 @@ export default defineConfig([
   eslintPluginPrettierRecommended,
   reactHooks.configs.flat.recommended,
   jsxA11y.flatConfigs.recommended,
-  globalIgnores(['index.js']),
+  globalIgnores(['index.js', 'storybook-static/**']),
   {
     plugins: {
       perfectionist,
