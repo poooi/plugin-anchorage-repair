@@ -19,7 +19,7 @@ import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/req
 import type { APIReqNyukyoStartRequest } from 'kcsapi/api_req_nyukyo/start/request'
 import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
 
-import { RepairQueue } from './candidates'
+import { MoraleQueue, RepairQueue } from './candidates'
 import FleetList from './fleet-list'
 import {
   fleetIdsSelector,
@@ -390,6 +390,7 @@ const PluginAnchorageRepair: React.FC = () => {
             />
           ))}
           <Tab id={-1} title={t('Repair Queue')} panel={<RepairQueue />} />
+          <Tab id={-2} title={t('Morale Queue')} panel={<MoraleQueue />} />
         </Tabs>
       </div>
     </AnchorageRepairContainer>

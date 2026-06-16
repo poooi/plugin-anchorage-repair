@@ -152,16 +152,12 @@ const ShipRow: React.FC<ShipRowProps> = ({
         <td>
           {isBoostReady && shipCanBoostMorale && !inRepair ? (
             <Tag intent="primary">
-              {t('Cond')}: {api_cond} (+{moraleBoostAmount})
+              {api_cond} (+{moraleBoostAmount})
             </Tag>
           ) : api_cond >= NOSAKI_COND_MAX ? (
-            <Tag intent="success">
-              {t('Cond')}: {api_cond} (MAX)
-            </Tag>
+            <Tag intent="success">{api_cond} (MAX)</Tag>
           ) : (
-            <Tag intent="none">
-              {t('Cond')}: {api_cond}
-            </Tag>
+            <Tag intent="none">{api_cond}</Tag>
           )}
         </td>
       )}
