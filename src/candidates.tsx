@@ -404,9 +404,13 @@ const SelectorPanel = styled.div`
   border: 1px solid var(--ship-selector-border);
   border-radius: 4px;
   background: var(--ship-selector-background);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  flex: 1;
   margin: 0.25rem;
-  max-height: calc(100vh - 6rem);
-  overflow: hidden;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto;
   padding: 0.75rem;
 
   .bp5-dark & {
@@ -464,6 +468,8 @@ const SelectorContent = styled.div`
 
 const SelectorSection = styled.section`
   align-self: start;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
   border: 1px solid var(--ship-selector-border);
@@ -485,10 +491,16 @@ const ShipTypeFilterBar = styled.div`
 `
 
 const AvailableSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   margin-top: 0.75rem;
 `
 
 const WatchedList = styled.ul`
+  flex: 1;
+  min-height: 0;
   padding: 0;
   margin: 0.5rem 0 0;
   max-height: 14rem;
@@ -509,9 +521,11 @@ const WatchedListItem = styled.li`
 `
 
 const ShipList = styled.ul`
+  flex: 1;
+  min-height: 0;
   padding: 0;
   margin: 0.5rem 0 0;
-  max-height: 26rem;
+  max-height: 100%;
   overflow-y: auto;
 `
 
