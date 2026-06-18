@@ -2,7 +2,16 @@ import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { APIShip } from 'kcsapi/api_port/port/response'
 import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
 
-import { HTMLTable } from '@blueprintjs/core'
+import {
+  Button,
+  Classes,
+  Colors,
+  HTMLTable,
+  InputGroup,
+  Tab,
+  Tabs,
+  Tag,
+} from '@blueprintjs/core'
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,7 +22,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import chroma from 'chroma-js'
 import { mapValues, findIndex, includes, map } from 'lodash'
 import fp from 'lodash/fp'
-import React, { useMemo, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
 import { createSelector } from 'reselect'
@@ -26,7 +35,13 @@ import { resolveTime } from 'views/utils/tools'
 
 import type { RootState } from '../poi-types'
 
-import { akashiEstimate, timePerHPCalc } from './functions'
+import { NOSAKI_ID_LIST, getFleetStatus } from './fleet-utils'
+import {
+  NOSAKI_COND_MAX,
+  akashiEstimate,
+  nosakiMoraleEstimate,
+  timePerHPCalc,
+} from './functions'
 
 interface EnhancedShip extends APIShip {
   akashi: number
@@ -37,6 +52,22 @@ interface EnhancedShip extends APIShip {
   hpPercentage: number
   canBoostMorale: boolean
   moraleBoostAmount: number
+}
+
+type MoraleWatchStatus =
+  | 'boost-ready'
+  | 'boosted'
+  | 'docking'
+  | 'no-nosaki'
+  | 'waiting'
+
+interface MoraleWatchShip extends EnhancedShip {
+  finalCond: number
+  moraleStatus: MoraleWatchStatus
+}
+
+interface MoraleQueueProps {
+  initialWatchedShipIds?: number[]
 }
 
 const allFleetShipIdSelector = createSelector(
@@ -93,27 +124,124 @@ const candidateShipsSelector = createSelector(
     )(ships),
 )
 
+const moraleWatchShipsSelector = createSelector(
+  [
+    (state: RootState) => state.info.fleets,
+    (state: RootState) => state.info.ships,
+    (state: RootState) => state.const.$ships,
+    repairIdSelector,
+    (state: RootState) => state.info.equips,
+  ],
+  (fleets, ships, $ships, repairIds, equips): MoraleWatchShip[] =>
+    fleets.flatMap((fleet) => {
+      const status = getFleetStatus(fleet, ships, $ships, repairIds, equips)
+
+      return fleet.api_ship.flatMap((shipId): MoraleWatchShip[] => {
+        if (shipId <= 0) return []
+        const ship = ships[shipId]
+        if (!ship || NOSAKI_ID_LIST.includes(ship.api_ship_id)) return []
+
+        const constShip = $ships[ship.api_ship_id]
+        if (!constShip) return []
+
+        const moraleEstimate = nosakiMoraleEstimate({
+          api_cond: ship.api_cond,
+          nosakiShipId: status.nosakiShipId,
+        })
+        const inRepair = includes(repairIds, ship.api_id)
+        const finalCond = Math.min(
+          NOSAKI_COND_MAX,
+          ship.api_cond + moraleEstimate.boostAmount,
+        )
+
+        let moraleStatus: MoraleWatchStatus = 'boost-ready'
+        if (inRepair) {
+          moraleStatus = 'docking'
+        } else if (ship.api_cond >= NOSAKI_COND_MAX) {
+          moraleStatus = 'boosted'
+        } else if (!status.nosakiPresent || status.nosakiShipId < 0) {
+          moraleStatus = 'no-nosaki'
+        } else if (!status.canBoostMorale) {
+          moraleStatus = 'waiting'
+        }
+
+        return [
+          {
+            ...constShip,
+            ...ship,
+            akashi: 0,
+            canBoostMorale: status.canBoostMorale && moraleEstimate.canBoost,
+            finalCond,
+            fleetId: (fleet.api_id || 1) - 1,
+            hpPercentage: ship.api_nowhp / ship.api_maxhp,
+            moraleStatus,
+            moraleBoostAmount: moraleEstimate.boostAmount,
+            perHP: 0,
+          },
+        ]
+      })
+    }),
+)
+
 const getHPBackgroundColor = (nowhp: number, maxhp: number): string => {
   const percentage = nowhp / maxhp
   return percentage > 0.75
     ? chroma
-        .mix(
-          'rgb(253, 216, 53)',
-          'rgb(67, 160, 71)',
-          (percentage - 0.75) / 0.25,
-          'lab',
-        )
-        .alpha(0.6)
+        .mix(Colors.GOLD3, Colors.GREEN3, (percentage - 0.75) / 0.25, 'lab')
+        .alpha(0.28)
         .css()
     : chroma
-        .mix(
-          'rgb(245, 124, 0)',
-          'rgb(253, 216, 53)',
-          (percentage - 0.5) / 0.25,
-          'lab',
-        )
-        .alpha(0.6)
+        .mix(Colors.ORANGE3, Colors.GOLD3, (percentage - 0.5) / 0.25, 'lab')
+        .alpha(0.28)
         .css()
+}
+
+const REPAIR_QUEUE_COLUMNS = `
+  minmax(14rem, 2fr) minmax(7rem, 1fr) minmax(8rem, 1fr) minmax(8rem, 1fr)
+`
+
+const MORALE_QUEUE_COLUMNS = `
+  minmax(14rem, 2fr) minmax(6rem, 0.7fr) minmax(8rem, 1fr) minmax(9rem, 1.2fr)
+`
+
+const MORALE_WATCH_STORAGE_KEY = 'poi-plugin-anchorage-repair.moraleWatchList'
+
+const shipTypeOptions: Array<{ id: number[] | -1; name: string }> = [
+  { id: -1, name: 'All' },
+  { id: [8, 9, 10, 12], name: 'BB' },
+  { id: [7, 11, 18], name: 'CV' },
+  { id: [5, 6], name: 'CA' },
+  { id: [3, 4, 21], name: 'CL' },
+  { id: [2], name: 'DD' },
+  { id: [13, 14], name: 'SS' },
+  { id: [1], name: 'DE' },
+  { id: [15, 16, 17, 19, 20, 22], name: 'Auxiliary' },
+]
+
+const loadWatchedShipIds = (initialWatchedShipIds?: number[]): Set<number> => {
+  if (initialWatchedShipIds) return new Set(initialWatchedShipIds)
+
+  try {
+    const rawValue = window.localStorage.getItem(MORALE_WATCH_STORAGE_KEY)
+    if (!rawValue) return new Set()
+    const parsedValue = JSON.parse(rawValue)
+    return Array.isArray(parsedValue)
+      ? new Set(
+          parsedValue.filter(
+            (value): value is number => typeof value === 'number',
+          ),
+        )
+      : new Set()
+  } catch {
+    return new Set()
+  }
+}
+
+const saveWatchedShipIds = (shipIds: Set<number>) => {
+  window.localStorage.setItem(
+    MORALE_WATCH_STORAGE_KEY,
+    JSON.stringify([...shipIds]),
+  )
 }
 
 const CandidateListContainer = styled.div`
@@ -125,64 +253,365 @@ const CandidateListContainer = styled.div`
 const ScrollContainer = styled.div`
   flex: 1;
   overflow: auto;
+  padding: 0.25rem;
 
   ::-webkit-scrollbar {
     width: 1em;
   }
 `
 
-const StyledTable = styled(HTMLTable)`
+const StyledTable = styled(HTMLTable)<{ $columns: string }>`
+  --repair-table-background: ${Colors.WHITE};
+  --repair-table-border: ${Colors.LIGHT_GRAY1};
+  --repair-table-header-background: ${Colors.LIGHT_GRAY5};
+  --repair-table-header-hover: ${Colors.LIGHT_GRAY4};
+  --repair-table-row-border: ${Colors.LIGHT_GRAY3};
+  --repair-table-text: ${Colors.DARK_GRAY1};
+
   width: 100%;
+  min-width: 42rem;
   border-collapse: collapse;
+  display: block;
+  border: 1px solid var(--repair-table-border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--repair-table-background);
+
+  .bp5-dark & {
+    --repair-table-background: ${Colors.DARK_GRAY3};
+    --repair-table-border: ${Colors.DARK_GRAY5};
+    --repair-table-header-background: ${Colors.DARK_GRAY4};
+    --repair-table-header-hover: ${Colors.DARK_GRAY5};
+    --repair-table-row-border: ${Colors.DARK_GRAY5};
+    --repair-table-text: ${Colors.LIGHT_GRAY5};
+  }
+
+  thead,
+  tbody {
+    display: block;
+  }
 
   thead {
     position: sticky;
     top: 0;
     z-index: 1;
+    background: var(--repair-table-header-background);
+    border-bottom: 1px solid var(--repair-table-border);
   }
 
-  thead th {
-    padding: 0.5em;
+  thead tr {
+    display: grid;
+    grid-template-columns: ${(props) => props.$columns};
+  }
+
+  && thead th {
+    padding: 0.55rem 0.75rem;
     text-align: left;
     cursor: pointer;
     user-select: none;
+    font-weight: 600;
+    color: var(--repair-table-text);
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
+      background-color: var(--repair-table-header-hover);
     }
   }
 
   tbody {
-    display: grid;
     position: relative;
+    width: 100%;
   }
 
-  tbody td {
-    padding: 0.5em;
+  && tbody td {
+    padding: 0.55rem 0.75rem;
     vertical-align: middle;
+    position: relative;
+    z-index: 1;
+    border-bottom: 0;
   }
 `
 
 const TableRow = styled.tr<{
   $background: string
+  $columns: string
   $percentage: number
 }>`
   position: absolute;
   width: 100%;
-  background: linear-gradient(
-    90deg,
-    ${(props) => props.$background} ${(props) => props.$percentage}%,
-    rgba(0, 0, 0, 0) 50%
-  );
+  display: grid;
+  grid-template-columns: ${(props) => props.$columns};
+  align-items: center;
+  border-bottom: 1px solid var(--repair-table-row-border);
+  color: var(--repair-table-text);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: ${(props) => props.$percentage}%;
+    background: ${(props) => props.$background};
+  }
+
+  &:hover::before {
+    filter: saturate(1.08);
+  }
 `
 
 const ShipName = styled.span`
-  font-size: 120%;
+  font-size: 110%;
+  font-weight: 500;
 `
 
 const SortIndicator = styled.span`
   margin-left: 0.5em;
 `
+
+const SelectorPanel = styled.div`
+  --ship-selector-background: ${Colors.LIGHT_GRAY5};
+  --ship-selector-border: ${Colors.LIGHT_GRAY1};
+  --ship-selector-text: ${Colors.DARK_GRAY1};
+
+  border: 1px solid var(--ship-selector-border);
+  border-radius: 4px;
+  background: var(--ship-selector-background);
+  margin: 0.25rem;
+  max-height: calc(100vh - 6rem);
+  overflow: hidden;
+  padding: 0.75rem;
+
+  .bp5-dark & {
+    --ship-selector-background: ${Colors.DARK_GRAY3};
+    --ship-selector-border: ${Colors.DARK_GRAY5};
+    --ship-selector-text: ${Colors.LIGHT_GRAY5};
+  }
+`
+
+const SelectorTabs = styled.div`
+  margin-top: 0.5rem;
+  min-height: 0;
+  overflow: hidden;
+
+  .bp5-tab-panel {
+    margin-top: 0;
+  }
+`
+
+const SelectorToolbar = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.25rem 0.25rem 0.75rem;
+`
+
+const ManagerToolbar = styled(SelectorToolbar)`
+  justify-content: space-between;
+`
+
+const SelectorHeader = styled.div`
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--ship-selector-text);
+  margin-bottom: 0.5rem;
+`
+
+const SelectorTitle = styled.div`
+  font-weight: 600;
+`
+
+const SelectorHint = styled.div`
+  font-size: 90%;
+  color: ${Colors.GRAY1};
+
+  .bp5-dark & {
+    color: ${Colors.GRAY5};
+  }
+`
+
+const WatchedSection = styled.div`
+  border-bottom: 1px solid var(--ship-selector-border);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+`
+
+const WatchedList = styled.ul`
+  padding: 0;
+  margin: 0.5rem 0 0;
+  max-height: 8rem;
+  overflow-y: auto;
+`
+
+const WatchedListItem = styled.li`
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+`
+
+const ShipList = styled.ul`
+  padding: 0;
+  margin: 0;
+  max-height: 18rem;
+  overflow-y: auto;
+`
+
+const ShipListItem = styled.li`
+  display: flex;
+  cursor: pointer;
+  padding: 0.5em 1em;
+`
+
+const ShipLv = styled.span`
+  width: 4.5em;
+`
+
+const SelectorShipName = styled.span`
+  flex: 1;
+`
+
+const SelectorEmpty = styled.div`
+  color: ${Colors.GRAY1};
+  padding: 0.5rem 0;
+
+  .bp5-dark & {
+    color: ${Colors.GRAY5};
+  }
+`
+
+const ShipCell: React.FC<{ ship: EnhancedShip }> = ({ ship }) => {
+  const { t } = useTranslation()
+
+  return (
+    <ShipName>
+      {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
+        ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
+      }`}
+    </ShipName>
+  )
+}
+
+const ShipSelector: React.FC<{
+  ships: MoraleWatchShip[]
+  watchedShipIds: Set<number>
+  toggleWatch: (shipId: number) => void
+}> = ({ ships, watchedShipIds, toggleWatch }) => {
+  const { t } = useTranslation(['poi-plugin-anchorage-repair', 'resources'])
+  const [query, setQuery] = useState('')
+
+  const filteredShipIds = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase()
+    if (!normalizedQuery) return null
+
+    return ships
+      .filter((ship) => {
+        const translatedName = t(ship.api_name, { ns: 'resources' })
+        return `${ship.api_name} ${translatedName} ${ship.api_lv}`
+          .toLowerCase()
+          .includes(normalizedQuery)
+      })
+      .map((ship) => ship.api_id)
+  }, [query, ships, t])
+
+  const watchedShips = useMemo(
+    () => ships.filter((ship) => watchedShipIds.has(ship.api_id)),
+    [ships, watchedShipIds],
+  )
+
+  const renderShipList = (typeIds: number[] | -1) => (
+    <ShipList>
+      {ships
+        .filter((ship) => typeIds === -1 || typeIds.includes(ship.api_stype))
+        .filter(
+          (ship) => !filteredShipIds || filteredShipIds.includes(ship.api_id),
+        )
+        .filter((ship) => !watchedShipIds.has(ship.api_id))
+        .map((ship) => (
+          <ShipListItem
+            key={ship.api_id}
+            className={`${Classes.POPOVER_DISMISS} ${Classes.MENU_ITEM}`}
+            onClick={() => toggleWatch(ship.api_id)}
+          >
+            <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
+            <SelectorShipName>
+              {t(ship.api_name, { ns: 'resources' })}
+            </SelectorShipName>
+            <Tag>{ship.api_cond}</Tag>
+          </ShipListItem>
+        ))}
+    </ShipList>
+  )
+
+  return (
+    <SelectorPanel>
+      <SelectorHeader>
+        <SelectorTitle>{t('Ship Selector')}</SelectorTitle>
+        <SelectorHint>{t('Select ships to watch')}</SelectorHint>
+      </SelectorHeader>
+      <WatchedSection>
+        <SelectorTitle>{t('Watched')}</SelectorTitle>
+        {watchedShips.length > 0 ? (
+          <WatchedList>
+            {watchedShips.map((ship) => (
+              <WatchedListItem key={ship.api_id}>
+                <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
+                <SelectorShipName>
+                  {t(ship.api_name, { ns: 'resources' })}
+                </SelectorShipName>
+                <Tag>{ship.api_cond}</Tag>
+                <Button small minimal onClick={() => toggleWatch(ship.api_id)}>
+                  {t('Remove')}
+                </Button>
+              </WatchedListItem>
+            ))}
+          </WatchedList>
+        ) : (
+          <SelectorEmpty>{t('No watched ships')}</SelectorEmpty>
+        )}
+      </WatchedSection>
+      <InputGroup
+        fill
+        placeholder={t('Search ships')}
+        rightElement={
+          query ? (
+            <Button minimal small onClick={() => setQuery('')}>
+              {t('Clear')}
+            </Button>
+          ) : undefined
+        }
+        value={query}
+        onChange={(event) => setQuery(event.currentTarget.value)}
+      />
+      <SelectorTabs>
+        <Tabs
+          id="morale-watch-ship-type-selection"
+          renderActiveTabPanelOnly
+          vertical
+        >
+          {shipTypeOptions.map((option) => (
+            <Tab
+              key={option.name}
+              id={option.name}
+              panel={renderShipList(option.id)}
+              title={t(option.name)}
+            />
+          ))}
+        </Tabs>
+      </SelectorTabs>
+    </SelectorPanel>
+  )
+}
+
+const WatchListManager: React.FC<{
+  ships: MoraleWatchShip[]
+  watchedShipIds: Set<number>
+  toggleWatch: (shipId: number) => void
+}> = ({ ships, watchedShipIds, toggleWatch }) => (
+  <ShipSelector
+    ships={ships}
+    watchedShipIds={watchedShipIds}
+    toggleWatch={toggleWatch}
+  />
+)
 
 export const RepairQueue: React.FC = () => {
   const ships = useSelector(candidateShipsSelector)
@@ -197,13 +626,7 @@ export const RepairQueue: React.FC = () => {
         header: t('Ship'),
         cell: (info) => {
           const ship = info.row.original
-          return (
-            <ShipName>
-              {`Lv.${ship.api_lv} ${t(ship.api_name, { ns: 'resources' })}${
-                ship.fleetId < 0 ? '' : `/${ship.fleetId + 1}`
-              }`}
-            </ShipName>
-          )
+          return <ShipCell ship={ship} />
         },
         enableSorting: false,
       },
@@ -268,7 +691,7 @@ export const RepairQueue: React.FC = () => {
   return (
     <CandidateListContainer id="candidate-list">
       <ScrollContainer ref={tableContainerRef}>
-        <StyledTable>
+        <StyledTable $columns={REPAIR_QUEUE_COLUMNS}>
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -276,7 +699,6 @@ export const RepairQueue: React.FC = () => {
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    style={{ width: header.getSize() }}
                   >
                     {header.isPlaceholder
                       ? null
@@ -311,13 +733,255 @@ export const RepairQueue: React.FC = () => {
                 <TableRow
                   key={row.id}
                   $background={color}
+                  $columns={REPAIR_QUEUE_COLUMNS}
                   $percentage={percentage}
                   style={{
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} style={{ width: cell.column.getSize() }}>
+                    <td key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </td>
+                  ))}
+                </TableRow>
+              )
+            })}
+          </tbody>
+        </StyledTable>
+      </ScrollContainer>
+    </CandidateListContainer>
+  )
+}
+
+const getMoraleStatusIntent = (status: MoraleWatchStatus) => {
+  switch (status) {
+    case 'boost-ready':
+      return 'primary'
+    case 'boosted':
+      return 'success'
+    case 'docking':
+    case 'waiting':
+      return 'warning'
+    case 'no-nosaki':
+    default:
+      return 'none'
+  }
+}
+
+const getMoraleStatusLabel = (
+  status: MoraleWatchStatus,
+  t: (key: string) => string,
+) => {
+  switch (status) {
+    case 'boost-ready':
+      return t('Boost ready')
+    case 'boosted':
+      return t('Boosted')
+    case 'docking':
+      return t('Docking')
+    case 'waiting':
+      return t('Waiting for Nosaki')
+    case 'no-nosaki':
+    default:
+      return t('No Nosaki')
+  }
+}
+
+export const MoraleQueue: React.FC<MoraleQueueProps> = ({
+  initialWatchedShipIds,
+}) => {
+  const ships = useSelector(moraleWatchShipsSelector)
+  const { t } = useTranslation('poi-plugin-anchorage-repair')
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [isManagingWatchList, setIsManagingWatchList] = useState(false)
+  const [watchedShipIds, setWatchedShipIds] = useState(() =>
+    loadWatchedShipIds(initialWatchedShipIds),
+  )
+  const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (initialWatchedShipIds) {
+      setWatchedShipIds(new Set(initialWatchedShipIds))
+    }
+  }, [initialWatchedShipIds])
+
+  const toggleWatch = useCallback(
+    (shipId: number) => {
+      setWatchedShipIds((currentShipIds) => {
+        const nextShipIds = new Set(currentShipIds)
+        if (nextShipIds.has(shipId)) {
+          nextShipIds.delete(shipId)
+        } else {
+          nextShipIds.add(shipId)
+        }
+        if (!initialWatchedShipIds) {
+          saveWatchedShipIds(nextShipIds)
+        }
+        return nextShipIds
+      })
+    },
+    [initialWatchedShipIds],
+  )
+
+  const visibleShips = useMemo(
+    () =>
+      ships.filter(
+        (ship) =>
+          watchedShipIds.has(ship.api_id) ||
+          (ship.moraleStatus !== 'no-nosaki' && ship.moraleBoostAmount > 0),
+      ),
+    [ships, watchedShipIds],
+  )
+
+  const selectableShips = useMemo(
+    () =>
+      [...ships].sort((shipA, shipB) => {
+        if (shipA.fleetId !== shipB.fleetId)
+          return shipA.fleetId - shipB.fleetId
+        return shipB.api_lv - shipA.api_lv || shipB.api_id - shipA.api_id
+      }),
+    [ships],
+  )
+
+  const columns = useMemo<ColumnDef<MoraleWatchShip>[]>(
+    () => [
+      {
+        id: 'ship',
+        header: t('Ship'),
+        cell: (info) => <ShipCell ship={info.row.original} />,
+        enableSorting: false,
+      },
+      {
+        accessorKey: 'api_cond',
+        header: t('Cond'),
+        cell: (info) => info.row.original.api_cond,
+        sortingFn: (rowA, rowB) =>
+          rowA.original.api_cond - rowB.original.api_cond,
+      },
+      {
+        accessorKey: 'moraleBoostAmount',
+        header: t('Morale Boost'),
+        cell: (info) => {
+          const ship = info.row.original
+          return ship.moraleBoostAmount > 0
+            ? `+${ship.moraleBoostAmount} (${ship.finalCond})`
+            : '-'
+        },
+        sortingFn: (rowA, rowB) =>
+          rowA.original.moraleBoostAmount - rowB.original.moraleBoostAmount,
+      },
+      {
+        accessorKey: 'moraleStatus',
+        header: t('Status'),
+        cell: (info) => {
+          const status = info.row.original.moraleStatus
+          return (
+            <Tag intent={getMoraleStatusIntent(status)}>
+              {getMoraleStatusLabel(status, t)}
+            </Tag>
+          )
+        },
+      },
+    ],
+    [t],
+  )
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const table = useReactTable({
+    data: visibleShips,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+
+  const { rows } = table.getRowModel()
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 40,
+    overscan: 5,
+  })
+
+  if (isManagingWatchList) {
+    return (
+      <CandidateListContainer id="morale-candidate-list">
+        <ManagerToolbar>
+          <Button onClick={() => setIsManagingWatchList(false)}>
+            {t('Back to morale queue')}
+          </Button>
+          <Tag>{t('Watched ships count', { count: watchedShipIds.size })}</Tag>
+        </ManagerToolbar>
+        <WatchListManager
+          ships={selectableShips}
+          watchedShipIds={watchedShipIds}
+          toggleWatch={toggleWatch}
+        />
+      </CandidateListContainer>
+    )
+  }
+
+  return (
+    <CandidateListContainer id="morale-candidate-list">
+      <SelectorToolbar>
+        <Button intent="primary" onClick={() => setIsManagingWatchList(true)}>
+          {t('Manage watch list')}
+        </Button>
+      </SelectorToolbar>
+      <ScrollContainer ref={tableContainerRef}>
+        <StyledTable $columns={MORALE_QUEUE_COLUMNS}>
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                    {header.column.getIsSorted() && (
+                      <SortIndicator>
+                        {header.column.getIsSorted() === 'asc' ? '↑' : '↓'}
+                      </SortIndicator>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+            }}
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index]
+              if (!row) return null
+              return (
+                <TableRow
+                  key={row.id}
+                  $background="transparent"
+                  $columns={MORALE_QUEUE_COLUMNS}
+                  $percentage={0}
+                  style={{
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),

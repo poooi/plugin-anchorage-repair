@@ -54,3 +54,29 @@ declare module 'views/utils/tools' {
 declare module 'views/components/etc/overlay' {
   export { Tooltip, Popover, Dialog } from '@blueprintjs/core'
 }
+
+declare module '@storybook/react-vite' {
+  import type { ComponentType, ReactElement } from 'react'
+
+  export type Decorator = (Story: ComponentType) => ReactElement
+
+  export type Meta<TComponent = unknown> = {
+    title?: string
+    component?: TComponent
+    args?: Record<string, unknown>
+    parameters?: Record<string, unknown>
+  }
+
+  export type Preview = {
+    decorators?: Decorator[]
+    parameters?: Record<string, unknown>
+  }
+
+  export type StoryObj<TMeta = unknown> = {
+    name?: string
+    args?: Record<string, unknown>
+    decorators?: Decorator[]
+    parameters?: Record<string, unknown>
+    readonly __meta?: TMeta
+  }
+}

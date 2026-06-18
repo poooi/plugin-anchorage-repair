@@ -1,4 +1,4 @@
-import { HTMLTable, Tag, Callout } from '@blueprintjs/core'
+import { Colors, HTMLTable, Tag, Callout } from '@blueprintjs/core'
 import _ from 'lodash'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,7 +43,45 @@ const HiddenCallout = styled(Callout)<{ $hidden: boolean }>`
 `
 
 const StyledTable = styled(HTMLTable)`
+  --repair-table-background: ${Colors.WHITE};
+  --repair-table-border: ${Colors.LIGHT_GRAY1};
+  --repair-table-header-background: ${Colors.LIGHT_GRAY5};
+  --repair-table-row-border: ${Colors.LIGHT_GRAY3};
+  --repair-table-text: ${Colors.DARK_GRAY1};
+
   width: 100%;
+  border: 1px solid var(--repair-table-border);
+  border-radius: 4px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  background: var(--repair-table-background);
+
+  .bp5-dark & {
+    --repair-table-background: ${Colors.DARK_GRAY3};
+    --repair-table-border: ${Colors.DARK_GRAY5};
+    --repair-table-header-background: ${Colors.DARK_GRAY4};
+    --repair-table-row-border: ${Colors.DARK_GRAY5};
+    --repair-table-text: ${Colors.LIGHT_GRAY5};
+  }
+
+  && thead th {
+    background: var(--repair-table-header-background);
+    border-bottom: 1px solid var(--repair-table-border);
+    color: var(--repair-table-text);
+    font-weight: 600;
+    padding: 0.55rem 0.75rem;
+  }
+
+  && tbody td {
+    border-bottom: 1px solid var(--repair-table-row-border);
+    color: var(--repair-table-text);
+    padding: 0.55rem 0.75rem;
+  }
+
+  && tbody tr:last-child td {
+    border-bottom: 0;
+  }
 
   td,
   th {
