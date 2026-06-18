@@ -111,7 +111,7 @@ Following corner cases are not taken into consideration, thus the result may not
 ✓ Fleet preset loading doesn't reset timers
 ✓ Nosaki timer is global across all fleets
 ✓ Cross-fleet ship swaps reset affected repair/Nosaki timers when appropriate
-✓ Expedition departure resets the repair timer for fleets containing repair ships
+✓ Expedition departure resets or clears the repair timer depending on whether another repair fleet remains active
 ✓ Ship remodeling (including Nosaki → Nosaki Kai) doesn't reset timer
 
 # Changelog
