@@ -16,7 +16,6 @@ import type { APIGetMemberSlotItemResponse } from 'kcsapi/api_get_member/slot_it
 import type { APIDeckPort, APIShip } from 'kcsapi/api_port/port/response'
 import type { APIReqHenseiChangeRequest } from 'kcsapi/api_req_hensei/change/request'
 import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/request'
-import type { APIReqNyukyoStartRequest } from 'kcsapi/api_req_nyukyo/start/request'
 import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
 
 import { MoraleQueue, RepairQueue } from './candidates'
@@ -30,7 +29,6 @@ import {
   checkNosakiPresent,
   REPAIR_SHIP_ID,
   NOSAKI_ID_LIST,
-  getFleetStatus,
 } from './fleet-utils'
 import { akashiEstimate, AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
 import { timerState } from './timer-state'
@@ -72,7 +70,6 @@ const FleetTabPanel: React.FC<{ fleetId: number }> = ({ fleetId }) => {
 type GameResponsePostBody =
   | APIReqHenseiChangeRequest
   | APIReqMissionStartRequest
-  | APIReqNyukyoStartRequest
   | Record<string, string | number | undefined>
 
 interface GameResponseEvent extends CustomEvent {
@@ -123,7 +120,7 @@ const PluginAnchorageRepair: React.FC = () => {
   const handleRepairTimerEvents = useCallback((e: Event) => {
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
-    const { fleets, ships } = getGameState()
+    const { fleets, ships, repairId, equips } = getGameState()
     const previousFleets = previousRepairGameStateRef.current?.fleets ?? fleets
 
     const currentTime = Date.now()
@@ -133,7 +130,15 @@ const PluginAnchorageRepair: React.FC = () => {
 
     switch (path) {
       case '/kcsapi/api_port/port': {
-        // On port event: always start/reset timer (if 20min elapsed)
+        const anyFleetRepairsActive = fleets.some((fleet) => {
+          const { active } = checkRepairActive(fleet, ships, repairId, equips)
+          return active
+        })
+
+        if (!anyFleetRepairsActive) {
+          break
+        }
+
         if (lastRepairRefresh === 0) {
           // Timer not started yet - start it now
           timerState.setLastRepairRefresh(currentTime)
@@ -152,9 +157,6 @@ const PluginAnchorageRepair: React.FC = () => {
         const body = postBody as APIReqHenseiChangeRequest
         const changedShipId = parseInt(body.api_ship_id, 10)
         const changedFleetId = parseInt(body.api_id, 10)
-
-        // 舰队一括解除不会导致计时器重置
-        if (changedShipId == -2) break
 
         // 在两个舰队交换舰娘的情况下，另一个舰队也需要检查是否有明石/朝日在位
         const changedFleetId2 = previousFleets.find((fleet) =>
@@ -187,6 +189,26 @@ const PluginAnchorageRepair: React.FC = () => {
         // Ship remodeling doesn't reset timer
         break
 
+      case '/kcsapi/api_req_mission/start': {
+        const body = postBody as APIReqMissionStartRequest
+        const expedFleetId = parseInt(body.api_deck_id, 10)
+
+        if (!Number.isNaN(expedFleetId)) {
+          const expedFleet = fleets.find((f) => f.api_id === expedFleetId)
+          const hasRepairShip = _.get(expedFleet, 'api_ship', []).some(
+            (shipId: number) => {
+              const ship = ships[shipId]
+              return ship && REPAIR_SHIP_ID.includes(ship.api_ship_id)
+            },
+          )
+
+          if (hasRepairShip) {
+            timerState.resetRepairTimer()
+          }
+        }
+        break
+      }
+
       case '/kcsapi/api_req_mission/result':
         // 经测试，远征归来不重置
         // 经测试，远征归来的舰队无法获得效果
@@ -213,7 +235,14 @@ const PluginAnchorageRepair: React.FC = () => {
 
     switch (path) {
       case '/kcsapi/api_port/port': {
-        // On port event: always start/reset timer (if 15min elapsed)
+        const anyFleetNosakiPresent = fleets.some((fleet) =>
+          checkNosakiPresent(fleet, ships),
+        )
+
+        if (!anyFleetNosakiPresent) {
+          break
+        }
+
         if (lastNosakiRefresh === 0) {
           // Timer not started yet - start it now
           timerState.setLastNosakiRefresh(currentTime)
