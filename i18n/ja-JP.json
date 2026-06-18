@@ -41,6 +41,7 @@
   "Clear": "クリア",
   "Add watched ship": "注目艦を追加",
   "Watched ships count": "注目中: {{count}}",
+  "Available ships count": "選択可能: {{count}}",
   "Manage watch list": "注目リスト管理",
   "Back to morale queue": "士気向上待機表へ戻る",
   "Remove": "解除",

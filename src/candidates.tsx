@@ -2,16 +2,7 @@ import type { ColumnDef, SortingState } from '@tanstack/react-table'
 import type { APIShip } from 'kcsapi/api_port/port/response'
 import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
 
-import {
-  Button,
-  Classes,
-  Colors,
-  HTMLTable,
-  InputGroup,
-  Tab,
-  Tabs,
-  Tag,
-} from '@blueprintjs/core'
+import { Button, Colors, HTMLTable, InputGroup, Tag } from '@blueprintjs/core'
 import {
   useReactTable,
   getCoreRowModel,
@@ -423,16 +414,6 @@ const SelectorPanel = styled.div`
   }
 `
 
-const SelectorTabs = styled.div`
-  margin-top: 0.5rem;
-  min-height: 0;
-  overflow: hidden;
-
-  .bp5-tab-panel {
-    margin-top: 0;
-  }
-`
-
 const SelectorToolbar = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -471,6 +452,22 @@ const WatchedSection = styled.div`
   padding-bottom: 0.75rem;
 `
 
+const SelectorControls = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const ShipTypeFilterBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`
+
+const AvailableSection = styled.div`
+  margin-top: 0.75rem;
+`
+
 const WatchedList = styled.ul`
   padding: 0;
   margin: 0.5rem 0 0;
@@ -487,8 +484,8 @@ const WatchedListItem = styled.li`
 
 const ShipList = styled.ul`
   padding: 0;
-  margin: 0;
-  max-height: 18rem;
+  margin: 0.5rem 0 0;
+  max-height: 22rem;
   overflow-y: auto;
 `
 
@@ -542,6 +539,7 @@ const ShipSelector: React.FC<{
 }> = ({ ships, watchedShipIds, toggleWatch }) => {
   const { t } = useTranslation(['poi-plugin-anchorage-repair', 'resources'])
   const [query, setQuery] = useState('')
+  const [selectedShipType, setSelectedShipType] = useState('All')
 
   const filteredShipIds = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -562,41 +560,58 @@ const ShipSelector: React.FC<{
     [ships, watchedShipIds],
   )
 
-  const renderShipList = (typeIds: number[] | -1) => {
-    const selectableShips = ships
-      .filter((ship) => typeIds === -1 || typeIds.includes(ship.api_stype))
-      .filter(
-        (ship) => !filteredShipIds || filteredShipIds.includes(ship.api_id),
-      )
-      .filter((ship) => !watchedShipIds.has(ship.api_id))
+  const availableShips = useMemo(
+    () => ships.filter((ship) => !watchedShipIds.has(ship.api_id)),
+    [ships, watchedShipIds],
+  )
 
-    return (
-      <ShipList>
-        {selectableShips.length > 0 ? (
-          selectableShips.map((ship) => (
-            <ShipListItem
-              key={ship.api_id}
-              className={`${Classes.POPOVER_DISMISS} ${Classes.MENU_ITEM}`}
-              onClick={() => toggleWatch(ship.api_id)}
-            >
-              <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
-              <SelectorShipName>
-                {t(ship.api_name, { ns: 'resources' })}
-              </SelectorShipName>
-              <SelectorShipActions>
-                <Tag>{ship.api_cond}</Tag>
-                <Button small minimal>
-                  {t('Watch')}
-                </Button>
-              </SelectorShipActions>
-            </ShipListItem>
-          ))
-        ) : (
-          <SelectorEmpty>{t('No ships available')}</SelectorEmpty>
-        )}
-      </ShipList>
+  const shipTypeCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        shipTypeOptions.map((option) => [
+          option.name,
+          availableShips.filter(
+            (ship) => option.id === -1 || option.id.includes(ship.api_stype),
+          ).length,
+        ]),
+      ),
+    [availableShips],
+  )
+
+  const selectedShipTypeOption =
+    shipTypeOptions.find((option) => option.name === selectedShipType) ??
+    shipTypeOptions[0]
+
+  const selectableShips = availableShips
+    .filter(
+      (ship) =>
+        selectedShipTypeOption.id === -1 ||
+        selectedShipTypeOption.id.includes(ship.api_stype),
     )
-  }
+    .filter((ship) => !filteredShipIds || filteredShipIds.includes(ship.api_id))
+
+  const renderShipList = () => (
+    <ShipList>
+      {selectableShips.length > 0 ? (
+        selectableShips.map((ship) => (
+          <ShipListItem key={ship.api_id}>
+            <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
+            <SelectorShipName>
+              {t(ship.api_name, { ns: 'resources' })}
+            </SelectorShipName>
+            <SelectorShipActions>
+              <Tag>{ship.api_cond}</Tag>
+              <Button small minimal onClick={() => toggleWatch(ship.api_id)}>
+                {t('Watch')}
+              </Button>
+            </SelectorShipActions>
+          </ShipListItem>
+        ))
+      ) : (
+        <SelectorEmpty>{t('No ships available')}</SelectorEmpty>
+      )}
+    </ShipList>
+  )
 
   return (
     <SelectorPanel>
@@ -614,10 +629,16 @@ const ShipSelector: React.FC<{
                 <SelectorShipName>
                   {t(ship.api_name, { ns: 'resources' })}
                 </SelectorShipName>
-                <Tag>{ship.api_cond}</Tag>
-                <Button small minimal onClick={() => toggleWatch(ship.api_id)}>
-                  {t('Remove')}
-                </Button>
+                <SelectorShipActions>
+                  <Tag>{ship.api_cond}</Tag>
+                  <Button
+                    small
+                    minimal
+                    onClick={() => toggleWatch(ship.api_id)}
+                  >
+                    {t('Remove')}
+                  </Button>
+                </SelectorShipActions>
               </WatchedListItem>
             ))}
           </WatchedList>
@@ -625,35 +646,42 @@ const ShipSelector: React.FC<{
           <SelectorEmpty>{t('No watched ships')}</SelectorEmpty>
         )}
       </WatchedSection>
-      <InputGroup
-        fill
-        placeholder={t('Search ships')}
-        rightElement={
-          query ? (
-            <Button minimal small onClick={() => setQuery('')}>
-              {t('Clear')}
-            </Button>
-          ) : undefined
-        }
-        value={query}
-        onChange={(event) => setQuery(event.currentTarget.value)}
-      />
-      <SelectorTabs>
-        <Tabs
-          id="morale-watch-ship-type-selection"
-          renderActiveTabPanelOnly
-          vertical
-        >
+      <SelectorControls>
+        <InputGroup
+          fill
+          placeholder={t('Search ships')}
+          rightElement={
+            query ? (
+              <Button minimal small onClick={() => setQuery('')}>
+                {t('Clear')}
+              </Button>
+            ) : undefined
+          }
+          value={query}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+        />
+        <ShipTypeFilterBar>
           {shipTypeOptions.map((option) => (
-            <Tab
+            <Button
               key={option.name}
-              id={option.name}
-              panel={renderShipList(option.id)}
-              title={t(option.name)}
-            />
+              active={option.name === selectedShipType}
+              small
+              onClick={() => setSelectedShipType(option.name)}
+            >
+              {`${t(option.name)} (${shipTypeCounts[option.name] ?? 0})`}
+            </Button>
           ))}
-        </Tabs>
-      </SelectorTabs>
+        </ShipTypeFilterBar>
+      </SelectorControls>
+      <AvailableSection>
+        <SelectorHeader>
+          <SelectorTitle>
+            {t('Available ships count', { count: selectableShips.length })}
+          </SelectorTitle>
+          <SelectorHint>{t(selectedShipTypeOption.name)}</SelectorHint>
+        </SelectorHeader>
+        {renderShipList()}
+      </AvailableSection>
     </SelectorPanel>
   )
 }

@@ -41,6 +41,7 @@
   "Clear": "지우기",
   "Add watched ship": "관심 함선 추가",
   "Watched ships count": "관심 중: {{count}}",
+  "Available ships count": "선택 가능: {{count}}",
   "Manage watch list": "관심 목록 관리",
   "Back to morale queue": "사기 증진 목록으로 돌아가기",
   "Remove": "해제",

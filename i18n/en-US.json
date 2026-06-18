@@ -41,6 +41,7 @@
   "Clear": "Clear",
   "Add watched ship": "Add watched ship",
   "Watched ships count": "Watched ships: {{count}}",
+  "Available ships count": "Available ships: {{count}}",
   "Manage watch list": "Manage watch list",
   "Back to morale queue": "Back to morale queue",
   "Remove": "Remove",

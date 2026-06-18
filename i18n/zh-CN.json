@@ -41,6 +41,7 @@
   "Clear": "清除",
   "Add watched ship": "添加关注舰娘",
   "Watched ships count": "已关注: {{count}}",
+  "Available ships count": "可选择: {{count}}",
   "Manage watch list": "管理关注列表",
   "Back to morale queue": "返回士气提升序列",
   "Remove": "移除",
