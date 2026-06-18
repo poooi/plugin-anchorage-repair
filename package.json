@@ -1,7 +1,7 @@
 {
   "name": "poi-plugin-anchorage-repair",
   "version": "1.0.1",
-  "description": "Anchorage repair plugin for poi",
+  "description": "Anchorage support plugin for poi",
   "main": "index.es",
   "scripts": {
     "prepack": "tsdown",
@@ -67,7 +67,7 @@
     "vite": "^7.0.0"
   },
   "poiPlugin": {
-    "title": "Anchorage repair",
+    "title": "Anchorage support",
     "description": "A plugin to help with Akashi's HP repair and Nosaki's morale boost",
     "icon": "ti/anchor",
     "priority": 9,

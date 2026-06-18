@@ -1,5 +1,6 @@
 {
   "Anchorage repair": "泊地修理",
+  "Anchorage support": "泊地支援",
   "Repair ship not flagship": "修理艦不是旗艦",
   "Not ready": "未就緒",
   "capacity-count": "可修理數量: {{count}}",
@@ -15,7 +16,6 @@
   "Ready for repair!": "修理準備就緒！",
   "flagship in dock": "旗艦入渠中",
   "anchorage repair completed": "泊地修理完畢",
-  "A plugin to help in Akashi's anchorage repair arrangement": "明石HP修理和野埼士氣提升助手",
   "A plugin to help with Akashi's HP repair and Nosaki's morale boost": "明石HP修理和野埼士氣提升助手",
   "Docking": "入渠中",
   "Total time required": "泊地修理總耗時",

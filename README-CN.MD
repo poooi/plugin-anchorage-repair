@@ -1,4 +1,4 @@
-# 泊地修理插件
+# 泊地支援插件
 
 [![npm package][npm-badge]][npm]
 

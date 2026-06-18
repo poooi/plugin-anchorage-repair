@@ -1,4 +1,4 @@
-# Anchorage repair plugin for poi
+# Anchorage support plugin for poi
 
 [![npm package][npm-badge]][npm]
 
