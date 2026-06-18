@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'fs/promises'
-import path from 'path'
+import { dirname } from 'path'
 
 export default class FileWriter {
   private writing = false
@@ -21,7 +21,7 @@ export default class FileWriter {
       while (this.queue.length > 0) {
         const [filePath, data] = this.queue.shift()!
         try {
-          await mkdir(path.dirname(filePath), { recursive: true })
+          await mkdir(dirname(filePath), { recursive: true })
           await writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`)
         } catch (error: unknown) {
           console.error(error)

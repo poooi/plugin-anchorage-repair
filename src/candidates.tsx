@@ -23,7 +23,7 @@ import chroma from 'chroma-js'
 import { readFile } from 'fs/promises'
 import { mapValues, findIndex, includes, map } from 'lodash'
 import fp from 'lodash/fp'
-import path from 'path'
+import { join } from 'path'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
@@ -70,6 +70,7 @@ interface MoraleWatchShip extends EnhancedShip {
 }
 
 interface MoraleQueueProps {
+  initialManagingWatchList?: boolean
   initialWatchedShipIds?: number[]
 }
 
@@ -132,58 +133,79 @@ const moraleWatchShipsSelector = createSelector(
     (state: RootState) => state.info.fleets,
     (state: RootState) => state.info.ships,
     (state: RootState) => state.const.$ships,
+    shipFleetIdMapSelector,
     repairIdSelector,
     (state: RootState) => state.info.equips,
   ],
-  (fleets, ships, $ships, repairIds, equips): MoraleWatchShip[] =>
-    fleets.flatMap((fleet) => {
-      const status = getFleetStatus(fleet, ships, $ships, repairIds, equips)
+  (
+    fleets,
+    ships,
+    $ships,
+    shipFleetIdMap,
+    repairIds,
+    equips,
+  ): MoraleWatchShip[] => {
+    const fleetStatusById = new Map(
+      fleets.map((fleet) => {
+        const status = getFleetStatus(fleet, ships, $ships, repairIds, equips)
+        return [fleet.api_id, status] as const
+      }),
+    )
+    const fleetIdByShipId = new Map(
+      fleets.flatMap((fleet) =>
+        fleet.api_ship
+          .filter((shipId) => shipId > 0)
+          .map((shipId) => [shipId, fleet.api_id] as const),
+      ),
+    )
 
-      return fleet.api_ship.flatMap((shipId): MoraleWatchShip[] => {
-        if (shipId <= 0) return []
-        const ship = ships[shipId]
-        if (!ship || NOSAKI_ID_LIST.includes(ship.api_ship_id)) return []
+    return Object.values(ships).flatMap((ship): MoraleWatchShip[] => {
+      if (!ship || NOSAKI_ID_LIST.includes(ship.api_ship_id)) return []
 
-        const constShip = $ships[ship.api_ship_id]
-        if (!constShip) return []
+      const constShip = $ships[ship.api_ship_id]
+      if (!constShip) return []
 
-        const moraleEstimate = nosakiMoraleEstimate({
-          api_cond: ship.api_cond,
-          nosakiShipId: status.nosakiShipId,
-        })
-        const inRepair = includes(repairIds, ship.api_id)
-        const finalCond = Math.min(
-          NOSAKI_COND_MAX,
-          ship.api_cond + moraleEstimate.boostAmount,
-        )
-
-        let moraleStatus: MoraleWatchStatus = 'boost-ready'
-        if (inRepair) {
-          moraleStatus = 'docking'
-        } else if (ship.api_cond >= NOSAKI_COND_MAX) {
-          moraleStatus = 'boosted'
-        } else if (!status.nosakiPresent || status.nosakiShipId < 0) {
-          moraleStatus = 'no-nosaki'
-        } else if (!status.canBoostMorale) {
-          moraleStatus = 'waiting'
-        }
-
-        return [
-          {
-            ...constShip,
-            ...ship,
-            akashi: 0,
-            canBoostMorale: status.canBoostMorale && moraleEstimate.canBoost,
-            finalCond,
-            fleetId: (fleet.api_id || 1) - 1,
-            hpPercentage: ship.api_nowhp / ship.api_maxhp,
-            moraleStatus,
-            moraleBoostAmount: moraleEstimate.boostAmount,
-            perHP: 0,
-          },
-        ]
+      const fleetId = fleetIdByShipId.get(ship.api_id)
+      const status = fleetId ? fleetStatusById.get(fleetId) : undefined
+      const nosakiShipId = status?.nosakiShipId ?? -1
+      const moraleEstimate = nosakiMoraleEstimate({
+        api_cond: ship.api_cond,
+        nosakiShipId,
       })
-    }),
+      const inRepair = includes(repairIds, ship.api_id)
+      const finalCond = Math.min(
+        NOSAKI_COND_MAX,
+        ship.api_cond + moraleEstimate.boostAmount,
+      )
+
+      let moraleStatus: MoraleWatchStatus = 'boost-ready'
+      if (inRepair) {
+        moraleStatus = 'docking'
+      } else if (ship.api_cond >= NOSAKI_COND_MAX) {
+        moraleStatus = 'boosted'
+      } else if (!status?.nosakiPresent || nosakiShipId < 0) {
+        moraleStatus = 'no-nosaki'
+      } else if (!status.canBoostMorale) {
+        moraleStatus = 'waiting'
+      }
+
+      return [
+        {
+          ...constShip,
+          ...ship,
+          akashi: 0,
+          canBoostMorale:
+            (status?.canBoostMorale ?? false) && moraleEstimate.canBoost,
+          finalCond,
+          fleetId: shipFleetIdMap[ship.api_id] ?? -1,
+          hpPercentage: ship.api_nowhp / ship.api_maxhp,
+          moraleStatus,
+          moraleBoostAmount: moraleEstimate.boostAmount,
+          perHP: 0,
+        },
+      ]
+    })
+  },
 )
 
 const getHPBackgroundColor = (nowhp: number, maxhp: number): string => {
@@ -211,7 +233,7 @@ const PLUGIN_KEY = 'poi-plugin-anchorage-repair'
 const MORALE_WATCH_STORAGE_KEY = 'moraleWatchList'
 const DATA_PATH =
   typeof window.APPDATA_PATH === 'string'
-    ? path.join(window.APPDATA_PATH, `${PLUGIN_KEY}.json`)
+    ? join(window.APPDATA_PATH, `${PLUGIN_KEY}.json`)
     : ''
 
 type PluginData = {
@@ -472,7 +494,9 @@ const ShipList = styled.ul`
 
 const ShipListItem = styled.li`
   display: flex;
+  align-items: center;
   cursor: pointer;
+  gap: 0.5rem;
   padding: 0.5em 1em;
 `
 
@@ -482,6 +506,12 @@ const ShipLv = styled.span`
 
 const SelectorShipName = styled.span`
   flex: 1;
+`
+
+const SelectorShipActions = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `
 
 const SelectorEmpty = styled.div`
@@ -532,29 +562,41 @@ const ShipSelector: React.FC<{
     [ships, watchedShipIds],
   )
 
-  const renderShipList = (typeIds: number[] | -1) => (
-    <ShipList>
-      {ships
-        .filter((ship) => typeIds === -1 || typeIds.includes(ship.api_stype))
-        .filter(
-          (ship) => !filteredShipIds || filteredShipIds.includes(ship.api_id),
-        )
-        .filter((ship) => !watchedShipIds.has(ship.api_id))
-        .map((ship) => (
-          <ShipListItem
-            key={ship.api_id}
-            className={`${Classes.POPOVER_DISMISS} ${Classes.MENU_ITEM}`}
-            onClick={() => toggleWatch(ship.api_id)}
-          >
-            <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
-            <SelectorShipName>
-              {t(ship.api_name, { ns: 'resources' })}
-            </SelectorShipName>
-            <Tag>{ship.api_cond}</Tag>
-          </ShipListItem>
-        ))}
-    </ShipList>
-  )
+  const renderShipList = (typeIds: number[] | -1) => {
+    const selectableShips = ships
+      .filter((ship) => typeIds === -1 || typeIds.includes(ship.api_stype))
+      .filter(
+        (ship) => !filteredShipIds || filteredShipIds.includes(ship.api_id),
+      )
+      .filter((ship) => !watchedShipIds.has(ship.api_id))
+
+    return (
+      <ShipList>
+        {selectableShips.length > 0 ? (
+          selectableShips.map((ship) => (
+            <ShipListItem
+              key={ship.api_id}
+              className={`${Classes.POPOVER_DISMISS} ${Classes.MENU_ITEM}`}
+              onClick={() => toggleWatch(ship.api_id)}
+            >
+              <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
+              <SelectorShipName>
+                {t(ship.api_name, { ns: 'resources' })}
+              </SelectorShipName>
+              <SelectorShipActions>
+                <Tag>{ship.api_cond}</Tag>
+                <Button small minimal>
+                  {t('Watch')}
+                </Button>
+              </SelectorShipActions>
+            </ShipListItem>
+          ))
+        ) : (
+          <SelectorEmpty>{t('No ships available')}</SelectorEmpty>
+        )}
+      </ShipList>
+    )
+  }
 
   return (
     <SelectorPanel>
@@ -807,17 +849,24 @@ const getMoraleStatusLabel = (
 }
 
 export const MoraleQueue: React.FC<MoraleQueueProps> = ({
+  initialManagingWatchList = false,
   initialWatchedShipIds,
 }) => {
   const ships = useSelector(moraleWatchShipsSelector)
   const { t } = useTranslation('poi-plugin-anchorage-repair')
   const [sorting, setSorting] = useState<SortingState>([])
-  const [isManagingWatchList, setIsManagingWatchList] = useState(false)
+  const [isManagingWatchList, setIsManagingWatchList] = useState(
+    initialManagingWatchList,
+  )
   const [watchedShipIds, setWatchedShipIds] = useState(
     () => new Set(initialWatchedShipIds),
   )
   const watchListChangedBeforeLoadRef = useRef(false)
   const tableContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setIsManagingWatchList(initialManagingWatchList)
+  }, [initialManagingWatchList])
 
   useEffect(() => {
     if (initialWatchedShipIds) {
@@ -869,8 +918,11 @@ export const MoraleQueue: React.FC<MoraleQueueProps> = ({
   const selectableShips = useMemo(
     () =>
       [...ships].sort((shipA, shipB) => {
-        if (shipA.fleetId !== shipB.fleetId)
-          return shipA.fleetId - shipB.fleetId
+        const fleetSortA =
+          shipA.fleetId >= 0 ? shipA.fleetId : Number.MAX_SAFE_INTEGER
+        const fleetSortB =
+          shipB.fleetId >= 0 ? shipB.fleetId : Number.MAX_SAFE_INTEGER
+        if (fleetSortA !== fleetSortB) return fleetSortA - fleetSortB
         return shipB.api_lv - shipA.api_lv || shipB.api_id - shipA.api_id
       }),
     [ships],

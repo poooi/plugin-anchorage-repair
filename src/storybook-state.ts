@@ -126,6 +126,22 @@ export const repairTimerReady = Date.now() - AKASHI_INTERVAL - 60 * 1000
 
 export const moraleTimerReady = Date.now() - NOSAKI_INTERVAL - 60 * 1000
 
+const mockShipTypes = [2, 3, 4, 5, 6, 7, 8, 13, 14, 15, 16, 18, 21, 22]
+
+const mockOwnedShips: ShipInput[] = Array.from({ length: 160 }, (_, index) => {
+  const maxhp = 28 + (index % 45)
+  return {
+    cond: 25 + (index % 31),
+    id: 1000 + index,
+    level: 1 + (index % 99),
+    maxhp,
+    name: `Mock Ship ${String(index + 1).padStart(3, '0')}`,
+    nowhp: Math.max(1, maxhp - (index % 12)),
+    shipId: 2000 + index,
+    stype: mockShipTypes[index % mockShipTypes.length],
+  }
+})
+
 export const readmeScenarios = {
   akashiRepair: createStoryState({
     ships: [
@@ -246,6 +262,7 @@ export const readmeScenarios = {
         maxhp: 47,
         shipId: 183,
       },
+      ...mockOwnedShips,
     ],
   }),
   pairedRepairBonus: createStoryState({

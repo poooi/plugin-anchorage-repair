@@ -17,6 +17,7 @@ const config: StorybookConfig = {
     config.resolve = config.resolve || {}
     config.resolve.alias = {
       ...config.resolve.alias,
+      'fs/promises': mockPath('fs-promises.ts'),
       path: mockPath('path.ts'),
       'react-fontawesome': mockPath('react-fontawesome.tsx'),
       'views/components/etc/overlay': mockPath('overlay.tsx'),
