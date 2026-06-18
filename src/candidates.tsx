@@ -400,6 +400,7 @@ const SelectorPanel = styled.div`
   --ship-selector-card-background: ${Colors.WHITE};
   --ship-selector-text: ${Colors.DARK_GRAY1};
 
+  container-type: inline-size;
   border: 1px solid var(--ship-selector-border);
   border-radius: 4px;
   background: var(--ship-selector-background);
@@ -456,7 +457,7 @@ const SelectorContent = styled.div`
   gap: 1rem;
   min-height: 0;
 
-  @media (max-width: 1100px) {
+  @container (max-width: 68rem) {
     grid-template-columns: 1fr;
   }
 `
