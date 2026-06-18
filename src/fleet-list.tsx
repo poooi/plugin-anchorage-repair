@@ -204,8 +204,8 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
   return (
     <GridContainer>
-      <InfoRow>
-        {status.canRepair && (
+      {status.canRepair && (
+        <InfoRow>
           <>
             <InfoCol $xs={4}>
               <Tooltip content={tooltipContent} placement="bottom">
@@ -234,38 +234,42 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
               </Tag>
             </InfoCol>
           </>
-        )}
-        {status.nosakiPresent && (
-          <>
-            <InfoCol $xs={4}>
-              <Tooltip content={moraleTooltipContent} placement="bottom">
-                <Tag
-                  intent={status.canBoostMorale ? 'success' : 'warning'}
-                  interactive={status.nosakiPresent}
-                >
-                  {t('Morale Boost')}
+        </InfoRow>
+      )}
+      {(status.nosakiPresent || !hasAnyActivity) && (
+        <InfoRow>
+          {status.nosakiPresent && (
+            <>
+              <InfoCol $xs={4}>
+                <Tooltip content={moraleTooltipContent} placement="bottom">
+                  <Tag
+                    intent={status.canBoostMorale ? 'success' : 'warning'}
+                    interactive={status.nosakiPresent}
+                  >
+                    {t('Morale Boost')}
+                  </Tag>
+                </Tooltip>
+              </InfoCol>
+              <InfoCol $xs={4}>
+                <Tag intent={status.canBoostMorale ? 'success' : 'warning'}>
+                  <span>{t('elapsed')} </span>
+                  <CountupTimer
+                    countdownId={`nosaki-${basicInfo.api_id}`}
+                    startTime={lastMoraleRefresh}
+                    tickCallback={tickMorale}
+                    startCallback={resetMoraleTimeElapsed}
+                  />
                 </Tag>
-              </Tooltip>
-            </InfoCol>
+              </InfoCol>
+            </>
+          )}
+          {!hasAnyActivity && (
             <InfoCol $xs={4}>
-              <Tag intent={status.canBoostMorale ? 'success' : 'warning'}>
-                <span>{t('elapsed')} </span>
-                <CountupTimer
-                  countdownId={`nosaki-${basicInfo.api_id}`}
-                  startTime={lastMoraleRefresh}
-                  tickCallback={tickMorale}
-                  startCallback={resetMoraleTimeElapsed}
-                />
-              </Tag>
+              <Tag intent="warning">{t('Not ready')}</Tag>
             </InfoCol>
-          </>
-        )}
-        {!hasAnyActivity && (
-          <InfoCol $xs={4}>
-            <Tag intent="warning">{t('Not ready')}</Tag>
-          </InfoCol>
-        )}
-      </InfoRow>
+          )}
+        </InfoRow>
+      )}
       <RowContainer>
         <ColContainer $xs={12}>
           <HiddenCallout
