@@ -5,3 +5,4 @@ src/
 *.mts
 *.ts
 *.tsx
+storybook-static/

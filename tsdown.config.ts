@@ -26,6 +26,8 @@ export default defineConfig({
     'react-i18next',
     'views/components/main/parts/countdown-timer',
     '@blueprintjs/core',
+    'fs/promises',
+    'path',
   ],
   dts: false,
   clean: false,
