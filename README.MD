@@ -82,7 +82,7 @@ behavior, so implementation is based on the closest observable API transitions.
   - Resets when the fleet whose flagship is a repair ship changes composition.
   - Also resets when a ship is moved from a repair-ship fleet into another fleet.
   - Fleet preset loading does **not** reset the timer.
-  - Sending a fleet containing a repair ship to expedition resets the timer.
+  - Sending a fleet containing a repair ship to expedition resets the shared timer if another repair fleet remains active; otherwise the plugin clears the timer until repair becomes active again.
   - Expedition return itself does not reset the timer.
   - Sortie, exercise, equipment changes, development, and other-fleet operations do not reset the timer.
 

@@ -211,7 +211,22 @@ const PluginAnchorageRepair: React.FC = () => {
           )
 
           if (hasRepairShip) {
-            timerState.resetRepairTimer()
+            const otherFleetRepairsActive = fleets.some((fleet) => {
+              if (fleet.api_id === expedFleetId) return false
+              const { active } = checkRepairActive(
+                fleet,
+                ships,
+                repairId,
+                equips,
+              )
+              return active
+            })
+
+            if (otherFleetRepairsActive) {
+              timerState.resetRepairTimer()
+            } else {
+              timerState.clearRepairTimer()
+            }
           }
         }
         break
