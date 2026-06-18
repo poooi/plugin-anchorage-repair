@@ -87,7 +87,7 @@ const ShipRow: React.FC<ShipRowProps> = ({
 
   const basicNotifyConfig = {
     type: 'repair',
-    title: t('Anchorage repair'),
+    title: t('HP Repair'),
     message: t('anchorage repair completed'),
     icon: join(window.ROOT, 'assets', 'img', 'operation', 'repair.png'),
     preemptTime: 0,
