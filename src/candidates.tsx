@@ -20,7 +20,7 @@ import {
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import chroma from 'chroma-js'
-import { mkdir, readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { mapValues, findIndex, includes, map } from 'lodash'
 import fp from 'lodash/fp'
 import path from 'path'
@@ -37,6 +37,7 @@ import { resolveTime } from 'views/utils/tools'
 
 import type { RootState } from '../poi-types'
 
+import FileWriter from './file-writer'
 import { NOSAKI_ID_LIST, getFleetStatus } from './fleet-utils'
 import {
   NOSAKI_COND_MAX,
@@ -249,23 +250,13 @@ const loadWatchedShipIds = async (): Promise<Set<number>> => {
   return new Set(normalizeShipIds(data[MORALE_WATCH_STORAGE_KEY]))
 }
 
-let saveQueue = Promise.resolve()
+const fileWriter = new FileWriter()
 
 const saveWatchedShipIds = (shipIds: Set<number>) => {
   if (!DATA_PATH) return
-  saveQueue = saveQueue
-    .then(async () => {
-      const data = await loadPluginData()
-      const nextData: PluginData = {
-        ...data,
-        [MORALE_WATCH_STORAGE_KEY]: [...shipIds],
-      }
-      await mkdir(path.dirname(DATA_PATH), { recursive: true })
-      await writeFile(DATA_PATH, `${JSON.stringify(nextData, null, 2)}\n`)
-    })
-    .catch((error: unknown) => {
-      console.error(error)
-    })
+  fileWriter.write(DATA_PATH, {
+    [MORALE_WATCH_STORAGE_KEY]: [...shipIds],
+  } satisfies PluginData)
 }
 
 const CandidateListContainer = styled.div`
@@ -825,6 +816,7 @@ export const MoraleQueue: React.FC<MoraleQueueProps> = ({
   const [watchedShipIds, setWatchedShipIds] = useState(
     () => new Set(initialWatchedShipIds),
   )
+  const watchListChangedBeforeLoadRef = useRef(false)
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -835,7 +827,7 @@ export const MoraleQueue: React.FC<MoraleQueueProps> = ({
 
     let cancelled = false
     loadWatchedShipIds().then((shipIds) => {
-      if (!cancelled) {
+      if (!cancelled && !watchListChangedBeforeLoadRef.current) {
         setWatchedShipIds(shipIds)
       }
     })
@@ -848,6 +840,7 @@ export const MoraleQueue: React.FC<MoraleQueueProps> = ({
   const toggleWatch = useCallback(
     (shipId: number) => {
       setWatchedShipIds((currentShipIds) => {
+        watchListChangedBeforeLoadRef.current = true
         const nextShipIds = new Set(currentShipIds)
         if (nextShipIds.has(shipId)) {
           nextShipIds.delete(shipId)
