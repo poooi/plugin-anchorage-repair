@@ -397,6 +397,7 @@ const SortIndicator = styled.span`
 const SelectorPanel = styled.div`
   --ship-selector-background: ${Colors.LIGHT_GRAY5};
   --ship-selector-border: ${Colors.LIGHT_GRAY1};
+  --ship-selector-card-background: ${Colors.WHITE};
   --ship-selector-text: ${Colors.DARK_GRAY1};
 
   border: 1px solid var(--ship-selector-border);
@@ -410,6 +411,7 @@ const SelectorPanel = styled.div`
   .bp5-dark & {
     --ship-selector-background: ${Colors.DARK_GRAY3};
     --ship-selector-border: ${Colors.DARK_GRAY5};
+    --ship-selector-card-background: ${Colors.DARK_GRAY4};
     --ship-selector-text: ${Colors.LIGHT_GRAY5};
   }
 `
@@ -440,16 +442,33 @@ const SelectorTitle = styled.div`
 const SelectorHint = styled.div`
   font-size: 90%;
   color: ${Colors.GRAY1};
+  text-align: right;
 
   .bp5-dark & {
     color: ${Colors.GRAY5};
   }
 `
 
-const WatchedSection = styled.div`
-  border-bottom: 1px solid var(--ship-selector-border);
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.75rem;
+const SelectorContent = styled.div`
+  display: grid;
+  grid-template-columns: minmax(16rem, 24rem) minmax(32rem, 1fr);
+  align-items: start;
+  gap: 1rem;
+  min-height: 0;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+`
+
+const SelectorSection = styled.section`
+  align-self: start;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--ship-selector-border);
+  border-radius: 4px;
+  background: var(--ship-selector-card-background);
+  padding: 0.75rem;
 `
 
 const SelectorControls = styled.div`
@@ -471,30 +490,46 @@ const AvailableSection = styled.div`
 const WatchedList = styled.ul`
   padding: 0;
   margin: 0.5rem 0 0;
-  max-height: 8rem;
+  max-height: 14rem;
   overflow-y: auto;
 `
 
 const WatchedListItem = styled.li`
   align-items: center;
-  display: flex;
+  display: grid;
+  grid-template-columns: 4.5em minmax(0, 1fr) auto auto;
   gap: 0.5rem;
-  padding: 0.25rem 0;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--ship-selector-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
 `
 
 const ShipList = styled.ul`
   padding: 0;
   margin: 0.5rem 0 0;
-  max-height: 22rem;
+  max-height: 26rem;
   overflow-y: auto;
 `
 
 const ShipListItem = styled.li`
-  display: flex;
+  display: grid;
+  grid-template-columns: 4.5em minmax(0, 1fr) auto auto;
   align-items: center;
   cursor: pointer;
   gap: 0.5rem;
   padding: 0.5em 1em;
+  border-bottom: 1px solid var(--ship-selector-border);
+
+  &:hover {
+    background: var(--ship-selector-background);
+  }
+
+  &:last-child {
+    border-bottom: 0;
+  }
 `
 
 const ShipLv = styled.span`
@@ -503,11 +538,16 @@ const ShipLv = styled.span`
 
 const SelectorShipName = styled.span`
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 const SelectorShipActions = styled.span`
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 `
 
@@ -601,7 +641,12 @@ const ShipSelector: React.FC<{
             </SelectorShipName>
             <SelectorShipActions>
               <Tag>{ship.api_cond}</Tag>
-              <Button small minimal onClick={() => toggleWatch(ship.api_id)}>
+              <Button
+                intent="primary"
+                small
+                minimal
+                onClick={() => toggleWatch(ship.api_id)}
+              >
                 {t('Watch')}
               </Button>
             </SelectorShipActions>
@@ -616,72 +661,82 @@ const ShipSelector: React.FC<{
   return (
     <SelectorPanel>
       <SelectorHeader>
-        <SelectorTitle>{t('Ship Selector')}</SelectorTitle>
+        <SelectorTitle>{t('Manage watch list')}</SelectorTitle>
         <SelectorHint>{t('Select ships to watch')}</SelectorHint>
       </SelectorHeader>
-      <WatchedSection>
-        <SelectorTitle>{t('Watched')}</SelectorTitle>
-        {watchedShips.length > 0 ? (
-          <WatchedList>
-            {watchedShips.map((ship) => (
-              <WatchedListItem key={ship.api_id}>
-                <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
-                <SelectorShipName>
-                  {t(ship.api_name, { ns: 'resources' })}
-                </SelectorShipName>
-                <SelectorShipActions>
-                  <Tag>{ship.api_cond}</Tag>
-                  <Button
-                    small
-                    minimal
-                    onClick={() => toggleWatch(ship.api_id)}
-                  >
-                    {t('Remove')}
+      <SelectorContent>
+        <SelectorSection>
+          <SelectorHeader>
+            <SelectorTitle>{t('Watched')}</SelectorTitle>
+            <SelectorHint>
+              {t('Watched ships count', { count: watchedShips.length })}
+            </SelectorHint>
+          </SelectorHeader>
+          {watchedShips.length > 0 ? (
+            <WatchedList>
+              {watchedShips.map((ship) => (
+                <WatchedListItem key={ship.api_id}>
+                  <ShipLv>{`Lv.${String(ship.api_lv).padEnd(4)}`}</ShipLv>
+                  <SelectorShipName>
+                    {t(ship.api_name, { ns: 'resources' })}
+                  </SelectorShipName>
+                  <SelectorShipActions>
+                    <Tag>{ship.api_cond}</Tag>
+                    <Button
+                      intent="danger"
+                      small
+                      minimal
+                      onClick={() => toggleWatch(ship.api_id)}
+                    >
+                      {t('Remove')}
+                    </Button>
+                  </SelectorShipActions>
+                </WatchedListItem>
+              ))}
+            </WatchedList>
+          ) : (
+            <SelectorEmpty>{t('No watched ships')}</SelectorEmpty>
+          )}
+        </SelectorSection>
+        <SelectorSection>
+          <SelectorControls>
+            <InputGroup
+              fill
+              placeholder={t('Search ships')}
+              rightElement={
+                query ? (
+                  <Button minimal small onClick={() => setQuery('')}>
+                    {t('Clear')}
                   </Button>
-                </SelectorShipActions>
-              </WatchedListItem>
-            ))}
-          </WatchedList>
-        ) : (
-          <SelectorEmpty>{t('No watched ships')}</SelectorEmpty>
-        )}
-      </WatchedSection>
-      <SelectorControls>
-        <InputGroup
-          fill
-          placeholder={t('Search ships')}
-          rightElement={
-            query ? (
-              <Button minimal small onClick={() => setQuery('')}>
-                {t('Clear')}
-              </Button>
-            ) : undefined
-          }
-          value={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
-        <ShipTypeFilterBar>
-          {shipTypeOptions.map((option) => (
-            <Button
-              key={option.name}
-              active={option.name === selectedShipType}
-              small
-              onClick={() => setSelectedShipType(option.name)}
-            >
-              {`${t(option.name)} (${shipTypeCounts[option.name] ?? 0})`}
-            </Button>
-          ))}
-        </ShipTypeFilterBar>
-      </SelectorControls>
-      <AvailableSection>
-        <SelectorHeader>
-          <SelectorTitle>
-            {t('Available ships count', { count: selectableShips.length })}
-          </SelectorTitle>
-          <SelectorHint>{t(selectedShipTypeOption.name)}</SelectorHint>
-        </SelectorHeader>
-        {renderShipList()}
-      </AvailableSection>
+                ) : undefined
+              }
+              value={query}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+            />
+            <ShipTypeFilterBar>
+              {shipTypeOptions.map((option) => (
+                <Button
+                  key={option.name}
+                  active={option.name === selectedShipType}
+                  small
+                  onClick={() => setSelectedShipType(option.name)}
+                >
+                  {`${t(option.name)} (${shipTypeCounts[option.name] ?? 0})`}
+                </Button>
+              ))}
+            </ShipTypeFilterBar>
+          </SelectorControls>
+          <AvailableSection>
+            <SelectorHeader>
+              <SelectorTitle>
+                {t('Available ships count', { count: selectableShips.length })}
+              </SelectorTitle>
+              <SelectorHint>{t(selectedShipTypeOption.name)}</SelectorHint>
+            </SelectorHeader>
+            {renderShipList()}
+          </AvailableSection>
+        </SelectorSection>
+      </SelectorContent>
     </SelectorPanel>
   )
 }
@@ -1027,7 +1082,6 @@ export const MoraleQueue: React.FC<MoraleQueueProps> = ({
           <Button onClick={() => setIsManagingWatchList(false)}>
             {t('Back to morale queue')}
           </Button>
-          <Tag>{t('Watched ships count', { count: watchedShipIds.size })}</Tag>
         </ManagerToolbar>
         <WatchListManager
           ships={selectableShips}
