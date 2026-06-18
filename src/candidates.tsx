@@ -20,8 +20,10 @@ import {
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import chroma from 'chroma-js'
+import { mkdir, readFile, writeFile } from 'fs/promises'
 import { mapValues, findIndex, includes, map } from 'lodash'
 import fp from 'lodash/fp'
+import path from 'path'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSelector } from 'react-redux'
@@ -204,7 +206,16 @@ const MORALE_QUEUE_COLUMNS = `
   minmax(14rem, 2fr) minmax(6rem, 0.7fr) minmax(8rem, 1fr) minmax(9rem, 1.2fr)
 `
 
-const MORALE_WATCH_STORAGE_KEY = 'poi-plugin-anchorage-repair.moraleWatchList'
+const PLUGIN_KEY = 'poi-plugin-anchorage-repair'
+const MORALE_WATCH_STORAGE_KEY = 'moraleWatchList'
+const DATA_PATH =
+  typeof window.APPDATA_PATH === 'string'
+    ? path.join(window.APPDATA_PATH, `${PLUGIN_KEY}.json`)
+    : ''
+
+type PluginData = {
+  [MORALE_WATCH_STORAGE_KEY]?: number[]
+}
 
 const shipTypeOptions: Array<{ id: number[] | -1; name: string }> = [
   { id: -1, name: 'All' },
@@ -218,30 +229,43 @@ const shipTypeOptions: Array<{ id: number[] | -1; name: string }> = [
   { id: [15, 16, 17, 19, 20, 22], name: 'Auxiliary' },
 ]
 
-const loadWatchedShipIds = (initialWatchedShipIds?: number[]): Set<number> => {
-  if (initialWatchedShipIds) return new Set(initialWatchedShipIds)
+const normalizeShipIds = (value: unknown): number[] =>
+  Array.isArray(value)
+    ? value.filter((shipId): shipId is number => Number.isInteger(shipId))
+    : []
 
+const loadPluginData = async (): Promise<PluginData> => {
+  if (!DATA_PATH) return {}
   try {
-    const rawValue = window.localStorage.getItem(MORALE_WATCH_STORAGE_KEY)
-    if (!rawValue) return new Set()
-    const parsedValue = JSON.parse(rawValue)
-    return Array.isArray(parsedValue)
-      ? new Set(
-          parsedValue.filter(
-            (value): value is number => typeof value === 'number',
-          ),
-        )
-      : new Set()
+    const rawValue = await readFile(DATA_PATH, 'utf8')
+    return JSON.parse(rawValue) as PluginData
   } catch {
-    return new Set()
+    return {}
   }
 }
 
+const loadWatchedShipIds = async (): Promise<Set<number>> => {
+  const data = await loadPluginData()
+  return new Set(normalizeShipIds(data[MORALE_WATCH_STORAGE_KEY]))
+}
+
+let saveQueue = Promise.resolve()
+
 const saveWatchedShipIds = (shipIds: Set<number>) => {
-  window.localStorage.setItem(
-    MORALE_WATCH_STORAGE_KEY,
-    JSON.stringify([...shipIds]),
-  )
+  if (!DATA_PATH) return
+  saveQueue = saveQueue
+    .then(async () => {
+      const data = await loadPluginData()
+      const nextData: PluginData = {
+        ...data,
+        [MORALE_WATCH_STORAGE_KEY]: [...shipIds],
+      }
+      await mkdir(path.dirname(DATA_PATH), { recursive: true })
+      await writeFile(DATA_PATH, `${JSON.stringify(nextData, null, 2)}\n`)
+    })
+    .catch((error: unknown) => {
+      console.error(error)
+    })
 }
 
 const CandidateListContainer = styled.div`
@@ -798,14 +822,26 @@ export const MoraleQueue: React.FC<MoraleQueueProps> = ({
   const { t } = useTranslation('poi-plugin-anchorage-repair')
   const [sorting, setSorting] = useState<SortingState>([])
   const [isManagingWatchList, setIsManagingWatchList] = useState(false)
-  const [watchedShipIds, setWatchedShipIds] = useState(() =>
-    loadWatchedShipIds(initialWatchedShipIds),
+  const [watchedShipIds, setWatchedShipIds] = useState(
+    () => new Set(initialWatchedShipIds),
   )
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (initialWatchedShipIds) {
       setWatchedShipIds(new Set(initialWatchedShipIds))
+      return
+    }
+
+    let cancelled = false
+    loadWatchedShipIds().then((shipIds) => {
+      if (!cancelled) {
+        setWatchedShipIds(shipIds)
+      }
+    })
+
+    return () => {
+      cancelled = true
     }
   }, [initialWatchedShipIds])
 

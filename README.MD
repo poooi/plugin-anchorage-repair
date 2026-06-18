@@ -112,6 +112,7 @@ Following corner cases are not taken into consideration, thus the result may not
 ✓ Nosaki timer is global across all fleets
 ✓ Cross-fleet ship swaps reset affected repair/Nosaki timers when appropriate
 ✓ Expedition departure resets or clears the repair timer depending on whether another repair fleet remains active
+✓ Morale Queue watch list persists to the plugin data file under Poi's app data directory
 ✓ Ship remodeling (including Nosaki → Nosaki Kai) doesn't reset timer
 
 # Changelog

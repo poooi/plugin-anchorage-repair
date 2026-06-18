@@ -55,6 +55,10 @@ declare module 'views/components/etc/overlay' {
   export { Tooltip, Popover, Dialog } from '@blueprintjs/core'
 }
 
+interface Window {
+  APPDATA_PATH?: string
+}
+
 declare module '@storybook/react-vite' {
   import type { ComponentType, ReactElement } from 'react'
 
