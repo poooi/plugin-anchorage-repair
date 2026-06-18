@@ -29,6 +29,7 @@ import {
   checkNosakiPresent,
   REPAIR_SHIP_ID,
   NOSAKI_ID_LIST,
+  getFleetStatus,
 } from './fleet-utils'
 import { akashiEstimate, AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
 import { timerState } from './timer-state'
@@ -246,7 +247,7 @@ const PluginAnchorageRepair: React.FC = () => {
   const handleNosakiTimerEvents = useCallback((e: Event) => {
     const event = e as GameResponseEvent
     const { path, postBody } = event.detail
-    const { fleets, ships } = getGameState()
+    const { fleets, ships, $ships, repairId, equips } = getGameState()
     const previousFleets = previousRepairGameStateRef.current?.fleets ?? fleets
 
     const currentTime = Date.now()
@@ -256,9 +257,21 @@ const PluginAnchorageRepair: React.FC = () => {
 
     switch (path) {
       case '/kcsapi/api_port/port': {
-        const anyFleetNosakiPresent = fleets.some((fleet) =>
-          checkNosakiPresent(fleet, ships),
-        )
+        let anyFleetNosakiPresent = false
+        let anyFleetCanBoostMorale = false
+
+        for (const fleet of fleets) {
+          if (!checkNosakiPresent(fleet, ships)) {
+            continue
+          }
+
+          anyFleetNosakiPresent = true
+          const status = getFleetStatus(fleet, ships, $ships, repairId, equips)
+          if (status.canBoostMorale) {
+            anyFleetCanBoostMorale = true
+            break
+          }
+        }
 
         if (!anyFleetNosakiPresent) {
           break
@@ -267,7 +280,10 @@ const PluginAnchorageRepair: React.FC = () => {
         if (lastNosakiRefresh === 0) {
           // Timer not started yet - start it now
           timerState.setLastNosakiRefresh(currentTime)
-        } else if (nosakiTimeElapsed >= NOSAKI_INTERVAL) {
+        } else if (
+          anyFleetCanBoostMorale &&
+          nosakiTimeElapsed >= NOSAKI_INTERVAL
+        ) {
           // More than 15min since last refresh, reset timer
           timerState.resetNosakiTimer()
         }
