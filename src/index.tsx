@@ -116,6 +116,14 @@ const PluginAnchorageRepair: React.FC = () => {
     return { fleets, ships, repairs, equips, $ships, repairId }
   }
 
+  // Timer behavior references:
+  // Akashi: https://wikiwiki.jp/kancolle/%E6%98%8E%E7%9F%B3
+  // Nosaki: https://wikiwiki.jp/kancolle/%E9%87%8E%E5%9F%BC
+  //
+  // These pages describe in-game screen behavior. The plugin can only observe
+  // API response events and the already-mutated store state, so handlers below
+  // approximate the game timers from observable API transitions.
+
   // Handler for anchorage repair timer (Akashi/Asahi)
   const handleRepairTimerEvents = useCallback((e: Event) => {
     const event = e as GameResponseEvent
@@ -158,7 +166,7 @@ const PluginAnchorageRepair: React.FC = () => {
         const changedShipId = parseInt(body.api_ship_id, 10)
         const changedFleetId = parseInt(body.api_id, 10)
 
-        // 在两个舰队交换舰娘的情况下，另一个舰队也需要检查是否有明石/朝日在位
+        // Inter-fleet swaps affect both the destination fleet and the source fleet.
         const changedFleetId2 = previousFleets.find((fleet) =>
           fleet.api_ship.some((id) => id === changedShipId),
         )?.api_id
@@ -210,10 +218,8 @@ const PluginAnchorageRepair: React.FC = () => {
       }
 
       case '/kcsapi/api_req_mission/result':
-        // 经测试，远征归来不重置
-        // 经测试，远征归来的舰队无法获得效果
-        // No reset when fleet returns from expedition in test
-        // No effect for fleets returning from expedition in test
+        // In-game testing: expedition return itself does not reset the timer,
+        // and the returning fleet does not receive the effect at this point.
         break
 
       default:
@@ -262,11 +268,10 @@ const PluginAnchorageRepair: React.FC = () => {
         const changedShipId = parseInt(body.api_ship_id, 10)
         const changedFleetId = parseInt(body.api_id, 10)
 
-        // 舰队一括解除不会导致计时器重置
-        // Fleet-wide disband doesn't reset timer
+        // Fleet-wide disband does not reset the Nosaki timer.
         if (changedShipId == -2) break
 
-        // 在两个舰队交换舰娘的情况下，另一个舰队也需要检查是否有野崎在位
+        // Inter-fleet swaps affect both the destination fleet and the source fleet.
         const changedFleetId2 = previousFleets.find((fleet) =>
           fleet.api_ship.some((id) => id === changedShipId),
         )?.api_id
@@ -298,10 +303,8 @@ const PluginAnchorageRepair: React.FC = () => {
         break
 
       case '/kcsapi/api_req_mission/result':
-        // 经测试，远征归来不重置
-        // 经测试，远征归来的舰队无法获得效果
-        // No reset when fleet returns from expedition in test
-        // No effect for fleets returning from expedition in test
+        // In-game testing: expedition return itself does not reset the timer,
+        // and the returning fleet does not receive the effect at this point.
         break
 
       default:
@@ -313,7 +316,7 @@ const PluginAnchorageRepair: React.FC = () => {
     (e: Event) => {
       handleRepairTimerEvents(e)
       handleNosakiTimerEvents(e)
-      // 缓存舰队状态，用于在舰队间交换舰娘时判断另一个舰队的编号
+      // Cache fleet state for identifying the source fleet in inter-fleet swaps.
       previousRepairGameStateRef.current = getGameState()
     },
     [handleRepairTimerEvents, handleNosakiTimerEvents],
