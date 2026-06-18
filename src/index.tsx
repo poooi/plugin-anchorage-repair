@@ -284,7 +284,7 @@ const PluginAnchorageRepair: React.FC = () => {
         const changedFleetId = parseInt(body.api_id, 10)
 
         // Fleet-wide disband does not reset the Nosaki timer.
-        if (changedShipId == -2) break
+        if (changedShipId === -2) break
 
         // Inter-fleet swaps affect both the destination fleet and the source fleet.
         const changedFleetId2 = previousFleets.find((fleet) =>
@@ -338,6 +338,7 @@ const PluginAnchorageRepair: React.FC = () => {
   )
 
   useEffect(() => {
+    previousRepairGameStateRef.current = getGameState()
     window.addEventListener('game.response', handleGameResponseEvents)
     return () => {
       window.removeEventListener('game.response', handleGameResponseEvents)

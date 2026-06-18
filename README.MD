@@ -87,7 +87,7 @@ behavior, so implementation is based on the closest observable API transitions.
   - Sortie, exercise, equipment changes, development, and other-fleet operations do not reset the timer.
 
 - **Nosaki timer (global/shared)**:
-  - Starts when Nosaki/Nosaki Kai is in position 1 or 2 with companion ships.
+  - Starts when Nosaki/Nosaki Kai is in position 1 or 2.
   - At port return after 15 minutes, morale boost is applied if Nosaki and target ships satisfy the eligibility checks.
   - Resets when a fleet with Nosaki/Nosaki Kai in position 1 or 2 changes composition.
   - Fleet preset loading and companion fleet-wide disband do **not** reset the timer.
