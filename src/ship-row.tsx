@@ -62,7 +62,7 @@ const ShipRow: React.FC<ShipRowProps> = ({
   ship,
 }) => {
   const canNotify = useSelector((state: RootState) => state.misc.canNotify)
-  const { t } = useTranslation()
+  const { t } = useTranslation('poi-plugin-anchorage-repair')
 
   const {
     api_nowhp,
