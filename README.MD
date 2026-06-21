@@ -30,7 +30,7 @@ A plugin to help with Akashi's HP repair and Nosaki's morale boost, featuring si
   - **Valid pairs**: Akashi + Asahi Kai OR Akashi Kai + Asahi Kai (in either order at positions 1-2)
   - **2nd position health requirement**: Must be below minor damage (HP > 75% max HP) for paired bonus to work
   - SRF on position 2 also counts toward repair range
-  - If position 2 has SRF equipped and is healthy, repair speed increases by ~15% (time reduced to 85%)
+  - If position 2 has SRF equipped and is healthy, repair time is reduced to 5/6 of normal time (about 83.3%), per the Asahi Kai wiki entry
   - With maximum 5 total SRF, can repair up to 7 ships in combined fleet operations
 - **Repair target eligibility**: Ships can be repaired when at minor damage or better (HP > 50% max HP)
 - Target ships must not be in docking
@@ -129,6 +129,8 @@ The timer reset rules corrected
 
 # References
 - <https://wikiwiki.jp/kancolle/%E6%98%8E%E7%9F%B3>
+- <https://wikiwiki.jp/kancolle/%E6%9C%9D%E6%97%A5%E6%94%B9> (paired repair details: "修理に要する時間が本来の5/6")
+- <https://twitter.com/KanColle_STAFF/status/1688966979607224320> (official paired repair announcement)
 - <https://wikiwiki.jp/kancolle/%E9%87%8E%E5%9F%BC>
 - <https://wikiwiki.jp/kancolle/%E7%96%B2%E5%8A%B4%E5%BA%A6>
 - <https://gist.githubusercontent.com/fujieda/440fa64d310c2b6960f3/raw>
