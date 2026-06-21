@@ -347,18 +347,21 @@ export const getFleetRepairDetail = (
             nosakiShipId,
           })
 
+      const timeMultiplier = pairedRepairBonus
+        ? PAIRED_REPAIR_TIME_MULTIPLIER
+        : 1
+
       // Calculate base timePerHP
       let timePerHP = getTimePerHP(ship.api_lv, constShip.api_stype)
 
-      // Apply paired repair bonus (15% faster repair speed)
-      if (pairedRepairBonus && timePerHP > 0) {
-        timePerHP = timePerHP * PAIRED_REPAIR_TIME_MULTIPLIER
+      if (timePerHP > 0) {
+        timePerHP = timePerHP * timeMultiplier
       }
 
       return {
         ...ship,
         ...constShip,
-        estimate: akashiEstimate(ship),
+        estimate: akashiEstimate(ship, timeMultiplier),
         timePerHP,
         inRepair: _.includes(repairId, ship.api_id),
         availableSRF: index < repairCount,
