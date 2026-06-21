@@ -3,6 +3,12 @@
   "version": "1.0.4",
   "description": "Anchorage support plugin for poi",
   "main": "index.es",
+  "files": [
+    "README-CN.MD",
+    "i18n",
+    "index.js",
+    "index.js.map"
+  ],
   "scripts": {
     "prepack": "tsdown",
     "dev": "tsdown --watch",
