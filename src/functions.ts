@@ -2,7 +2,7 @@ import FACTOR from './factor'
 
 export const AKASHI_INTERVAL = 20 * 60 * 1000 // minimum time required, in ms
 export const NOSAKI_INTERVAL = 15 * 60 * 1000 // nosaki morale boost interval, in ms
-export const PAIRED_REPAIR_TIME_MULTIPLIER = 0.85 // 15% faster repair when paired (85% of normal time)
+export const PAIRED_REPAIR_TIME_MULTIPLIER = 5 / 6 // paired repair takes 5/6 of normal time
 const DOCKING_OFFSET = 30 * 1000 // offset in docking time formula
 // Damage thresholds per WIKI:
 // - HP > 50%: 小破 (minor damage) or better - can be repaired
@@ -20,22 +20,28 @@ const minuteCeil = (time: number) => {
 }
 
 // estimate the time needed in anchorage repair
-export const akashiEstimate = ({
-  api_nowhp,
-  api_maxhp,
-  api_ndock_time,
-}: {
-  api_nowhp: number
-  api_maxhp: number
-  api_ndock_time: number
-}) => {
+export const akashiEstimate = (
+  {
+    api_nowhp,
+    api_maxhp,
+    api_ndock_time,
+  }: {
+    api_nowhp: number
+    api_maxhp: number
+    api_ndock_time: number
+  },
+  timeMultiplier = 1,
+) => {
   if (api_ndock_time === 0 || api_nowhp >= api_maxhp) return 0
 
   if (api_nowhp <= api_maxhp * MODERATE_DAMAGE_THRESHOLD) return 0 // damage check
 
   if (api_maxhp - api_nowhp === 1) return AKASHI_INTERVAL // if only 1 hp to repair
 
-  return Math.max(minuteCeil(api_ndock_time - DOCKING_OFFSET), AKASHI_INTERVAL)
+  return Math.max(
+    minuteCeil((api_ndock_time - DOCKING_OFFSET) * timeMultiplier),
+    AKASHI_INTERVAL,
+  )
 }
 
 export const timePerHPCalc = ({
