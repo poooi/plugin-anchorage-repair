@@ -38,18 +38,18 @@ const AnchorageRepairContainer = styled.div`
   padding: 1em;
   height: 100%;
 
-  .bp5-tabs {
+  [class^="bp"][class$="-tabs"] {
     height: 100%;
     display: flex;
     flex-direction: column;
   }
 
-  .bp5-tab-panel {
+  [class^="bp"][class$="-tab-panel"] {
     height: 100%;
     overflow: auto;
   }
 
-  .bp5-tab-list .bp5-tab.can-repair {
+  [class^="bp"][class$="-tab-list"] [class^="bp"][class$="-tab"].can-repair {
     flex: 2;
   }
 `
