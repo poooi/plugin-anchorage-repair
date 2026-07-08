@@ -1,6 +1,6 @@
 {
   "name": "poi-plugin-anchorage-repair",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Anchorage support plugin for poi",
   "main": "index.js",
   "files": [
