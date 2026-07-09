@@ -36,6 +36,7 @@ import {
   nosakiMoraleEstimate,
   timePerHPCalc,
 } from './functions'
+import { bpClass } from './styles'
 
 interface EnhancedShip extends APIShip {
   akashi: number
@@ -305,7 +306,7 @@ const StyledTable = styled(HTMLTable)<{ $columns: string }>`
   overflow: hidden;
   background: var(--repair-table-background);
 
-  [class^="bp"][class$="-dark"] & {
+  ${bpClass('-dark')} & {
     --repair-table-background: ${Colors.DARK_GRAY3};
     --repair-table-border: ${Colors.DARK_GRAY5};
     --repair-table-header-background: ${Colors.DARK_GRAY4};
@@ -413,7 +414,7 @@ const SelectorPanel = styled.div`
   overflow: auto;
   padding: 0.75rem;
 
-  [class^="bp"][class$="-dark"] & {
+  ${bpClass('-dark')} & {
     --ship-selector-background: ${Colors.DARK_GRAY3};
     --ship-selector-border: ${Colors.DARK_GRAY5};
     --ship-selector-card-background: ${Colors.DARK_GRAY4};
@@ -449,7 +450,7 @@ const SelectorHint = styled.div`
   color: ${Colors.GRAY1};
   text-align: right;
 
-  [class^="bp"][class$="-dark"] & {
+  ${bpClass('-dark')} & {
     color: ${Colors.GRAY5};
   }
 `
@@ -570,7 +571,7 @@ const SelectorEmpty = styled.div`
   color: ${Colors.GRAY1};
   padding: 0.5rem 0;
 
-  [class^="bp"][class$="-dark"] & {
+  ${bpClass('-dark')} & {
     color: ${Colors.GRAY5};
   }
 `

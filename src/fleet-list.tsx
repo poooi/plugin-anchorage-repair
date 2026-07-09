@@ -14,6 +14,7 @@ import {
   createFleetRepairDetailSelector,
 } from './fleet-selectors'
 import ShipRow from './ship-row'
+import { bpClass } from './styles'
 import { timerState } from './timer-state'
 
 interface FleetListProps {
@@ -57,7 +58,7 @@ const StyledTable = styled(HTMLTable)`
   overflow: hidden;
   background: var(--repair-table-background);
 
-  [class^="bp"][class$="-dark"] & {
+  ${bpClass('-dark')} & {
     --repair-table-background: ${Colors.DARK_GRAY3};
     --repair-table-border: ${Colors.DARK_GRAY5};
     --repair-table-header-background: ${Colors.DARK_GRAY4};

@@ -32,24 +32,25 @@ import {
   getFleetStatus,
 } from './fleet-utils'
 import { akashiEstimate, AKASHI_INTERVAL, NOSAKI_INTERVAL } from './functions'
+import { bpClass } from './styles'
 import { timerState } from './timer-state'
 
 const AnchorageRepairContainer = styled.div`
   padding: 1em;
   height: 100%;
 
-  [class^="bp"][class$="-tabs"] {
+  ${bpClass('-tabs')} {
     height: 100%;
     display: flex;
     flex-direction: column;
   }
 
-  [class^="bp"][class$="-tab-panel"] {
+  ${bpClass('-tab-panel')} {
     height: 100%;
     overflow: auto;
   }
 
-  [class^="bp"][class$="-tab-list"] [class^="bp"][class$="-tab"].can-repair {
+  ${bpClass('-tab-list')} ${bpClass('-tab')}.can-repair {
     flex: 2;
   }
 `
