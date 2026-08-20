@@ -26,12 +26,20 @@ export type FleetBasicInfo = {
   shipId: number[]
 }
 
+export type NosakiFailureReason =
+  | 'not-fully-supplied'
+  | 'damaged'
+  | 'low-morale'
+  | 'in-expedition'
+  | 'in-repair'
+
 export type FleetStatus = {
   canRepair: boolean
   akashiFlagship: boolean
   inExpedition: boolean
   flagShipInRepair: boolean
   canBoostMorale: boolean
+  nosakiFailureReason: NosakiFailureReason[]
   nosakiPresent: boolean // Nosaki is in position 1 or 2 (may not be eligible yet)
   nosakiPosition: number // -1 if not present, 0 for flagship, 1 for second position
   nosakiShipId: number // 996 or 1002, or -1 if not present
@@ -196,6 +204,7 @@ export const getFleetStatus = (
   let nosakiShipId = -1
   let nosakiPresent = false // Nosaki is in position 1 or 2
   let canBoostMorale = false // Nosaki is eligible to boost morale
+  const nosakiFailureReason: NosakiFailureReason[] = []
 
   const checkNosakiAtPosition = (position: number) => {
     const ship = ships[_.get(fleet, `api_ship.${position}`, -1)]
@@ -219,15 +228,13 @@ export const getFleetStatus = (
       const hasGoodMorale = ship.api_cond >= 30
       const notInRepair = !_.includes(repairId, ship.api_id)
 
-      if (
-        isFullySupplied &&
-        isHealthy &&
-        hasGoodMorale &&
-        !inExpedition &&
-        notInRepair
-      ) {
-        canBoostMorale = true
-      }
+      if (!isFullySupplied) nosakiFailureReason.push('not-fully-supplied')
+      if (!isHealthy) nosakiFailureReason.push('damaged')
+      if (!hasGoodMorale) nosakiFailureReason.push('low-morale')
+      if (inExpedition) nosakiFailureReason.push('in-expedition')
+      if (!notInRepair) nosakiFailureReason.push('in-repair')
+      canBoostMorale = nosakiFailureReason.length === 0
+
       return true
     }
     return false
@@ -244,6 +251,7 @@ export const getFleetStatus = (
     inExpedition,
     flagShipInRepair,
     canBoostMorale,
+    nosakiFailureReason,
     nosakiPresent,
     nosakiPosition,
     nosakiShipId,
