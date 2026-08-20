@@ -18,6 +18,8 @@ import type { APIReqHenseiChangeRequest } from 'kcsapi/api_req_hensei/change/req
 import type { APIReqMissionStartRequest } from 'kcsapi/api_req_mission/start/request'
 import type { APIMstShip } from 'kcsapi/api_start2/getData/response'
 
+import type { RootState } from '../poi-types'
+
 import { MoraleQueue, RepairQueue } from './candidates'
 import FleetList from './fleet-list'
 import {
@@ -106,14 +108,14 @@ const PluginAnchorageRepair: React.FC = () => {
       ships = {},
       repairs = [],
       equips,
-      $ships = {},
     }: {
       fleets: APIDeckPort[]
       ships: Record<number, APIShip>
       repairs: APIGetMemberNdockResponse[]
       equips?: Record<number, APIGetMemberSlotItemResponse>
-      $ships?: Record<number, APIMstShip>
     } = window.getStore('info') || {}
+    const $ships =
+      window.getStore<Partial<RootState['const']>>('const').$ships ?? {}
     const repairId = repairs.map((dock) => dock.api_ship_id)
     return { fleets, ships, repairs, equips, $ships, repairId }
   }
