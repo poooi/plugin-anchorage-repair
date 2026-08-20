@@ -195,13 +195,25 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
 
   const moraleTooltipContent = (
     <div>
-      {status.canBoostMorale ? (<p>{t('Nosaki ready!')}</p>) : (
+      {status.canBoostMorale ? (
+        <p>{t('Nosaki ready!')}</p>
+      ) : (
         <>
-          {status.nosakiFailureReason.includes('not-fully-supplied') && (<p>{t('Nosaki not fully supplied')}</p>)}
-          {status.nosakiFailureReason.includes('damaged') && (<p>{t('Nosaki damaged')}</p>)}
-          {status.nosakiFailureReason.includes('low-morale') && (<p>{t('Nosaki morale too low')}</p>)}
-          {status.nosakiFailureReason.includes('in-expedition') && (<p>{t('fleet in expedition')}</p>)}
-          {status.nosakiFailureReason.includes('in-repair') && (<p>{t('Nosaki in repair')}</p>)}
+          {status.nosakiFailureReason.includes('not-fully-supplied') && (
+            <p>{t('Nosaki not fully supplied')}</p>
+          )}
+          {status.nosakiFailureReason.includes('damaged') && (
+            <p>{t('Nosaki damaged')}</p>
+          )}
+          {status.nosakiFailureReason.includes('low-morale') && (
+            <p>{t('Nosaki morale too low')}</p>
+          )}
+          {status.nosakiFailureReason.includes('in-expedition') && (
+            <p>{t('fleet in expedition')}</p>
+          )}
+          {status.nosakiFailureReason.includes('in-repair') && (
+            <p>{t('Nosaki in repair')}</p>
+          )}
         </>
       )}
     </div>
@@ -253,7 +265,9 @@ const FleetList: React.FC<FleetListProps> = ({ fleetId }) => {
                     intent={status.canBoostMorale ? 'success' : 'warning'}
                     interactive={status.nosakiPresent}
                   >
-                    {status.canBoostMorale ? t('Morale Boost') : t('Morale Boost check failed')}
+                    {status.canBoostMorale
+                      ? t('Morale Boost')
+                      : t('Morale Boost check failed')}
                   </Tag>
                 </Tooltip>
               </InfoCol>

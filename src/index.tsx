@@ -114,7 +114,8 @@ const PluginAnchorageRepair: React.FC = () => {
       repairs: APIGetMemberNdockResponse[]
       equips?: Record<number, APIGetMemberSlotItemResponse>
     } = window.getStore('info') || {}
-    const $ships = window.getStore<Partial<RootState['const']>>('const').$ships ?? {}
+    const $ships =
+      window.getStore<Partial<RootState['const']>>('const').$ships ?? {}
     const repairId = repairs.map((dock) => dock.api_ship_id)
     return { fleets, ships, repairs, equips, $ships, repairId }
   }
